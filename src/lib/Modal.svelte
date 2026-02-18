@@ -10,26 +10,43 @@
   let productDetails = null;
   let loadingDetails = false;
 
+  // Mapeo de códigos de país a monedas
+  const currencyMap = {
+    '+1': { code: 'USD', symbol: '$' },
+    '+52': { code: 'MXN', symbol: '$' }, 
+    '+54': { code: 'ARS', symbol: '$' },
+    '+55': { code: 'BRL', symbol: 'R$' },
+    '+56': { code: 'CLP', symbol: '$' },
+    '+57': { code: 'COP', symbol: '$' },
+    '+51': { code: 'PEN', symbol: 'S/' },
+    '+58': { code: 'VES', symbol: 'Bs.' },
+    '+593': { code: 'USD', symbol: '$' },
+    '+591': { code: 'BOB', symbol: 'Bs.' },
+    '+595': { code: 'PYG', symbol: '₲' },
+    '+598': { code: 'UYU', symbol: '$U' },
+    '+34': { code: 'EUR', symbol: '€' },
+    '+33': { code: 'EUR', symbol: '€' },
+    '+49': { code: 'EUR', symbol: '€' },
+    '+44': { code: 'GBP', symbol: '£' }
+  };
+
+  function getCurrency(code) {
+    return currencyMap[code] || { code: 'USD', symbol: '$' };
+  }
+
   // Cargar detalles del producto cuando se muestra el modal o cambia el país
   $: if (isVisible && countryCode) {
-    console.log('🌍 Modal visible - País del USUARIO (para precio Stripe):', countryCode);
-    productDetails = null; // Reset cuando cambia el país
+    productDetails = null;
     loadProductDetails();
   }
 
   async function loadProductDetails() {
     loadingDetails = true;
-    console.log('🔍 Cargando detalles para país:', countryCode);
     
     try {
       productDetails = await getProductDetailsByCountry(countryCode);
-      console.log('✅ Detalles cargados:', productDetails);
-      
-      if (!productDetails || !productDetails.priceId) {
-        console.error('❌ Detalles incompletos:', productDetails);
-      }
     } catch (error) {
-      console.error('❌ Error cargando detalles:', error);
+      console.error('Error loading product details:', error);
     } finally {
       loadingDetails = false;
     }
@@ -39,26 +56,17 @@
     isLoading = true;
     errorMessage = '';
     
-    console.log('💳 Iniciando pago...');
-    console.log('País:', countryCode);
-    console.log('Detalles del producto:', productDetails);
-    
     try {
       if (!productDetails?.priceId) {
-        throw new Error('No se pudieron cargar los detalles del producto. Detalles: ' + JSON.stringify(productDetails));
+        throw new Error('No se pudieron cargar los detalles del producto.');
       }
 
-      console.log('💰 Price ID a usar:', productDetails.priceId);
-
-      // Detectar GA Client ID automáticamente
       const gaClientId = getGAClientId();
-      console.log('📊 GA Client ID:', gaClientId);
 
-      // Crear sesión de pago con Stripe Kraken
       await crearSesionPago(
-        productDetails.priceId,    // price_id (requerido)
-        1,                         // unidades: 1 acceso (requerido)
-        'payment',                 // mode: pago único (requerido)
+        productDetails.priceId,
+        1,
+        'payment',
         {
           gaCliente: gaClientId,
           sitio: 'svelte-geo',
@@ -66,7 +74,6 @@
         }
       );
     } catch (error) {
-      console.error('💥 Error completo en pago:', error);
       errorMessage = error.message || 'Error al procesar el pago. Intenta de nuevo.';
       isLoading = false;
     }
@@ -78,35 +85,38 @@
     <div class="modal-content">
       <div class="payment-section">
         {#if loadingDetails}
-          <h2>Cargando...</h2>
-          <p class="description">Obteniendo detalles del producto</p>
+          <div class="radio-button">
+            <div class="radio-dot"></div>
+          </div>
+          <div class="content">
+            <h2>Cargando...</h2>
+          </div>
         {:else if productDetails}
-          <h2>{productDetails.product.name}</h2>
-          <p class="description">{productDetails.product.description}</p>
-          <p class="price">{productDetails.price.formatted}</p>
+          <div class="radio-button">
+            <div class="radio-dot"></div>
+          </div>
+          <div class="content">
+            <h2>Mapa Completo - Pago Único</h2>
+          </div>
+          <div class="price">{productDetails.price.formatted} {getCurrency(countryCode).code}</div>
+          <button 
+            class="payment-button"
+            on:click={handlePayment}
+            disabled={isLoading || loadingDetails || !productDetails}
+          >
+            {isLoading ? 'Procesando...' : 'Comprar'}
+          </button>
         {:else}
-          <h2>Acceso Premium</h2>
-          <p class="description">Obtén acceso a funciones avanzadas de geolocalización</p>
+          <div class="radio-button">
+            <div class="radio-dot"></div>
+          </div>
+          <div class="content">
+            <h2>Acceso Premium</h2>
+          </div>
         {/if}
         
         {#if errorMessage}
           <div class="error-message">{errorMessage}</div>
-        {/if}
-        
-        <button 
-          class="payment-button"
-          on:click={handlePayment}
-          disabled={isLoading || loadingDetails || !productDetails}
-        >
-          {isLoading ? 'Procesando...' : 'Comprar'}
-        </button>
-        
-        {#if productDetails}
-          <div class="debug-info">
-            <p><small><strong>Debug Info:</strong></p>
-            <p><small>País: {countryCode}</small></p>
-            <p><small>Price ID: {productDetails.priceId}</small></p>
-          </div>
         {/if}
         
         <p class="stripe-text">Pago Seguro con Stripe ®</p>
@@ -122,8 +132,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
+    background: linear-gradient(135deg, rgba(30, 60, 114, 0.7) 0%, rgba(42, 82, 152, 0.7) 100%);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -132,74 +142,89 @@
 
   .modal-content {
     background: white;
-    border-radius: 24px;
-    padding: 2rem 4rem;
+    border-radius: 16px;
+    padding: 1rem 2rem;
     max-width: 600px;
-    width: 80%;
-    min-height: 300px;
+    width: 90%;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 120px;
     box-shadow: 
       0 0 0 1px rgba(255, 255, 255, 0.1),
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      0 0 60px rgba(74, 144, 226, 0.4),
-      0 0 120px rgba(74, 144, 226, 0.2);
-    border: 2px solid rgba(144, 202, 249, 0.3);
+      0 20px 60px rgba(0, 0, 0, 0.3),
+      0 0 80px rgba(255, 255, 255, 0.6),
+      0 0 120px rgba(255, 255, 255, 0.4),
+      0 0 160px rgba(255, 255, 255, 0.2);
   }
 
   .payment-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
     width: 100%;
-    text-align: center;
   }
 
-  .payment-section h2 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.8rem;
+  .radio-button {
+    background: #4A90E2;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .radio-dot {
+    background: white;
+    border-radius: 50%;
+    width: 6px;
+    height: 6px;
+  }
+
+  .content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .content h2 {
+    margin: 0;
+    font-size: 1.1rem;
     color: #333;
-    font-weight: 700;
-  }
-
-  .description {
-    color: #666;
-    font-size: 0.95rem;
-    margin: 0 0 1rem 0;
+    font-weight: 600;
+    white-space: nowrap;
   }
 
   .price {
-    font-size: 2.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
-    color: #667eea;
-    margin: 0 0 1.5rem 0;
-    text-align: center;
-  }
-
-  .error-message {
-    background: #fee;
-    color: #c33;
-    padding: 0.75rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    border-left: 4px solid #c33;
+    color: #2c5f8d;
+    margin: 0;
+    flex-shrink: 0;
   }
 
   .payment-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2c5f8d;
     color: white;
     border: none;
-    padding: 0.75rem 2rem;
+    padding: 0.6rem 1.5rem;
     font-size: 1rem;
     font-weight: 600;
     border-radius: 8px;
     cursor: pointer;
-    width: 100%;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .payment-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+    background: #234a6e;
+    transform: translateY(-1px);
   }
 
   .payment-button:disabled {
@@ -207,25 +232,26 @@
     cursor: not-allowed;
   }
 
-  .debug-info {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 0.5rem;
-    margin: 1rem 0;
-    font-size: 0.75rem;
-    text-align: left;
-  }
-
-  .debug-info p {
-    margin: 0.25rem 0;
-    color: #666;
+  .error-message {
+    background: #fee;
+    color: #c33;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    border-left: 4px solid #c33;
+    width: 100%;
   }
 
   .stripe-text {
-    margin: 1rem 0 0 0;
-    font-size: 0.85rem;
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+    margin: 0;
+    font-size: 0.75rem;
     color: #888;
     text-align: center;
+    width: 100%;
   }
 </style>

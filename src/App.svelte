@@ -78,10 +78,10 @@
     // Ocultar spinner
     showSpinner = false;
 
-    // Iniciar timer para modal (6 segundos)
+    // Iniciar timer para modal (30 segundos)
     setTimeout(() => {
       showModal = true;
-    }, 6000);
+    }, 30000);
   }
 
   function closeModal() {
