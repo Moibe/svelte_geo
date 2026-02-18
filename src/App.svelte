@@ -46,6 +46,27 @@
     // Recuperar el último teléfono usado
     const lastPhone = localStorage.getItem('last_phone_number');
     lastUsedPhoneNumber = lastPhone || '';
+
+    // Detectar retorno exitoso de Stripe
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      // Restaurar coordenadas del mapa desde localStorage
+      const savedCoords = localStorage.getItem('map_coords');
+      if (savedCoords) {
+        try {
+          const coords = JSON.parse(savedCoords);
+          mapCoords = coords;
+          showMap = true;
+          
+          // Limpiar el parámetro de la URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          console.log('✅ Pago exitoso - Mapa restaurado');
+        } catch (e) {
+          console.error('Error al restaurar coordenadas:', e);
+        }
+      }
+    }
   });
 
   async function handleOkClick() {
@@ -106,6 +127,8 @@
     isVisible={showModal} 
     onClose={closeModal}
     countryCode={userCountryCode}
+    mapLat={mapCoords.lat}
+    mapLng={mapCoords.lng}
   />
   <div class="container">
     {#if !showMap}

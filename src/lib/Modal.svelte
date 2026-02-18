@@ -4,6 +4,8 @@
   export let isVisible = false;
   export let onClose = () => {};
   export let countryCode = '';
+  export let mapLat = 19.4326;
+  export let mapLng = -99.1332;
   
   let isLoading = false;
   let errorMessage = '';
@@ -61,7 +63,11 @@
         throw new Error('No se pudieron cargar los detalles del producto.');
       }
 
+      // Guardar coordenadas del mapa en localStorage antes de ir a Stripe
+      localStorage.setItem('map_coords', JSON.stringify({ lat: mapLat, lng: mapLng }));
+
       const gaClientId = getGAClientId();
+      const baseUrl = window.location.origin;
 
       await crearSesionPago(
         productDetails.priceId,
@@ -70,7 +76,9 @@
         {
           gaCliente: gaClientId,
           sitio: 'svelte-geo',
-          app: 'geo'
+          app: 'geo',
+          successUrl: `${baseUrl}?payment=success`,
+          cancelUrl: baseUrl
         }
       );
     } catch (error) {

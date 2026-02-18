@@ -57,6 +57,8 @@ export function getGAClientId() {
  * @param {string} options.gaCliente - Google Analytics Client ID
  * @param {string} options.app - Subdominio (default: "app")
  * @param {string} options.sitio - Nombre del sitio de origen
+ * @param {string} options.successUrl - URL de retorno tras pago exitoso
+ * @param {string} options.cancelUrl - URL de retorno tras cancelación
  * @returns {Promise<Object>} Respuesta del backend
  */
 export async function crearSesionPago(
@@ -108,6 +110,12 @@ export async function crearSesionPago(
     }
     if (options.sitio) {
       params.append('sitio', options.sitio);
+    }
+    if (options.successUrl) {
+      params.append('success_url', options.successUrl);
+    }
+    if (options.cancelUrl) {
+      params.append('cancel_url', options.cancelUrl);
     }
 
     console.log('═══════════════════════════════════════');
