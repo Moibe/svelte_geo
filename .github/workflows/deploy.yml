@@ -26,30 +26,30 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 10.104.0.2 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 165.22.53.200 >> ~/.ssh/known_hosts
 
       - name: Download sensitive files from server
         run: |
-          scp root@10.104.0.2:/root/code/svelte_geo/.env .env
+          scp root@165.22.53.200:/root/code/svelte_geo/.env .env
 
       - name: Build project
         run: npm run build
 
       - name: Pull latest code on server
         run: |
-          ssh root@10.104.0.2 "cd /root/code/svelte_geo && git pull origin main"
+          ssh root@165.22.53.200 "cd /root/code/svelte_geo && git pull origin main"
 
       - name: Deploy to server
         run: |
-          rsync -av --delete dist/ root@10.104.0.2:/root/code/svelte_geo/dist/
+          rsync -av --delete dist/ root@165.22.53.200:/root/code/svelte_geo/dist/
 
       - name: Verify deployment
         run: |
-          ssh root@10.104.0.2 "ls -la /root/code/svelte_geo/dist/ | head -10"
+          ssh root@165.22.53.200 "ls -la /root/code/svelte_geo/dist/ | head -10"
 
       - name: Deployment summary
         if: success()
-        run: echo "🚀 Deploy a 10.104.0.2 completado exitosamente"
+        run: echo "🚀 Deploy a 165.22.53.200 completado exitosamente"
 
       - name: Notify deployment failure
         if: failure()
