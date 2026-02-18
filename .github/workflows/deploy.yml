@@ -1,0 +1,56 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H your-domain.com >> ~/.ssh/known_hosts
+
+      - name: Download sensitive files from server
+        run: |
+          scp root@your-domain.com:/root/code/svelte_geo/.env .env
+
+      - name: Build project
+        run: npm run build
+
+      - name: Pull latest code on server
+        run: |
+          ssh root@your-domain.com "cd /root/code/svelte_geo && git pull origin main"
+
+      - name: Deploy to server
+        run: |
+          rsync -av --delete dist/ root@your-domain.com:/root/code/svelte_geo/dist/
+
+      - name: Verify deployment
+        run: |
+          ssh root@your-domain.com "ls -la /root/code/svelte_geo/dist/ | head -10"
+
+      - name: Deployment summary
+        if: success()
+        run: echo "🚀 Deploy a your-domain.com completado exitosamente"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: echo "❌ El deploy falló. Revisa los logs arriba."

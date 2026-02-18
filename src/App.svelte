@@ -1,0 +1,203 @@
+<script>
+  import { onMount } from 'svelte';
+  import CountrySelect from './lib/CountrySelect.svelte';
+  import PhoneInput from './lib/PhoneInput.svelte';
+  import Map from './lib/Map.svelte';
+  import LoadingSpinner from './lib/LoadingSpinner.svelte';
+  import Modal from './lib/Modal.svelte';
+  import { detectCountry, getLocationCache, saveLocationCache } from './lib/geoLocation.js';
+
+  let phoneNumber = '';
+  let selectedCountry = '+1'; // País del teléfono que busca
+  let userCountryCode = '+52'; // País real del usuario (para precio Stripe)
+  let showMap = false;
+  let showSpinner = false;
+  let showModal = false;
+  let mapCoords = { lat: 19.4326, lng: -99.1332 }; // Default CDMX
+  let lastUsedPhoneNumber = '';
+  
+
+
+  // Función para generar posición random
+  function randomizeLocation(lat, lng) {
+    const kmToDegrees = 5 / 111;
+    const latOffset = (Math.random() - 0.5) * 2 * kmToDegrees;
+    const lngOffset = (Math.random() - 0.5) * 2 * kmToDegrees;
+    
+    return {
+      lat: lat + latOffset,
+      lng: lng + lngOffset,
+    };
+  }
+
+  onMount(async () => {
+    // Detectar país y ubicación REAL del usuario
+    const locationData = await detectCountry();
+    userCountryCode = locationData.countryCode; // Para precio Stripe
+    selectedCountry = locationData.countryCode; // Para dropdown (inicia con país del usuario)
+    mapCoords = { lat: locationData.lat, lng: locationData.lng };
+    
+    console.log('🌍 Ubicación del usuario detectada:');
+    console.log('   📞 Código telefónico:', userCountryCode);
+    if (locationData.isoCode) {
+      console.log('   🏴 Código ISO país:', locationData.isoCode);
+    }
+    
+    // Recuperar el último teléfono usado
+    const lastPhone = localStorage.getItem('last_phone_number');
+    lastUsedPhoneNumber = lastPhone || '';
+  });
+
+  async function handleOkClick() {
+    // Verificar si existe ubicación en cache para este número
+    let cached = getLocationCache(phoneNumber, selectedCountry);
+    
+    if (cached) {
+      // Si existe en cache, usar esa ubicación (mismo número)
+      mapCoords = cached;
+    } else {
+      // Si no existe en cache, es un número nuevo: generar nueva posición random
+      const newLocation = randomizeLocation(mapCoords.lat, mapCoords.lng);
+      mapCoords = newLocation;
+      saveLocationCache(phoneNumber, selectedCountry, newLocation.lat, newLocation.lng);
+    }
+    
+    // Guardar el número actual como último usado
+    localStorage.setItem('last_phone_number', phoneNumber);
+    lastUsedPhoneNumber = phoneNumber;
+
+    // Mostrar spinner
+    showSpinner = true;
+    
+    // Esperar a que el spinner termine de mostrar todos los mensajes
+    await new Promise(resolve => setTimeout(resolve, 6000));
+    
+    // Mostrar mapa
+    showMap = true;
+    
+    // Ocultar spinner
+    showSpinner = false;
+
+    // Iniciar timer para modal (6 segundos)
+    setTimeout(() => {
+      showModal = true;
+    }, 6000);
+  }
+
+  function closeModal() {
+    showModal = false;
+    showMap = false;
+    phoneNumber = '';
+  }
+
+  function handlePhoneKeydown(event) {
+    // Ejecutar handleOkClick si se presiona Enter y hay al menos 7 números
+    if (event.key === 'Enter' && phoneNumber.length >= 7) {
+      handleOkClick();
+    }
+  }
+  
+
+</script>
+
+<main>
+  <LoadingSpinner isVisible={showSpinner} />
+  <Modal 
+    isVisible={showModal} 
+    onClose={closeModal}
+    countryCode={userCountryCode}
+  />
+  <div class="container">
+    {#if !showMap}
+      <div class="input-wrapper">
+        <CountrySelect bind:value={selectedCountry} />
+        <PhoneInput 
+          bind:value={phoneNumber}
+          onSubmit={() => phoneNumber.length >= 7 && handleOkClick()}
+        />
+        <button 
+          class="ok-button" 
+          on:click={handleOkClick}
+          disabled={phoneNumber.length < 7}
+        >
+          Ok
+        </button>
+      </div>
+    {/if}
+    {#if showMap}
+      <div class="map-wrapper">
+        <Map lat={mapCoords.lat} lng={mapCoords.lng} />
+      </div>
+    {/if}
+  </div>
+</main>
+
+<style>
+  :global(html),
+  :global(body) {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  }
+  
+  main {
+    background: linear-gradient(135deg, #0052cc 0%, #004999 50%, #003366 100%);
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 800px;
+    padding: 2rem;
+  }
+
+  .input-wrapper {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .ok-button {
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: 2px solid #10b981;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .ok-button:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
+
+  .ok-button:disabled {
+    background: #ccc;
+    border-color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .map-wrapper {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 600px) {
+    .input-wrapper {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+</style>
