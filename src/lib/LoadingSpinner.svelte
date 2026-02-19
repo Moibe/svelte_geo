@@ -1,12 +1,24 @@
 <script>
+  import { _ } from 'svelte-i18n';
+  import { getCarriers } from './carriers.js';
+  
   export let isVisible = true;
+  export let countryCode = '+52'; // Código de país por defecto
 
-  const messages = [
-    'Generando ubicación GPS',
-    'Triangulando antenas',
-    'Reactivando en los diferentes carriers',
-    'Posición definida',
-  ];
+  let messages = [];
+
+  // Generar mensajes dinámicamente cuando cambia el país o el idioma
+  $: {
+    const carriers = getCarriers(countryCode);
+    messages = [
+      $_('spinner.generatingGPS'),
+      $_('spinner.triangulating'),
+      $_('spinner.reactivating'),
+      ...carriers,  // Despliega cada carrier como un mensaje individual
+      $_('spinner.positionDefined'),
+      $_('spinner.deviceFound'),
+    ];
+  }
 
   let currentMessageIndex = 0;
 
@@ -16,9 +28,13 @@
 
   $: {
     if (isVisible && currentMessageIndex < messages.length) {
+      // El último mensaje dura el doble de tiempo
+      const isLastMessage = currentMessageIndex === messages.length - 1;
+      const delay = isLastMessage ? 3000 : 1500;
+      
       setTimeout(() => {
         currentMessageIndex += 1;
-      }, 1500);
+      }, delay);
     }
   }
 </script>

@@ -1,4 +1,6 @@
 <script>
+  import { _ } from 'svelte-i18n';
+  
   export let value = '';
   export let onSubmit = () => {};
 
@@ -24,7 +26,7 @@
   on:input={handleInput}
   on:keydown={handleKeydown}
   bind:value
-  placeholder="Ingresa tu número"
+  placeholder={$_('search.phonePlaceholder')}
 />
 
 <style>

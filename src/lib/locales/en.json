@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "GPS Locator"
+  },
+  "search": {
+    "phoneNumber": "Phone Number",
+    "okButton": "Search",
+    "phonePlaceholder": "Enter the number"
+  },
+  "spinner": {
+    "generatingGPS": "Generating GPS location ...",
+    "triangulating": "Triangulating antennas ...",
+    "reactivating": "Reactivating across different carriers ...",
+    "positionDefined": "Position defined ...",
+    "deviceFound": "Device Found"
+  },
+  "map": {
+    "deviceFound": "Device Found",
+    "device": "Device Found",
+    "antenna": "Nearby Cell Tower",
+    "currentPosition": "Current position"
+  },
+  "modal": {
+    "loading": "Loading...",
+    "title": "Full Map - One-Time Payment",
+    "premium": "Premium Access",
+    "buyButton": "Buy",
+    "processing": "Processing...",
+    "securePayment": "Secure Payment with Stripe ®"
+  }
+}

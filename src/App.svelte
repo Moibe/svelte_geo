@@ -1,11 +1,14 @@
 <script>
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import CountrySelect from './lib/CountrySelect.svelte';
   import PhoneInput from './lib/PhoneInput.svelte';
   import Map from './lib/Map.svelte';
   import LoadingSpinner from './lib/LoadingSpinner.svelte';
   import Modal from './lib/Modal.svelte';
+  import LanguageSelector from './lib/LanguageSelector.svelte';
   import { detectCountry, getLocationCache, saveLocationCache } from './lib/geoLocation.js';
+  import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
 
   let phoneNumber = '';
   let selectedCountry = '+1'; // País del teléfono que busca
@@ -37,11 +40,15 @@
     selectedCountry = locationData.countryCode; // Para dropdown (inicia con país del usuario)
     mapCoords = { lat: locationData.lat, lng: locationData.lng };
     
+    // Establecer idioma automáticamente según el país
+    setLanguageFromCountry(locationData.countryCode);
+    
     console.log('🌍 Ubicación del usuario detectada:');
     console.log('   📞 Código telefónico:', userCountryCode);
     if (locationData.isoCode) {
       console.log('   🏴 Código ISO país:', locationData.isoCode);
     }
+    console.log('   🌐 Idioma establecido:', getLanguageFromCountry(locationData.countryCode) === 'es' ? 'Español' : 'English');
     
     // Recuperar el último teléfono usado
     const lastPhone = localStorage.getItem('last_phone_number');
@@ -90,8 +97,8 @@
     // Mostrar spinner
     showSpinner = true;
     
-    // Esperar a que el spinner termine de mostrar todos los mensajes
-    await new Promise(resolve => setTimeout(resolve, 6000));
+    // Esperar a que el spinner termine de mostrar todos los mensajes (último mensaje dura doble)
+    await new Promise(resolve => setTimeout(resolve, 16500));
     
     // Mostrar mapa
     showMap = true;
@@ -122,7 +129,7 @@
 </script>
 
 <main>
-  <LoadingSpinner isVisible={showSpinner} />
+  <LoadingSpinner isVisible={showSpinner} countryCode={selectedCountry} />
   <Modal 
     isVisible={showModal} 
     onClose={closeModal}
@@ -130,6 +137,9 @@
     mapLat={mapCoords.lat}
     mapLng={mapCoords.lng}
   />
+  <div class="language-selector-wrapper">
+    <LanguageSelector />
+  </div>
   <div class="container">
     {#if !showMap}
       <div class="input-wrapper">
@@ -143,7 +153,7 @@
           on:click={handleOkClick}
           disabled={phoneNumber.length < 7}
         >
-          Ok
+          {$_('search.okButton')}
         </button>
       </div>
     {/if}
@@ -171,6 +181,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+  }
+
+  .language-selector-wrapper {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1500;
   }
   
   .container {

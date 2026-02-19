@@ -1,4 +1,5 @@
 <script>
+  import { _ } from 'svelte-i18n';
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
   
   export let isVisible = false;
@@ -97,14 +98,14 @@
             <div class="radio-dot"></div>
           </div>
           <div class="content">
-            <h2>Cargando...</h2>
+            <h2>{$_('modal.loading')}</h2>
           </div>
         {:else if productDetails}
           <div class="radio-button">
             <div class="radio-dot"></div>
           </div>
           <div class="content">
-            <h2>Mapa Completo - Pago Único</h2>
+            <h2>{$_('modal.title')}</h2>
           </div>
           <div class="price">{productDetails.price.formatted} {getCurrency(countryCode).code}</div>
           <button 
@@ -112,14 +113,14 @@
             on:click={handlePayment}
             disabled={isLoading || loadingDetails || !productDetails}
           >
-            {isLoading ? 'Procesando...' : 'Comprar'}
+            {isLoading ? $_('modal.processing') : $_('modal.buyButton')}
           </button>
         {:else}
           <div class="radio-button">
             <div class="radio-dot"></div>
           </div>
           <div class="content">
-            <h2>Acceso Premium</h2>
+            <h2>{$_('modal.premium')}</h2>
           </div>
         {/if}
         
@@ -127,7 +128,7 @@
           <div class="error-message">{errorMessage}</div>
         {/if}
         
-        <p class="stripe-text">Pago Seguro con Stripe ®</p>
+        <p class="stripe-text">{$_('modal.securePayment')}</p>
       </div>
     </div>
   </div>

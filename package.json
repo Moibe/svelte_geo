@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "dotenv": "^16.3.1",
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "svelte-i18n": "^4.0.1"
   }
 }

@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import L from 'leaflet';
 
   export let lat = 19.4326; // Default CDMX lat
@@ -166,7 +167,7 @@
 <div class="map-container" bind:this={mapContainer}>
   <!-- Leyenda dentro del mapa -->
   <div class="map-legend">
-    <div class="legend-title">Dispositivo Encontrado</div>
+    <div class="legend-title">{$_('map.deviceFound')}</div>
     <div class="legend-item">
       <div class="legend-icon">
         <!-- Ícono del dispositivo móvil -->
@@ -209,7 +210,7 @@
           "></div>
         </div>
       </div>
-      <span class="legend-text">Dispositivo Encontrado</span>
+      <span class="legend-text">{$_('map.device')}</span>
     </div>
     
     <div class="legend-item">
@@ -261,13 +262,13 @@
           "></div>
         </div>
       </div>
-      <span class="legend-text">Antena Celular Cercana</span>
+      <span class="legend-text">{$_('map.antenna')}</span>
     </div>
   </div>
 </div>
 
 <div class="location-text">
-  Posición actual <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+  {$_('map.currentPosition')} <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
 </div>
 
 <style>

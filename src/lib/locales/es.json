@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "Localizador GPS"
+  },
+  "search": {
+    "phoneNumber": "Número de teléfono",
+    "okButton": "Buscar",
+    "phonePlaceholder": "Ingresa el número"
+  },
+  "spinner": {
+    "generatingGPS": "Generando ubicación GPS ...",
+    "triangulating": "Triangulando antenas ...",
+    "reactivating": "Reactivando en los diferentes operadores telefónicos ...",
+    "positionDefined": "Posición definida ...",
+    "deviceFound": "Dispositivo Encontrado"
+  },
+  "map": {
+    "deviceFound": "Dispositivo Encontrado",
+    "device": "Dispositivo Encontrado",
+    "antenna": "Antena Celular Cercana",
+    "currentPosition": "Posición actual"
+  },
+  "modal": {
+    "loading": "Cargando...",
+    "title": "Mapa Completo - Pago Único",
+    "premium": "Acceso Premium",
+    "buyButton": "Comprar",
+    "processing": "Procesando...",
+    "securePayment": "Pago Seguro con Stripe ®"
+  }
+}
