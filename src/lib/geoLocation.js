@@ -190,19 +190,42 @@ export function clearLocationCache(phoneNumber, countryCode) {
   localStorage.removeItem(key);
 }
 
-// Detectar país por GPS primero, luego por IP
+// Detectar país y ubicación por IP (para detección inicial sin pedir GPS)
+// Esta función se usa en onMount solo para establecer país/idioma/ubicación inicial
 export async function detectCountry() {
   try {
-    // Intentar usar Geolocation API
+    // Usar IP geolocation (rápido, sin permisos, sin warnings)
+    return await detectByIP();
+  } catch (error) {
+    console.log('IP geolocation falló, usando valores por defecto (México)');
+    // Randomizar CDMX por defecto
+    const randomized = randomizeLocation(19.4326, -99.1332);
+    return {
+      countryCode: '+52',
+      isoCode: 'MX',
+      lat: randomized.lat,
+      lng: randomized.lng,
+    };
+  }
+}
+
+/**
+ * Detectar ubicación con prioridad GPS para búsquedas
+ * Se usa cuando el usuario interactúa (click OK/búsqueda) - sin warnings
+ * SIEMPRE intenta GPS primero, cae a IP solo si falla
+ */
+export async function detectLocationForSearch() {
+  try {
+    // SIEMPRE intentar GPS primero (prioridad para búsquedas)
+    console.log('📍 Solicitando ubicación GPS...');
     return await detectByGPS();
   } catch (error) {
-    console.log('GPS no disponible, intentando IP geolocation...');
+    console.log('📍 GPS no disponible o rechazado, usando IP como fallback...');
     try {
-      // Caer a IP geolocation
+      // Fallback a IP si GPS falla o usuario rechaza
       return await detectByIP();
     } catch (err) {
       console.log('IP geolocation falló, usando valores por defecto (México)');
-      // Randomizar CDMX por defecto
       const randomized = randomizeLocation(19.4326, -99.1332);
       return {
         countryCode: '+52',
@@ -285,4 +308,38 @@ async function detectByIP() {
   
   console.error('❌ País no encontrado en mapeo:', isoCode);
   throw new Error('País no detectado por IP');
+}
+
+/**
+ * Búsqueda por navegador (GPS)
+ * Para ser llamada directamente desde Safe Mode en respuesta a click del usuario
+ * SIEMPRE pide GPS (no verifica permisos previamente)
+ */
+export async function searchByBrowser() {
+  console.log('🔍 Iniciando búsqueda por navegador...');
+  
+  try {
+    const result = await detectByGPS();
+    console.log('✅ Búsqueda por navegador exitosa:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Error en búsqueda por navegador:', error);
+    throw error;
+  }
+}
+
+/**
+ * Búsqueda por IP
+ * Para ser llamada directamente desde Safe Mode
+ */
+export async function searchByIP() {
+  console.log('🔍 Iniciando búsqueda por IP...');
+  try {
+    const result = await detectByIP();
+    console.log('✅ Búsqueda por IP exitosa:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Error en búsqueda por IP:', error);
+    throw error;
+  }
 }

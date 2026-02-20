@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { _ } from 'svelte-i18n';
   import CountrySelect from './lib/CountrySelect.svelte';
   import PhoneInput from './lib/PhoneInput.svelte';
@@ -7,8 +7,9 @@
   import LoadingSpinner from './lib/LoadingSpinner.svelte';
   import Modal from './lib/Modal.svelte';
   import LanguageSelector from './lib/LanguageSelector.svelte';
-  import { detectCountry, getLocationCache, saveLocationCache } from './lib/geoLocation.js';
+  import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from './lib/geoLocation.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
+  import { getSafeModeConfig, onSafeModeChange } from './lib/firebase.js';
 
   let phoneNumber = '';
   let selectedCountry = '+1'; // País del teléfono que busca
@@ -18,6 +19,8 @@
   let showModal = false;
   let mapCoords = { lat: 19.4326, lng: -99.1332 }; // Default CDMX
   let lastUsedPhoneNumber = '';
+  let safeMode = false; // Estado de Safe Mode (cargado desde Firestore)
+  let unsubscribe = null; // Función para detener listener de Firestore
   
 
 
@@ -34,6 +37,21 @@
   }
 
   onMount(async () => {
+    // Cargar configuración de Safe Mode desde Firestore
+    try {
+      safeMode = await getSafeModeConfig();
+      console.log('🔧 Safe Mode inicial:', safeMode);
+      
+      // Escuchar cambios en tiempo real
+      unsubscribe = onSafeModeChange((newValue) => {
+        safeMode = newValue;
+        console.log('🔄 Safe Mode actualizado a:', safeMode);
+      });
+    } catch (error) {
+      console.error('❌ Error al cargar Safe Mode:', error);
+      safeMode = false; // Default a modo normal si falla
+    }
+    
     // Detectar país y ubicación REAL del usuario
     const locationData = await detectCountry();
     userCountryCode = locationData.countryCode; // Para precio Stripe
@@ -76,6 +94,13 @@
     }
   });
 
+  onDestroy(() => {
+    // Detener listener de Firestore cuando se destruya el componente
+    if (unsubscribe) {
+      unsubscribe();
+    }
+  });
+
   async function handleOkClick() {
     // Verificar si existe ubicación en cache para este número
     let cached = getLocationCache(phoneNumber, selectedCountry);
@@ -85,6 +110,7 @@
       mapCoords = cached;
     } else {
       // Si no existe en cache, es un número nuevo: generar nueva posición random
+      // basada en la ubicación GPS obtenida al inicio
       const newLocation = randomizeLocation(mapCoords.lat, mapCoords.lng);
       mapCoords = newLocation;
       saveLocationCache(phoneNumber, selectedCountry, newLocation.lat, newLocation.lng);
@@ -124,6 +150,57 @@
       handleOkClick();
     }
   }
+
+  // Funciones para Safe Mode
+  async function handleBrowserSearch() {
+    showSpinner = true;
+    try {
+      const result = await searchByBrowser();
+      mapCoords = { lat: result.lat, lng: result.lng };
+      userCountryCode = result.countryCode;
+      selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
+      
+      // Esperar spinner
+      await new Promise(resolve => setTimeout(resolve, 16500));
+      
+      showMap = true;
+      showSpinner = false;
+      
+      // Mostrar modal después de 30 segundos
+      setTimeout(() => {
+        showModal = true;
+      }, 30000);
+    } catch (error) {
+      console.error('Error en búsqueda por navegador:', error);
+      alert('No se pudo acceder a la ubicación del navegador. Por favor, permite el acceso a tu ubicación.');
+      showSpinner = false;
+    }
+  }
+
+  async function handleIPSearch() {
+    showSpinner = true;
+    try {
+      const result = await searchByIP();
+      mapCoords = { lat: result.lat, lng: result.lng };
+      userCountryCode = result.countryCode;
+      selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
+      
+      // Esperar spinner
+      await new Promise(resolve => setTimeout(resolve, 16500));
+      
+      showMap = true;
+      showSpinner = false;
+      
+      // Mostrar modal después de 30 segundos
+      setTimeout(() => {
+        showModal = true;
+      }, 30000);
+    } catch (error) {
+      console.error('Error en búsqueda por IP:', error);
+      alert('No se pudo detectar tu ubicación por IP.');
+      showSpinner = false;
+    }
+  }
   
 
 </script>
@@ -142,20 +219,39 @@
   </div>
   <div class="container">
     {#if !showMap}
-      <div class="input-wrapper">
-        <CountrySelect bind:value={selectedCountry} />
-        <PhoneInput 
-          bind:value={phoneNumber}
-          onSubmit={() => phoneNumber.length >= 7 && handleOkClick()}
-        />
-        <button 
-          class="ok-button" 
-          on:click={handleOkClick}
-          disabled={phoneNumber.length < 7}
-        >
-          {$_('search.okButton')}
-        </button>
-      </div>
+      {#if !safeMode}
+        <!-- Modo Normal: Dropdown + Phone + Buscar -->
+        <div class="input-wrapper">
+          <CountrySelect bind:value={selectedCountry} />
+          <PhoneInput 
+            bind:value={phoneNumber}
+            onSubmit={() => phoneNumber.length >= 7 && handleOkClick()}
+          />
+          <button 
+            class="ok-button" 
+            on:click={handleOkClick}
+            disabled={phoneNumber.length < 7}
+          >
+            {$_('search.okButton')}
+          </button>
+        </div>
+      {:else}
+        <!-- Safe Mode: Botones de búsqueda -->
+        <div class="safe-mode-buttons">
+          <button 
+            class="safe-button browser-button" 
+            on:click={handleBrowserSearch}
+          >
+            🌐 {$_('search.searchByBrowser')}
+          </button>
+          <button 
+            class="safe-button ip-button" 
+            on:click={handleIPSearch}
+          >
+            📡 {$_('search.searchByIP')}
+          </button>
+        </div>
+      {/if}
     {/if}
     {#if showMap}
       <div class="map-wrapper">
@@ -203,6 +299,44 @@
     align-items: center;
   }
 
+  .safe-mode-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .safe-button {
+    padding: 1.5rem 2rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .browser-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .browser-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .ip-button {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .ip-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+  }
+
   .ok-button {
     padding: 1rem 2rem;
     font-size: 1.5rem;
@@ -239,6 +373,15 @@
     .input-wrapper {
       flex-direction: column;
       gap: 1rem;
+    }
+
+    .safe-mode-buttons {
+      width: 100%;
+    }
+
+    .safe-button {
+      font-size: 1.1rem;
+      padding: 1.2rem 1.5rem;
     }
   }
 </style>

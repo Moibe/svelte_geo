@@ -5,7 +5,11 @@
   "search": {
     "phoneNumber": "Phone Number",
     "okButton": "Search",
-    "phonePlaceholder": "Enter the number"
+    "phonePlaceholder": "Enter the number",
+    "safeMode": "Safe Mode",
+    "normalMode": "Normal Mode",
+    "searchByBrowser": "Search by Browser",
+    "searchByIP": "Search by IP"
   },
   "spinner": {
     "generatingGPS": "Generating GPS location ...",
