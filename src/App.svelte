@@ -9,7 +9,8 @@
   import LanguageSelector from './lib/LanguageSelector.svelte';
   import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from './lib/geoLocation.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange } from './lib/firebase.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange } from './lib/firebase.js';
+  import { verboseStore, log, warn, error } from './lib/logger.js';
 
   let phoneNumber = '';
   let selectedCountry = '+1'; // País del teléfono que busca
@@ -19,8 +20,19 @@
   let showModal = false;
   let mapCoords = { lat: 19.4326, lng: -99.1332 }; // Default CDMX
   let lastUsedPhoneNumber = '';
-  let safeMode = false; // Estado de Safe Mode (cargado desde Firestore)
+  let safeMode = null; // Estado de Safe Mode (cargado desde Firestore, null = cargando)
   let unsubscribe = null; // Función para detener listener de Firestore
+  let unsubscribeStripeMode = null; // Función para detener listener de Stripe Mode
+  let unsubscribeModalWait = null; // Función para detener listener de Modal Wait
+  let unsubscribeSell = null; // Función para detener listener de Sell Config
+  let unsubscribeVerbose = null; // Función para detener listener de Verbose Config
+  let isProductionMode = false; // Estado de Stripe Mode (false = sandbox, true = production)
+  let waitSafe = 30; // Tiempo de espera en Safe Mode (segundos)
+  let waitProd = 30; // Tiempo de espera en modo producción (segundos)
+  let sellEnabled = true; // Estado de venta (true = mostrar modal, false = nunca mostrar)
+  
+  // Tiempo de espera actual basado en el modo (Safe Mode usa waitSafe, Normal Mode usa waitProd)
+  $: currentWaitTime = (safeMode ? waitSafe : waitProd) * 1000;
   
 
 
@@ -37,19 +49,85 @@
   }
 
   onMount(async () => {
+    // Cargar configuración de Verbose PRIMERO (antes que otros logs)
+    try {
+      const verboseEnabled = await getVerboseConfig();
+      verboseStore.set(verboseEnabled);
+      log('🔊 Verbose logging:', verboseEnabled ? 'ACTIVADO' : 'DESACTIVADO');
+      
+      // Escuchar cambios en tiempo real
+      unsubscribeVerbose = onVerboseChange((newValue) => {
+        verboseStore.set(newValue);
+        log('🔄 Verbose logging actualizado:', newValue ? 'ACTIVADO' : 'DESACTIVADO');
+      });
+    } catch (err) {
+      error('❌ Error al cargar configuración verbose:', err);
+      verboseStore.set(true); // Default a true si falla
+    }
+    
     // Cargar configuración de Safe Mode desde Firestore
     try {
       safeMode = await getSafeModeConfig();
-      console.log('🔧 Safe Mode inicial:', safeMode);
+      log('🔧 Safe Mode inicial:', safeMode);
       
       // Escuchar cambios en tiempo real
       unsubscribe = onSafeModeChange((newValue) => {
         safeMode = newValue;
-        console.log('🔄 Safe Mode actualizado a:', safeMode);
+        log('🔄 Safe Mode actualizado a:', safeMode);
       });
-    } catch (error) {
-      console.error('❌ Error al cargar Safe Mode:', error);
+    } catch (err) {
+      error('❌ Error al cargar Safe Mode:', err);
       safeMode = false; // Default a modo normal si falla
+    }
+    
+    // Cargar configuración de Stripe Mode desde Firestore
+    try {
+      isProductionMode = await getStripeModeConfig();
+      log('💳 Stripe Mode inicial:', isProductionMode ? 'PRODUCTION' : 'SANDBOX');
+      
+      // Escuchar cambios en tiempo real
+      unsubscribeStripeMode = onStripeModeChange((newValue) => {
+        isProductionMode = newValue;
+        log('💳 Stripe Mode actualizado a:', newValue ? 'PRODUCTION' : 'SANDBOX');
+      });
+    } catch (err) {
+      error('❌ Error al cargar Stripe Mode:', err);
+      isProductionMode = false; // Default a sandbox si falla
+    }
+    
+    // Cargar configuración de tiempos de espera desde Firestore
+    try {
+      const waitConfig = await getModalWaitConfig();
+      waitSafe = waitConfig.waitSafe;
+      waitProd = waitConfig.waitProd;
+      log('⏱️ Tiempos de espera iniciales - Safe Mode:', waitSafe, 's (' + (waitSafe * 1000) + 'ms), Normal Mode:', waitProd, 's (' + (waitProd * 1000) + 'ms)');
+      
+      // Escuchar cambios en tiempo real
+      unsubscribeModalWait = onModalWaitChange((newConfig) => {
+        waitSafe = newConfig.waitSafe;
+        waitProd = newConfig.waitProd;
+        log('⏱️ Tiempos actualizados - Safe Mode:', waitSafe, 's (' + (waitSafe * 1000) + 'ms), Normal Mode:', waitProd, 's (' + (waitProd * 1000) + 'ms)');
+        log('⏱️ Tiempo actual en uso:', currentWaitTime, 'ms');
+      });
+    } catch (err) {
+      error('❌ Error al cargar tiempos de espera:', err);
+      waitSafe = 30;
+      waitProd = 30;
+    }
+    
+    // Cargar configuración de venta desde Firestore
+    try {
+      sellEnabled = await getSellConfig();
+      log('💰 Configuración de venta inicial:', sellEnabled ? 'ACTIVADA' : 'DESACTIVADA');
+      
+      // Escuchar cambios en tiempo real
+      unsubscribeSell = onSellChange((newValue) => {
+        sellEnabled = newValue;
+        log('🔄 Configuración de venta actualizada:', sellEnabled ? 'ACTIVADA' : 'DESACTIVADA');
+      });
+    } catch (err) {
+      error('❌ Error al cargar configuración de venta:', err);
+      sellEnabled = true; // Default a mostrar modal
     }
     
     // Detectar país y ubicación REAL del usuario
@@ -61,12 +139,12 @@
     // Establecer idioma automáticamente según el país
     setLanguageFromCountry(locationData.countryCode);
     
-    console.log('🌍 Ubicación del usuario detectada:');
-    console.log('   📞 Código telefónico:', userCountryCode);
+    log('🌍 Ubicación del usuario detectada:');
+    log('   📞 Código telefónico:', userCountryCode);
     if (locationData.isoCode) {
-      console.log('   🏴 Código ISO país:', locationData.isoCode);
+      log('   🏴 Código ISO país:', locationData.isoCode);
     }
-    console.log('   🌐 Idioma establecido:', getLanguageFromCountry(locationData.countryCode) === 'es' ? 'Español' : 'English');
+    log('   🌐 Idioma establecido:', getLanguageFromCountry(locationData.countryCode) === 'es' ? 'Español' : 'English');
     
     // Recuperar el último teléfono usado
     const lastPhone = localStorage.getItem('last_phone_number');
@@ -86,18 +164,30 @@
           // Limpiar el parámetro de la URL
           window.history.replaceState({}, document.title, window.location.pathname);
           
-          console.log('✅ Pago exitoso - Mapa restaurado');
+          log('✅ Pago exitoso - Mapa restaurado');
         } catch (e) {
-          console.error('Error al restaurar coordenadas:', e);
+          error('Error al restaurar coordenadas:', e);
         }
       }
     }
   });
 
   onDestroy(() => {
-    // Detener listener de Firestore cuando se destruya el componente
+    // Detener listeners de Firestore cuando se destruya el componente
     if (unsubscribe) {
       unsubscribe();
+    }
+    if (unsubscribeStripeMode) {
+      unsubscribeStripeMode();
+    }
+    if (unsubscribeModalWait) {
+      unsubscribeModalWait();
+    }
+    if (unsubscribeSell) {
+      unsubscribeSell();
+    }
+    if (unsubscribeVerbose) {
+      unsubscribeVerbose();
     }
   });
 
@@ -126,16 +216,22 @@
     // Esperar a que el spinner termine de mostrar todos los mensajes (último mensaje dura doble)
     await new Promise(resolve => setTimeout(resolve, 16500));
     
-    // Mostrar mapa
+    // Mostrar mapa primero
     showMap = true;
     
-    // Ocultar spinner
+    // Ocultar spinner después (para que no haya tiempo en blanco)
+    await new Promise(resolve => setTimeout(resolve, 100));
     showSpinner = false;
 
-    // Iniciar timer para modal (30 segundos)
+    // Iniciar timer para modal (tiempo dinámico según modo)
+    log('⏱️ Modal se mostrará en', currentWaitTime, 'ms');
     setTimeout(() => {
-      showModal = true;
-    }, 30000);
+      if (sellEnabled) {
+        showModal = true;
+      } else {
+        log('🚫 Venta desactivada - Modal no se mostrará');
+      }
+    }, currentWaitTime);
   }
 
   function closeModal() {
@@ -163,15 +259,24 @@
       // Esperar spinner
       await new Promise(resolve => setTimeout(resolve, 16500));
       
+      // Mostrar mapa primero
       showMap = true;
+      
+      // Ocultar spinner después (para que no haya tiempo en blanco)
+      await new Promise(resolve => setTimeout(resolve, 100));
       showSpinner = false;
       
-      // Mostrar modal después de 30 segundos
+      // Mostrar modal después del tiempo configurado
+      log('⏱️ Modal se mostrará en', currentWaitTime, 'ms');
       setTimeout(() => {
-        showModal = true;
-      }, 30000);
-    } catch (error) {
-      console.error('Error en búsqueda por navegador:', error);
+        if (sellEnabled) {
+          showModal = true;
+        } else {
+          log('🚫 Venta desactivada - Modal no se mostrará');
+        }
+      }, currentWaitTime);
+    } catch (err) {
+      error('Error en búsqueda por navegador:', err);
       alert('No se pudo acceder a la ubicación del navegador. Por favor, permite el acceso a tu ubicación.');
       showSpinner = false;
     }
@@ -188,15 +293,24 @@
       // Esperar spinner
       await new Promise(resolve => setTimeout(resolve, 16500));
       
+      // Mostrar mapa primero
       showMap = true;
+      
+      // Ocultar spinner después (para que no haya tiempo en blanco)
+      await new Promise(resolve => setTimeout(resolve, 100));
       showSpinner = false;
       
-      // Mostrar modal después de 30 segundos
+      // Mostrar modal después del tiempo configurado
+      log('⏱️ Modal se mostrará en', currentWaitTime, 'ms');
       setTimeout(() => {
-        showModal = true;
-      }, 30000);
-    } catch (error) {
-      console.error('Error en búsqueda por IP:', error);
+        if (sellEnabled) {
+          showModal = true;
+        } else {
+          log('🚫 Venta desactivada - Modal no se mostrará');
+        }
+      }, currentWaitTime);
+    } catch (err) {
+      error('Error en búsqueda por IP:', err);
       alert('No se pudo detectar tu ubicación por IP.');
       showSpinner = false;
     }
@@ -206,7 +320,7 @@
 </script>
 
 <main>
-  <LoadingSpinner isVisible={showSpinner} countryCode={selectedCountry} />
+  <LoadingSpinner isVisible={showSpinner} countryCode={selectedCountry} isSafeMode={safeMode === true} />
   <Modal 
     isVisible={showModal} 
     onClose={closeModal}
@@ -218,8 +332,14 @@
     <LanguageSelector />
   </div>
   <div class="container">
-    {#if !showMap}
-      {#if !safeMode}
+    {#if !showMap && !showSpinner}
+      {#if safeMode === null}
+        <!-- Cargando configuración desde Firebase -->
+        <div class="loading-config">
+          <div class="spinner-small"></div>
+          <p>Cargando...</p>
+        </div>
+      {:else if safeMode === false}
         <!-- Modo Normal: Dropdown + Phone + Buscar -->
         <div class="input-wrapper">
           <CountrySelect bind:value={selectedCountry} />
@@ -382,6 +502,35 @@
     .safe-button {
       font-size: 1.1rem;
       padding: 1.2rem 1.5rem;
+    }
+  }
+
+  .loading-config {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: #666;
+  }
+
+  .loading-config p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .spinner-small {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(99, 102, 241, 0.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
     }
   }
 </style>

@@ -1,6 +1,9 @@
 <script>
+  import { onMount, onDestroy } from 'svelte';
   import { _ } from 'svelte-i18n';
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
+  import { getStripeModeConfig, onStripeModeChange } from './firebase.js';
+  import { log, warn, error } from './logger.js';
   
   export let isVisible = false;
   export let onClose = () => {};
@@ -12,6 +15,8 @@
   let errorMessage = '';
   let productDetails = null;
   let loadingDetails = false;
+  let isProductionMode = false; // true = producción, false = sandbox
+  let unsubscribeStripeMode = null;
 
   // Mapeo de códigos de país a monedas
   const currencyMap = {
@@ -33,6 +38,34 @@
     '+44': { code: 'GBP', symbol: '£' }
   };
 
+  onMount(async () => {
+    // Cargar modo de Stripe desde Firestore
+    try {
+      isProductionMode = await getStripeModeConfig();
+      
+      // Escuchar cambios en tiempo real
+      unsubscribeStripeMode = onStripeModeChange((isProd) => {
+        isProductionMode = isProd;
+        log('💳 Stripe Mode actualizado:', isProd ? 'PRODUCTION' : 'SANDBOX');
+        // Recargar detalles del producto si el modal está visible
+        if (isVisible && countryCode) {
+          productDetails = null;
+          loadProductDetails();
+        }
+      });
+    } catch (err) {
+      error('❌ Error al cargar Stripe Mode:', err);
+      isProductionMode = false; // Default a sandbox por seguridad
+    }
+  });
+
+  onDestroy(() => {
+    // Detener listener de Stripe Mode
+    if (unsubscribeStripeMode) {
+      unsubscribeStripeMode();
+    }
+  });
+
   function getCurrency(code) {
     return currencyMap[code] || { code: 'USD', symbol: '$' };
   }
@@ -47,9 +80,25 @@
     loadingDetails = true;
     
     try {
-      productDetails = await getProductDetailsByCountry(countryCode);
-    } catch (error) {
-      console.error('Error loading product details:', error);
+      // En modo SANDBOX, usar un precio fijo para todos los países
+      if (!isProductionMode) {
+        // Usar configuración de sandbox desde variables de entorno
+        const testPriceId = import.meta.env.VITE_STRIPE_TEST_PRICE_ID || 'price_test_default';
+        productDetails = {
+          priceId: testPriceId,
+          price: {
+            amount: 100, // $1.00 en sandbox
+            formatted: '1.00'
+          }
+        };
+        log('🧪 SANDBOX MODE - Usando precio de prueba:', testPriceId);
+      } else {
+        // En modo PRODUCCIÓN, usar precios por país
+        productDetails = await getProductDetailsByCountry(countryCode, isProductionMode);
+        log('🏭 PRODUCTION MODE - Precio por país cargado');
+      }
+    } catch (err) {
+      error('Error loading product details:', err);
     } finally {
       loadingDetails = false;
     }
@@ -79,7 +128,8 @@
           sitio: 'svelte-geo',
           app: 'geo',
           successUrl: `${baseUrl}?payment=success`,
-          cancelUrl: baseUrl
+          cancelUrl: baseUrl,
+          isProductionMode: isProductionMode // Pasar modo de Stripe
         }
       );
     } catch (error) {

@@ -16,7 +16,18 @@
     "triangulating": "Triangulating antennas ...",
     "reactivating": "Reactivating across different carriers ...",
     "positionDefined": "Position defined ...",
-    "deviceFound": "Device Found"
+    "deviceFound": "Device Found",
+    "safe": {
+      "searchingGPS": "Searching via GPS",
+      "searchingBrowser": "Searching via Browser",
+      "searchingIPv4": "Searching by IP v4",
+      "searchingIPv6": "Searching by IP v6",
+      "positionDefined": "Position Defined",
+      "deviceLocated": "Device Located",
+      "buildingMap": "Building Map",
+      "placingMarkers": "Placing Markers",
+      "loading": "Loading"
+    }
   },
   "map": {
     "deviceFound": "Device Found",

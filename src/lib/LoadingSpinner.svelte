@@ -4,20 +4,37 @@
   
   export let isVisible = true;
   export let countryCode = '+52'; // Código de país por defecto
+  export let isSafeMode = false; // Nuevo: indica si está en Safe Mode
 
   let messages = [];
 
-  // Generar mensajes dinámicamente cuando cambia el país o el idioma
+  // Generar mensajes dinámicamente cuando cambia el país, idioma o modo
   $: {
-    const carriers = getCarriers(countryCode);
-    messages = [
-      $_('spinner.generatingGPS'),
-      $_('spinner.triangulating'),
-      $_('spinner.reactivating'),
-      ...carriers,  // Despliega cada carrier como un mensaje individual
-      $_('spinner.positionDefined'),
-      $_('spinner.deviceFound'),
-    ];
+    if (isSafeMode) {
+      // Mensajes para Safe Mode (sin carriers)
+      messages = [
+        $_('spinner.safe.searchingGPS'),
+        $_('spinner.safe.searchingBrowser'),
+        $_('spinner.safe.searchingIPv4'),
+        $_('spinner.safe.searchingIPv6'),
+        $_('spinner.safe.positionDefined'),
+        $_('spinner.safe.deviceLocated'),
+        $_('spinner.safe.buildingMap'),
+        $_('spinner.safe.placingMarkers'),
+        $_('spinner.safe.loading'),
+      ];
+    } else {
+      // Mensajes para Modo Normal (con carriers)
+      const carriers = getCarriers(countryCode);
+      messages = [
+        $_('spinner.generatingGPS'),
+        $_('spinner.triangulating'),
+        $_('spinner.reactivating'),
+        ...carriers,  // Despliega cada carrier como un mensaje individual
+        $_('spinner.positionDefined'),
+        $_('spinner.deviceFound'),
+      ];
+    }
   }
 
   let currentMessageIndex = 0;

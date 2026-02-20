@@ -1,9 +1,8 @@
+import { log, warn, error } from './logger.js';
+
 // Configuración de Stripe - Backend en Hugging Face Spaces
 const STRIPE_BACKEND_DEV = 'https://moibe-stripe-kraken-dev.hf.space/creaLinkSesion/';
 const STRIPE_BACKEND_PROD = 'https://moibe-stripe-kraken-prod.hf.space/creaLinkSesion/';
-
-// Usa DEV o PROD según tu preferencia
-const STRIPE_BACKEND = STRIPE_BACKEND_PROD;
 
 /**
  * Obtiene el Google Analytics Client ID
@@ -19,7 +18,7 @@ export function getGAClientId() {
         return clientId;
       });
     } catch (e) {
-      console.warn('Error obteniendo GA Client ID de gtag:', e);
+      warn('Error obteniendo GA Client ID de gtag:', e);
     }
   }
 
@@ -38,7 +37,7 @@ export function getGAClientId() {
       });
       if (clientId) return clientId;
     } catch (e) {
-      console.warn('Error obteniendo GA Client ID de _gaq:', e);
+      warn('Error obteniendo GA Client ID de _gaq:', e);
     }
   }
 
@@ -59,6 +58,7 @@ export function getGAClientId() {
  * @param {string} options.sitio - Nombre del sitio de origen
  * @param {string} options.successUrl - URL de retorno tras pago exitoso
  * @param {string} options.cancelUrl - URL de retorno tras cancelación
+ * @param {boolean} options.isProductionMode - true = producción, false = sandbox (default: false)
  * @returns {Promise<Object>} Respuesta del backend
  */
 export async function crearSesionPago(
@@ -68,6 +68,15 @@ export async function crearSesionPago(
   options = {}
 ) {
   try {
+    // Determinar modo de Stripe (producción vs sandbox)
+    const isProductionMode = options.isProductionMode || false;
+    
+    // Seleccionar backend según el modo
+    const STRIPE_BACKEND = isProductionMode ? STRIPE_BACKEND_PROD : STRIPE_BACKEND_DEV;
+    
+    log('💳 Stripe Mode:', isProductionMode ? '🏭 PRODUCTION' : '🧪 SANDBOX');
+    log('🌐 Backend URL:', STRIPE_BACKEND);
+    
     // Validar parámetros requeridos
     if (!priceId) {
       throw new Error('El price_id es requerido');
@@ -100,9 +109,9 @@ export async function crearSesionPago(
     const gaClientId = options.gaCliente || getGAClientId();
     if (gaClientId) {
       params.append('gaCliente', gaClientId);
-      console.log('📊 GA Client ID:', gaClientId);
+      log('📊 GA Client ID:', gaClientId);
     } else {
-      console.warn('⚠️ No se pudo detectar GA Client ID');
+      warn('⚠️ No se pudo detectar GA Client ID');
     }
     
     if (options.app) {
@@ -118,14 +127,14 @@ export async function crearSesionPago(
       params.append('cancel_url', options.cancelUrl);
     }
 
-    console.log('═══════════════════════════════════════');
-    console.log('📤 STRIPE KRAKEN - PAYLOAD ENVIADO');
-    console.log('═══════════════════════════════════════');
-    console.log('🌐 URL:', STRIPE_BACKEND);
-    console.log('📦 Parámetros:');
-    console.log(JSON.stringify(Object.fromEntries(params), null, 2));
-    console.log('🔗 Query string:', params.toString());
-    console.log('═══════════════════════════════════════');
+    log('═══════════════════════════════════════');
+    log('📤 STRIPE KRAKEN - PAYLOAD ENVIADO');
+    log('═══════════════════════════════════════');
+    log('🌐 URL:', STRIPE_BACKEND);
+    log('📦 Parámetros:');
+    log(JSON.stringify(Object.fromEntries(params), null, 2));
+    log('🔗 Query string:', params.toString());
+    log('═══════════════════════════════════════');
 
     const response = await fetch(STRIPE_BACKEND, {
       method: 'POST',
@@ -142,7 +151,7 @@ export async function crearSesionPago(
 
     // El backend puede devolver la URL como texto plano o como JSON
     const responseText = await response.text();
-    console.log('✅ Respuesta del backend:', responseText);
+    log('✅ Respuesta del backend:', responseText);
 
     let checkoutUrl = null;
 
@@ -169,27 +178,40 @@ export async function crearSesionPago(
 
     // Redirigir si tenemos URL válida
     if (checkoutUrl) {
-      console.log('🔗 Redirigiendo a Stripe Checkout:', checkoutUrl);
+      log('🔗 Redirigiendo a Stripe Checkout:', checkoutUrl);
       window.location.href = checkoutUrl;
       return { url: checkoutUrl };
     } else {
-      console.error('⚠️ Respuesta no reconocida:', responseText);
+      error('⚠️ Respuesta no reconocida:', responseText);
       throw new Error('No se recibió URL de checkout válida en la respuesta del backend');
     }
-  } catch (error) {
-    console.error('❌ Error al crear sesión de pago:', error);
-    throw error;
+  } catch (err) {
+    error('❌ Error al crear sesión de pago:', err);
+    throw err;
   }
 }
 
 /**
  * Obtiene los detalles de un producto por país (desde archivo local)
  * @param {string} countryCode - Código de país (ej: +34)
+ * @param {boolean} isProductionMode - true = producción, false = sandbox
  * @returns {Promise<Object>} Detalles del precio y producto
  */
-export async function getProductDetailsByCountry(countryCode) {
+export async function getProductDetailsByCountry(countryCode, isProductionMode = true) {
   try {
-    console.log(`🔍 Buscando detalles para país: ${countryCode}`);
+    log(`🔍 Buscando detalles para país: ${countryCode} (Modo: ${isProductionMode ? 'PRODUCTION' : 'SANDBOX'})`);
+    
+    // En modo sandbox, esta función no debería llamarse, pero devolver algo por si acaso
+    if (!isProductionMode) {
+      warn('⚠️ getProductDetailsByCountry llamado en modo SANDBOX - esto no debería pasar');
+      return {
+        priceId: import.meta.env.STRIPE_TEST_PRICE_ID || 'price_test_default',
+        price: {
+          amount: 100,
+          formatted: '1.00'
+        }
+      };
+    }
     
     const response = await fetch('/product-details.json');
     if (!response.ok) {
@@ -197,30 +219,30 @@ export async function getProductDetailsByCountry(countryCode) {
     }
     
     const productData = await response.json();
-    console.log('📄 Archivo de detalles cargado, claves disponibles:', Object.keys(productData));
+    log('📄 Archivo de detalles cargado, claves disponibles:', Object.keys(productData));
     
     // Intentar encontrar el país específico, si no existe, usar México (+52) como default
     const details = productData[countryCode] || productData['+52'];
     
     if (!details) {
-      console.error(`❌ No se encontraron detalles para ${countryCode} ni para México (+52)`);
+      error(`❌ No se encontraron detalles para ${countryCode} ni para México (+52)`);
       throw new Error(`No hay detalles disponibles para el país ${countryCode}`);
     }
     
     if (productData[countryCode]) {
-      console.log(`✅ Detalles específicos encontrados para ${countryCode}:`, details);
+      log(`✅ Detalles específicos encontrados para ${countryCode}:`, details);
     } else {
-      console.log(`⚠️ No hay precio específico para ${countryCode}, usando México (+52) como default:`, details);
+      log(`⚠️ No hay precio específico para ${countryCode}, usando México (+52) como default:`, details);
     }
     
     if (!details.priceId) {
-      console.error('❌ Price ID missing en detalles:', details);
+      error('❌ Price ID missing en detalles:', details);
       throw new Error('Price ID no disponible en los detalles del producto');
     }
     
     return details;
-  } catch (error) {
-    console.error('❌ Error al obtener detalles del producto:', error);
+  } catch (err) {
+    error('❌ Error al obtener detalles del producto:', err);
     
     // Fallback final con México
     const fallback = {
@@ -239,7 +261,7 @@ export async function getProductDetailsByCountry(countryCode) {
       }
     };
     
-    console.log('🚨 Usando fallback de México:', fallback);
+    log('🚨 Usando fallback de México:', fallback);
     return fallback;
   }
 }

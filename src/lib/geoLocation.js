@@ -1,3 +1,5 @@
+import { log, warn, error } from './logger.js';
+
 // Mapeo de código de país ISO (2 letras) a código telefónico
 export const countryCodeMap = {
   // Norteamérica
@@ -196,8 +198,8 @@ export async function detectCountry() {
   try {
     // Usar IP geolocation (rápido, sin permisos, sin warnings)
     return await detectByIP();
-  } catch (error) {
-    console.log('IP geolocation falló, usando valores por defecto (México)');
+  } catch (err) {
+    log('IP geolocation falló, usando valores por defecto (México)');
     // Randomizar CDMX por defecto
     const randomized = randomizeLocation(19.4326, -99.1332);
     return {
@@ -217,15 +219,15 @@ export async function detectCountry() {
 export async function detectLocationForSearch() {
   try {
     // SIEMPRE intentar GPS primero (prioridad para búsquedas)
-    console.log('📍 Solicitando ubicación GPS...');
+    log('📍 Solicitando ubicación GPS...');
     return await detectByGPS();
-  } catch (error) {
-    console.log('📍 GPS no disponible o rechazado, usando IP como fallback...');
+  } catch (err) {
+    log('📍 GPS no disponible o rechazado, usando IP como fallback...');
     try {
       // Fallback a IP si GPS falla o usuario rechaza
       return await detectByIP();
-    } catch (err) {
-      console.log('IP geolocation falló, usando valores por defecto (México)');
+    } catch (err2) {
+      log('IP geolocation falló, usando valores por defecto (México)');
       const randomized = randomizeLocation(19.4326, -99.1332);
       return {
         countryCode: '+52',
@@ -281,13 +283,13 @@ function detectByGPS() {
 
 // Detectar por IP
 async function detectByIP() {
-  console.log('🌐 Intentando detectar por IP...');
+  log('🌐 Intentando detectar por IP...');
   const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
   const data = await response.json();
-  console.log('📡 Respuesta de geojs.io:', data);
+  log('📡 Respuesta de geojs.io:', data);
   
   const isoCode = data.country_code?.toUpperCase();
-  console.log('🇨🇴 Código ISO detectado:', isoCode);
+  log('🇨🇴 Código ISO detectado:', isoCode);
   
   if (isoCode && countryCodeMap[isoCode]) {
     const lat = parseFloat(data.latitude) || 19.4326;
@@ -296,7 +298,7 @@ async function detectByIP() {
     // Randomizar ubicación
     const randomized = randomizeLocation(lat, lng);
     
-    console.log('✅ País mapeado:', isoCode, '->', countryCodeMap[isoCode]);
+    log('✅ País mapeado:', isoCode, '->', countryCodeMap[isoCode]);
     
     return {
       countryCode: countryCodeMap[isoCode],
@@ -306,7 +308,7 @@ async function detectByIP() {
     };
   }
   
-  console.error('❌ País no encontrado en mapeo:', isoCode);
+  error('❌ País no encontrado en mapeo:', isoCode);
   throw new Error('País no detectado por IP');
 }
 
@@ -316,15 +318,15 @@ async function detectByIP() {
  * SIEMPRE pide GPS (no verifica permisos previamente)
  */
 export async function searchByBrowser() {
-  console.log('🔍 Iniciando búsqueda por navegador...');
+  log('🔍 Iniciando búsqueda por navegador...');
   
   try {
     const result = await detectByGPS();
-    console.log('✅ Búsqueda por navegador exitosa:', result);
+    log('✅ Búsqueda por navegador exitosa:', result);
     return result;
-  } catch (error) {
-    console.error('❌ Error en búsqueda por navegador:', error);
-    throw error;
+  } catch (err) {
+    error('❌ Error en búsqueda por navegador:', err);
+    throw err;
   }
 }
 
@@ -333,13 +335,13 @@ export async function searchByBrowser() {
  * Para ser llamada directamente desde Safe Mode
  */
 export async function searchByIP() {
-  console.log('🔍 Iniciando búsqueda por IP...');
+  log('🔍 Iniciando búsqueda por IP...');
   try {
     const result = await detectByIP();
-    console.log('✅ Búsqueda por IP exitosa:', result);
+    log('✅ Búsqueda por IP exitosa:', result);
     return result;
-  } catch (error) {
-    console.error('❌ Error en búsqueda por IP:', error);
-    throw error;
+  } catch (err) {
+    error('❌ Error en búsqueda por IP:', err);
+    throw err;
   }
 }
