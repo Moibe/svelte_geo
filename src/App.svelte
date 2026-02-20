@@ -358,8 +358,8 @@
       {:else}
         <!-- Safe Mode: Botones de búsqueda -->
         <div class="safe-mode-container">
-          <h1 class="safe-mode-title">geoservices.space</h1>
-          <p class="safe-mode-subtitle">Ubica tu dispositivo en un mapa usando IP y gps</p>
+          <h1 class="safe-mode-title">{$_('search.safeModeTitle')}</h1>
+          <p class="safe-mode-subtitle">{$_('search.safeModeSubtitle')}</p>
           
           <div class="safe-mode-buttons">
             <button 

@@ -9,7 +9,9 @@
     "safeMode": "Safe Mode",
     "normalMode": "Normal Mode",
     "searchByBrowser": "Search by Browser",
-    "searchByIP": "Search by IP"
+    "searchByIP": "Search by IP",
+    "safeModeTitle": "geoservices.space",
+    "safeModeSubtitle": "Locate your device on a map using IP and GPS"
   },
   "spinner": {
     "generatingGPS": "Generating GPS location ...",
