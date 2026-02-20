@@ -357,19 +357,24 @@
         </div>
       {:else}
         <!-- Safe Mode: Botones de búsqueda -->
-        <div class="safe-mode-buttons">
-          <button 
-            class="safe-button browser-button" 
-            on:click={handleBrowserSearch}
-          >
-            🌐 {$_('search.searchByBrowser')}
-          </button>
-          <button 
-            class="safe-button ip-button" 
-            on:click={handleIPSearch}
-          >
-            📡 {$_('search.searchByIP')}
-          </button>
+        <div class="safe-mode-container">
+          <h1 class="safe-mode-title">geoservices.space</h1>
+          <p class="safe-mode-subtitle">Ubica tu dispositivo en un mapa usando IP y gps</p>
+          
+          <div class="safe-mode-buttons">
+            <button 
+              class="safe-button browser-button" 
+              on:click={handleBrowserSearch}
+            >
+              🌐 {$_('search.searchByBrowser')}
+            </button>
+            <button 
+              class="safe-button ip-button" 
+              on:click={handleIPSearch}
+            >
+              📡 {$_('search.searchByIP')}
+            </button>
+          </div>
         </div>
       {/if}
     {/if}
@@ -382,6 +387,8 @@
 </main>
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
   :global(html),
   :global(body) {
     margin: 0;
@@ -419,12 +426,34 @@
     align-items: center;
   }
 
+  .safe-mode-container {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .safe-mode-title {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 1rem 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .safe-mode-subtitle {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 2.5rem 0;
+    line-height: 1.5;
+  }
+
   .safe-mode-buttons {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    max-width: 500px;
-    margin: 0 auto;
   }
 
   .safe-button {
@@ -493,6 +522,19 @@
     .input-wrapper {
       flex-direction: column;
       gap: 1rem;
+    }
+
+    .safe-mode-container {
+      width: 100%;
+      padding: 0 1rem;
+    }
+
+    .safe-mode-title {
+      font-size: 2rem;
+    }
+
+    .safe-mode-subtitle {
+      font-size: 1rem;
     }
 
     .safe-mode-buttons {
