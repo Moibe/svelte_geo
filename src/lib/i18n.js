@@ -55,25 +55,87 @@ export function getLanguageFromCountry(countryCode) {
 }
 
 /**
+ * Obtiene el idioma del navegador (navigator.language)
+ * @returns {string} Código de idioma ('es' o 'en')
+ */
+export function getLanguageFromBrowser() {
+  const browserLang = navigator.language || navigator.userLanguage;
+  // Obtener solo el código de idioma (ej: 'es-MX' -> 'es')
+  const langCode = browserLang.split('-')[0].toLowerCase();
+  return langCode === 'es' ? 'es' : 'en';
+}
+
+/**
+ * Obtiene el idioma de la URL path (/es o /en)
+ * @returns {string|null} Código de idioma ('es' o 'en') o null si no hay path específico
+ */
+export function getLanguageFromPath() {
+  const path = window.location.pathname;
+  if (path.startsWith('/es')) return 'es';
+  if (path.startsWith('/en')) return 'en';
+  return null;
+}
+
+/**
  * Establece el idioma basado en el país detectado
+ * Orden de prioridad:
+ * 1. localStorage (preferencia guardada del usuario)
+ * 2. Detección por país (countryCode)
+ * 3. Idioma del navegador
+ * 4. URL path (/es o /en)
+ * 5. Fallback a inglés
  * @param {string} countryCode - Código telefónico del país
  */
 export function setLanguageFromCountry(countryCode) {
+  // Prioridad 1: Si el usuario ya seleccionó un idioma manualmente, respetarlo
   const savedLanguage = localStorage.getItem('preferred_language');
-  
-  // Si el usuario ya seleccionó un idioma manualmente, respetarlo
   if (savedLanguage) {
     locale.set(savedLanguage);
     return;
   }
   
-  // Si no, usar el idioma del país
-  const language = getLanguageFromCountry(countryCode);
-  locale.set(language);
+  // Prioridad 2: Usar el idioma del país detectado
+  if (countryCode) {
+    const language = getLanguageFromCountry(countryCode);
+    locale.set(language);
+    return;
+  }
+  
+  // Prioridad 3: Idioma del navegador
+  const browserLanguage = getLanguageFromBrowser();
+  if (browserLanguage) {
+    locale.set(browserLanguage);
+    return;
+  }
+  
+  // Prioridad 4: URL path (campaña marketing)
+  const pathLanguage = getLanguageFromPath();
+  if (pathLanguage) {
+    locale.set(pathLanguage);
+    return;
+  }
+  
+  // Prioridad 5: Fallback a inglés
+  locale.set('en');
 }
 
-// Inicializar con inglés por defecto (se actualizará cuando se detecte el país)
+// Inicializar con el idioma apropiado según las prioridades
+function initializeLanguage() {
+  const savedLanguage = localStorage.getItem('preferred_language');
+  if (savedLanguage) {
+    return savedLanguage;
+  }
+  
+  const pathLanguage = getLanguageFromPath();
+  if (pathLanguage) {
+    return pathLanguage;
+  }
+  
+  const browserLanguage = getLanguageFromBrowser();
+  return browserLanguage || 'en';
+}
+
 init({
   fallbackLocale: 'en',
-  initialLocale: 'en',
+  initialLocale: initializeLanguage(),
 });
