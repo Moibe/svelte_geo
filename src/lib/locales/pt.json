@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "Localizador GPS"
+  },
+  "search": {
+    "phoneNumber": "Número de telefone",
+    "okButton": "Pesquisar",
+    "phonePlaceholder": "Digite o número",
+    "safeMode": "Modo Seguro",
+    "normalMode": "Modo Normal",
+    "searchByBrowser": "Pesquisa por Navegador",
+    "searchByIP": "Pesquisa por IP",
+    "safeModeTitle": "geoservices.space",
+    "safeModeSubtitle": "Localize seu dispositivo em um mapa usando IP e GPS"
+  },
+  "spinner": {
+    "generatingGPS": "Gerando localização GPS ...",
+    "triangulating": "Triangulando antenas ...",
+    "reactivating": "Reativando nas diferentes operadoras ...",
+    "positionDefined": "Posição definida ...",
+    "deviceFound": "Dispositivo Encontrado",
+    "safe": {
+      "searchingGPS": "Pesquisando via GPS",
+      "searchingBrowser": "Pesquisando via Navegador",
+      "searchingIPv4": "Pesquisando por IP v4",
+      "searchingIPv6": "Pesquisando por IP v6",
+      "positionDefined": "Posição Definida",
+      "deviceLocated": "Dispositivo Localizado",
+      "buildingMap": "Construindo Mapa",
+      "placingMarkers": "Colocando Marcadores",
+      "loading": "Carregando"
+    }
+  },
+  "map": {
+    "deviceFound": "Dispositivo Encontrado",
+    "device": "Dispositivo Encontrado",
+    "antenna": "Torre de Celular Próxima",
+    "currentPosition": "Posição atual"
+  },
+  "modal": {
+    "loading": "Carregando...",
+    "title": "Mapa Completo - Pagamento Único",
+    "premium": "Acesso Premium",
+    "buyButton": "Comprar",
+    "processing": "Processando...",
+    "securePayment": "Pagamento Seguro com Stripe ®"
+  }
+}

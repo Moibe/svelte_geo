@@ -3,10 +3,12 @@ import { addMessages, init, locale } from 'svelte-i18n';
 // Importar traducciones
 import en from './locales/en.json';
 import es from './locales/es.json';
+import pt from './locales/pt.json';
 
 // Registrar traducciones
 addMessages('en', en);
 addMessages('es', es);
+addMessages('pt', pt);
 
 // Mapeo de códigos de país (+código telefónico) a idiomas
 export const countryToLanguage = {
@@ -37,18 +39,20 @@ export const countryToLanguage = {
   '+27': 'en',  // Sudáfrica
   '+353': 'en', // Irlanda
   
+  // Portugués
+  '+351': 'pt', // Portugal
+  '+55': 'pt',  // Brasil
+  
   // Otros países europeos (pueden tener inglés como fallback)
   '+33': 'en',  // Francia
   '+49': 'en',  // Alemania
   '+39': 'en',  // Italia
-  '+351': 'en', // Portugal
-  '+55': 'en',  // Brasil (portugués, pero usamos inglés como no tenemos PT)
 };
 
 /**
  * Obtiene el idioma basado en el código de país
  * @param {string} countryCode - Código telefónico del país (ej: '+52')
- * @returns {string} Código de idioma ('es' o 'en')
+ * @returns {string} Código de idioma ('es', 'en' o 'pt')
  */
 export function getLanguageFromCountry(countryCode) {
   return countryToLanguage[countryCode] || 'en';
@@ -56,23 +60,26 @@ export function getLanguageFromCountry(countryCode) {
 
 /**
  * Obtiene el idioma del navegador (navigator.language)
- * @returns {string} Código de idioma ('es' o 'en')
+ * @returns {string} Código de idioma ('es', 'en' o 'pt')
  */
 export function getLanguageFromBrowser() {
   const browserLang = navigator.language || navigator.userLanguage;
   // Obtener solo el código de idioma (ej: 'es-MX' -> 'es')
   const langCode = browserLang.split('-')[0].toLowerCase();
-  return langCode === 'es' ? 'es' : 'en';
+  if (langCode === 'es') return 'es';
+  if (langCode === 'pt') return 'pt';
+  return 'en';
 }
 
 /**
- * Obtiene el idioma de la URL path (/es o /en)
- * @returns {string|null} Código de idioma ('es' o 'en') o null si no hay path específico
+ * Obtiene el idioma de la URL path (/es, /en o /pt)
+ * @returns {string|null} Código de idioma ('es', 'en' o 'pt') o null si no hay path específico
  */
 export function getLanguageFromPath() {
   const path = window.location.pathname;
   if (path.startsWith('/es')) return 'es';
   if (path.startsWith('/en')) return 'en';
+  if (path.startsWith('/pt')) return 'pt';
   return null;
 }
 
@@ -82,7 +89,7 @@ export function getLanguageFromPath() {
  * 1. localStorage (preferencia guardada del usuario)
  * 2. Detección por país (countryCode)
  * 3. Idioma del navegador
- * 4. URL path (/es o /en)
+ * 4. URL path (/es, /en o /pt)
  * 5. Fallback a inglés
  * @param {string} countryCode - Código telefónico del país
  */

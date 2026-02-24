@@ -3,7 +3,8 @@
 
   const languages = [
     { code: 'es', label: '🇪🇸 Español' },
-    { code: 'en', label: '🇺🇸 English' }
+    { code: 'en', label: '🇺🇸 English' },
+    { code: 'pt', label: '🇧🇷 Português' }
   ];
 
   function changeLanguage(lang) {
