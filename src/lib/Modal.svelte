@@ -141,6 +141,7 @@
           gaCliente: gaClientId,
           sitio: 'svelte-geo',
           app: 'geo',
+          paymentMethodConfiguration: 'pmc_1KaoJKIYi36CbmfWCbDAL0wy',
           successUrl: `${baseUrl}?payment=success`,
           cancelUrl: baseUrl,
           isProductionMode: isProductionMode // Pasar modo de Stripe
