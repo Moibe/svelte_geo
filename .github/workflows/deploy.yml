@@ -32,8 +32,24 @@ jobs:
         run: |
           scp root@165.22.53.200:/root/code/svelte_geo/.env .env
 
+      - name: Verify .env file
+        run: |
+          echo "Checking .env file contents:"
+          cat .env | grep VITE_STRIPE_TEST_PRICE_ID || echo "Variable not found!"
+
       - name: Build project
         run: npm run build
+
+      - name: Verify compiled JS contains correct price_id
+        run: |
+          echo "Checking if compiled JS has correct price_id:"
+          if grep -q "price_1SDXvuROVpWRmEfBsAGp37kf" dist/assets/*.js; then
+            echo "✅ Correct price_id found in compiled JS"
+          else
+            echo "❌ WARNING: price_1SDXvuROVpWRmEfBsAGp37kf NOT found!"
+            echo "Checking for fallback:"
+            grep -o "price_test_default" dist/assets/*.js | head -5 || echo "Fallback not found either"
+          fi
 
       - name: Pull latest code on server
         run: |
