@@ -257,9 +257,9 @@ export function onPMCChange(callback) {
 const isDev = import.meta.env.DEV;
 
 /**
- * Obtiene el price ID de prueba para producción desde Firestore
- * Campo 'price-test' en geo-stripe. Si está vacío/ausente, usa el precio real.
- * @returns {Promise<string|null>} price ID override o null
+ * Obtiene el price ID de prueba y si está activo desde Firestore
+ * Campos en geo-stripe: 'price-test' (string) y 'price-testing' (boolean)
+ * @returns {Promise<string|null>} price ID override o null si está desactivado
  */
 export async function getPriceTestConfig() {
   try {
@@ -267,7 +267,9 @@ export async function getPriceTestConfig() {
     const configSnap = await getDoc(configRef);
     if (configSnap.exists()) {
       const data = configSnap.data();
-      return data['price-test'] || null;
+      const isActive = data['price-testing'] || false;
+      const priceId = data['price-test'] || null;
+      return isActive && priceId ? priceId : null;
     }
     return null;
   } catch (err) {
@@ -286,7 +288,9 @@ export function onPriceTestChange(callback) {
   return onSnapshot(configRef, (snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.data();
-      callback(data['price-test'] || null);
+      const isActive = data['price-testing'] || false;
+      const priceId = data['price-test'] || null;
+      callback(isActive && priceId ? priceId : null);
     } else {
       callback(null);
     }
