@@ -28,20 +28,9 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 165.22.53.200 >> ~/.ssh/known_hosts
 
-      - name: Download sensitive files from server
-        run: |
-          scp root@165.22.53.200:/root/code/svelte_geo/.env .env
-
-      - name: Build project
-        run: npm run build
-
       - name: Pull latest code on server
         run: |
           ssh root@165.22.53.200 "cd /root/code/svelte_geo && git reset --hard && git pull origin main"
-
-      - name: Deploy to server
-        run: |
-          rsync -av --delete dist/ root@165.22.53.200:/root/code/svelte_geo/dist/
 
       - name: Verify deployment
         run: |
