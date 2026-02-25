@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { _ } from 'svelte-i18n';
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
-  import { getPMCConfig, onPMCChange, getStripeModeConfig, onStripeModeChange } from './firebase.js';
+  import { getPMCConfig, onPMCChange, getStripeModeConfig, onStripeModeChange, getPriceTestConfig, onPriceTestChange } from './firebase.js';
   import { log, warn, error } from './logger.js';
   
   export let isVisible = false;
@@ -12,6 +12,8 @@
 
   let paymentMethodConfig = null; // PMC desde Firestore (geo-stripe.PMC)
   let unsubscribePMC;
+  let priceTestOverride = null;   // Override de precio para pruebas en producción (geo-stripe.price-test)
+  let unsubscribePriceTest;
   export let mapLat = 19.4326;
   export let mapLng = -99.1332;
   
@@ -71,11 +73,28 @@
       error('❌ Error al cargar PMC:', err);
       paymentMethodConfig = null;
     }
+
+    try {
+      priceTestOverride = await getPriceTestConfig();
+      if (priceTestOverride) log('🧪 PROD TEST PRICE override activo:', priceTestOverride);
+      unsubscribePriceTest = onPriceTestChange((price) => {
+        priceTestOverride = price;
+        log('🧪 PROD TEST PRICE actualizado:', price || 'desactivado');
+        if (isVisible && countryCode) {
+          productDetails = null;
+          loadProductDetails();
+        }
+      });
+    } catch (err) {
+      error('❌ Error al cargar price-test:', err);
+      priceTestOverride = null;
+    }
   });
 
   onDestroy(() => {
     if (unsubscribeStripeMode) unsubscribeStripeMode();
     if (unsubscribePMC) unsubscribePMC();
+    if (unsubscribePriceTest) unsubscribePriceTest();
   });
 
   function getCurrency(code) {
@@ -107,7 +126,13 @@
       } else {
         // En modo PRODUCCIÓN, usar precios por país
         productDetails = await getProductDetailsByCountry(countryCode, isProductionMode);
-        log('🏭 PRODUCTION MODE - Precio por país cargado');
+        // Aplicar override de price-test si está activo
+        if (priceTestOverride) {
+          log('🧪 PROD TEST PRICE aplicado:', priceTestOverride, '(reemplaza:', productDetails.priceId + ')');
+          productDetails = { ...productDetails, priceId: priceTestOverride };
+        } else {
+          log('🏭 PRODUCTION MODE - Precio por país cargado');
+        }
       }
     } catch (err) {
       error('Error loading product details:', err);

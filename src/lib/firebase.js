@@ -257,6 +257,46 @@ export function onPMCChange(callback) {
 const isDev = import.meta.env.DEV;
 
 /**
+ * Obtiene el price ID de prueba para producción desde Firestore
+ * Campo 'price-test' en geo-stripe. Si está vacío/ausente, usa el precio real.
+ * @returns {Promise<string|null>} price ID override o null
+ */
+export async function getPriceTestConfig() {
+  try {
+    const configRef = doc(db, 'configuraciones', 'geo-stripe');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return data['price-test'] || null;
+    }
+    return null;
+  } catch (err) {
+    error('❌ Error al cargar price-test:', err);
+    return null;
+  }
+}
+
+/**
+ * Escucha cambios en tiempo real del price ID de prueba para producción
+ * @param {Function} callback
+ * @returns {Function} Función para detener la escucha
+ */
+export function onPriceTestChange(callback) {
+  const configRef = doc(db, 'configuraciones', 'geo-stripe');
+  return onSnapshot(configRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      callback(data['price-test'] || null);
+    } else {
+      callback(null);
+    }
+  }, (err) => {
+    error('❌ Error al escuchar cambios de price-test:', err);
+    callback(null);
+  });
+}
+
+/**
  * Obtiene la configuración de verbose (si se muestran logs en consola)
  * Lee 'verbose-dev' en desarrollo y 'verbose-prod' en producción
  * @returns {Promise<boolean>} true = mostrar logs, false = ocultar logs
