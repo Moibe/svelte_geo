@@ -219,7 +219,7 @@ export async function getProductDetailsByCountry(countryCode, isProductionMode =
     if (!isProductionMode) {
       warn('⚠️ getProductDetailsByCountry llamado en modo SANDBOX - esto no debería pasar');
       return {
-        priceId: import.meta.env.STRIPE_TEST_PRICE_ID || 'price_test_default',
+        priceId: import.meta.env.VITE_STRIPE_TEST_PRICE_ID || 'price_test_default',
         price: {
           amount: 100,
           formatted: '1.00'
