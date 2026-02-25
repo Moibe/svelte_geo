@@ -253,8 +253,12 @@ export function onPMCChange(callback) {
   });
 }
 
+// true si estamos en entorno local de desarrollo (npm run dev)
+const isDev = import.meta.env.DEV;
+
 /**
  * Obtiene la configuración de verbose (si se muestran logs en consola)
+ * Lee 'verbose-dev' en desarrollo y 'verbose-prod' en producción
  * @returns {Promise<boolean>} true = mostrar logs, false = ocultar logs
  */
 export async function getVerboseConfig() {
@@ -264,11 +268,12 @@ export async function getVerboseConfig() {
     
     if (configSnap.exists()) {
       const data = configSnap.data();
-      const verboseEnabled = data.verbose !== undefined ? data.verbose : true;
+      const field = isDev ? 'verbose-dev' : 'verbose-prod';
+      const verboseEnabled = data[field] !== undefined ? data[field] : true;
       return verboseEnabled;
     }
     
-    return true; // Default a mostrar logs en desarrollo
+    return true; // Default a mostrar logs si no existe el documento
   } catch (err) {
     error('❌ Error al cargar configuración verbose:', err);
     return true; // Default a mostrar logs si falla
@@ -277,16 +282,18 @@ export async function getVerboseConfig() {
 
 /**
  * Escucha cambios en tiempo real de la configuración verbose
+ * Lee 'verbose-dev' en desarrollo y 'verbose-prod' en producción
  * @param {Function} callback - Función a llamar cuando cambie (recibe boolean)
  * @returns {Function} Función para detener la escucha
  */
 export function onVerboseChange(callback) {
   const configRef = doc(db, 'configuraciones', 'geo-verbose');
-  
+  const field = isDev ? 'verbose-dev' : 'verbose-prod';
+
   return onSnapshot(configRef, (snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.data();
-      const verboseEnabled = data.verbose !== undefined ? data.verbose : true;
+      const verboseEnabled = data[field] !== undefined ? data[field] : true;
       callback(verboseEnabled);
     } else {
       callback(true); // Default a mostrar logs
