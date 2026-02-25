@@ -30,20 +30,18 @@ jobs:
 
       - name: Create .env file from GitHub Secrets
         run: |
-          cat > .env << EOF
-          VITE_STRIPE_PROD_API_KEY=${{ secrets.VITE_STRIPE_PROD_API_KEY }}
-          VITE_STRIPE_PROD_PRODUCT_ID=${{ secrets.VITE_STRIPE_PROD_PRODUCT_ID }}
-          VITE_STRIPE_TEST_API_KEY=${{ secrets.VITE_STRIPE_TEST_API_KEY }}
-          VITE_STRIPE_TEST_PRODUCT_ID=${{ secrets.VITE_STRIPE_TEST_PRODUCT_ID }}
-          VITE_STRIPE_TEST_PRICE_ID=${{ secrets.VITE_STRIPE_TEST_PRICE_ID }}
-          VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
-          EOF
+          echo "VITE_STRIPE_PROD_API_KEY=${{ secrets.VITE_STRIPE_PROD_API_KEY }}" >> .env
+          echo "VITE_STRIPE_PROD_PRODUCT_ID=${{ secrets.VITE_STRIPE_PROD_PRODUCT_ID }}" >> .env
+          echo "VITE_STRIPE_TEST_API_KEY=${{ secrets.VITE_STRIPE_TEST_API_KEY }}" >> .env
+          echo "VITE_STRIPE_TEST_PRODUCT_ID=${{ secrets.VITE_STRIPE_TEST_PRODUCT_ID }}" >> .env
+          echo "VITE_STRIPE_TEST_PRICE_ID=${{ secrets.VITE_STRIPE_TEST_PRICE_ID }}" >> .env
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
+          echo "VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}" >> .env
           echo "✅ .env creado desde GitHub Secrets"
           grep "VITE_STRIPE_TEST_PRICE_ID" .env
 
