@@ -37,7 +37,7 @@ jobs:
 
       - name: Pull latest code on server
         run: |
-          ssh root@165.22.53.200 "cd /root/code/svelte_geo && git pull origin main"
+          ssh root@165.22.53.200 "cd /root/code/svelte_geo && git reset --hard && git pull origin main"
 
       - name: Deploy to server
         run: |
