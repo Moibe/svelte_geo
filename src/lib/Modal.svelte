@@ -116,6 +116,18 @@
       // Guardar coordenadas del mapa en localStorage antes de ir a Stripe
       localStorage.setItem('map_coords', JSON.stringify({ lat: mapLat, lng: mapLng }));
 
+      // Guardar datos de la compra para el evento de conversión
+      const purchaseData = {
+        transaction_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        value: productDetails.price.amount / 100, // Convertir centavos a unidad
+        currency: getCurrency(countryCode).code,
+        price_id: productDetails.priceId,
+        country_code: countryCode,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('purchase_data', JSON.stringify(purchaseData));
+      log('💾 Datos de compra guardados para conversión:', purchaseData);
+
       const gaClientId = getGAClientId();
       const baseUrl = window.location.origin;
 

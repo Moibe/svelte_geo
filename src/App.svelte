@@ -161,6 +161,52 @@
           mapCoords = coords;
           showMap = true;
           
+          // Enviar evento de conversión a Google Analytics/Ads
+          const purchaseData = localStorage.getItem('purchase_data');
+          if (purchaseData) {
+            try {
+              const data = JSON.parse(purchaseData);
+              
+              // Enviar evento purchase a GA4 (Google Ads lo importará automáticamente)
+              if (typeof gtag !== 'undefined') {
+                gtag('event', 'purchase', {
+                  transaction_id: data.transaction_id,
+                  value: data.value,
+                  currency: data.currency,
+                  items: [{
+                    item_id: data.price_id,
+                    item_name: 'Mapa Completo GPS',
+                    item_category: 'Geolocalización',
+                    price: data.value,
+                    quantity: 1
+                  }]
+                });
+                log('✅ Evento purchase enviado a GA4/Google Ads:', data);
+              } else if (typeof window.dataLayer !== 'undefined') {
+                // Fallback: usar dataLayer directamente
+                window.dataLayer.push({
+                  event: 'purchase',
+                  transaction_id: data.transaction_id,
+                  value: data.value,
+                  currency: data.currency,
+                  items: [{
+                    item_id: data.price_id,
+                    item_name: 'Mapa Completo GPS',
+                    item_category: 'Geolocalización',
+                    price: data.value,
+                    quantity: 1
+                  }]
+                });
+                log('✅ Evento purchase enviado vía dataLayer:', data);
+              }
+              
+              // Limpiar datos de compra (ya enviados)
+              localStorage.removeItem('purchase_data');
+            } catch (e) {
+              error('Error al procesar datos de compra:', e);
+            }
+          }
+          
           // Limpiar el parámetro de la URL
           window.history.replaceState({}, document.title, window.location.pathname);
           
