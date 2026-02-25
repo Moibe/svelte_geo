@@ -120,6 +120,9 @@ export async function crearSesionPago(
     if (options.sitio) {
       params.append('sitio', options.sitio);
     }
+    if (options.paymentMethodConfiguration) {
+      params.append('payment_method_configuration', options.paymentMethodConfiguration);
+    }
     if (options.successUrl) {
       params.append('success_url', options.successUrl);
     }
