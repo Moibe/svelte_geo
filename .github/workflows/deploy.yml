@@ -42,10 +42,20 @@ jobs:
           echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
           echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
           echo "VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}" >> .env
-          echo "✅ .env creado desde GitHub Secrets"
-          grep "VITE_STRIPE_TEST_PRICE_ID" .env
+          echo "--- Verificando .env generado ---"
+          echo "Número de líneas: $(wc -l < .env)"
+          echo "Longitud VITE_STRIPE_TEST_PRICE_ID: $(grep 'VITE_STRIPE_TEST_PRICE_ID' .env | wc -c) chars"
+          RAW=$(grep 'VITE_STRIPE_TEST_PRICE_ID' .env | cut -d'=' -f2)
+          if [ -z "$RAW" ]; then
+            echo "❌ ERROR: VITE_STRIPE_TEST_PRICE_ID está VACÍO - el secret no está configurado"
+            exit 1
+          else
+            echo "✅ VITE_STRIPE_TEST_PRICE_ID tiene valor (${#RAW} chars)"
+          fi
 
       - name: Build project
+        env:
+          VITE_STRIPE_TEST_PRICE_ID: ${{ secrets.VITE_STRIPE_TEST_PRICE_ID }}
         run: npm run build
 
       - name: Verify compiled JS contains correct price_id
