@@ -152,27 +152,40 @@ export async function crearSesionPago(
     // El backend puede devolver la URL como texto plano o como JSON
     const responseText = await response.text();
     log('✅ Respuesta del backend:', responseText);
+    log('📏 Tipo de respuesta:', typeof responseText);
+    log('📏 Longitud de respuesta:', responseText.length);
 
     let checkoutUrl = null;
 
     // Intentar parsear como JSON primero
     try {
       const data = JSON.parse(responseText);
+      log('✅ Parseado como JSON:', data);
+      log('🔍 Tipo de data:', typeof data);
+      log('🔍 Claves disponibles:', Object.keys(data));
       
       // Si el JSON parseado es un string (URL directamente)
       if (typeof data === 'string' && data.startsWith('http')) {
         checkoutUrl = data;
+        log('✓ URL encontrada en string directo');
       } else if (data && data.checkout_url) {
         checkoutUrl = data.checkout_url;
+        log('✓ URL encontrada en data.checkout_url');
       } else if (data && data.url) {
         checkoutUrl = data.url;
+        log('✓ URL encontrada en data.url');
       } else if (data && data.session && data.session.url) {
         checkoutUrl = data.session.url;
+        log('✓ URL encontrada en data.session.url');
+      } else {
+        error('❌ JSON parseado pero sin URL reconocible. Data completa:', data);
       }
     } catch (e) {
+      log('⚠️ No es JSON válido, intentando como texto plano. Error:', e.message);
       // No es JSON, verificar si es una URL directamente
       if (responseText.startsWith('http')) {
         checkoutUrl = responseText.trim();
+        log('✓ URL encontrada como texto plano');
       }
     }
 
@@ -183,6 +196,7 @@ export async function crearSesionPago(
       return { url: checkoutUrl };
     } else {
       error('⚠️ Respuesta no reconocida:', responseText);
+      error('❌ NO SE ENCONTRÓ CHECKOUT URL. Primeros 500 caracteres:', responseText.substring(0, 500));
       throw new Error('No se recibió URL de checkout válida en la respuesta del backend');
     }
   } catch (err) {
