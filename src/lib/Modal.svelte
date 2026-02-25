@@ -8,6 +8,7 @@
   export let isVisible = false;
   export let onClose = () => {};
   export let countryCode = '';
+  export let countryISO = 'MX'; // Código ISO del país (de geolocalización real)
   export let mapLat = 19.4326;
   export let mapLng = -99.1332;
   
@@ -123,6 +124,7 @@
         currency: getCurrency(countryCode).code,
         price_id: productDetails.priceId,
         country_code: countryCode,
+        country_iso: countryISO, // Usar ISO real de geolocalización
         timestamp: Date.now()
       };
       localStorage.setItem('purchase_data', JSON.stringify(purchaseData));

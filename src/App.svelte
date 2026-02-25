@@ -15,6 +15,7 @@
   let phoneNumber = '';
   let selectedCountry = '+1'; // País del teléfono que busca
   let userCountryCode = '+52'; // País real del usuario (para precio Stripe)
+  let userCountryISO = 'MX'; // Código ISO del país del usuario (MX, US, BR, etc.)
   let showMap = false;
   let showSpinner = false;
   let showModal = false;
@@ -133,6 +134,7 @@
     // Detectar país y ubicación REAL del usuario
     const locationData = await detectCountry();
     userCountryCode = locationData.countryCode; // Para precio Stripe
+    userCountryISO = locationData.isoCode || 'MX'; // Código ISO del país
     selectedCountry = locationData.countryCode; // Para dropdown (inicia con país del usuario)
     mapCoords = { lat: locationData.lat, lng: locationData.lng };
     
@@ -300,6 +302,7 @@
       const result = await searchByBrowser();
       mapCoords = { lat: result.lat, lng: result.lng };
       userCountryCode = result.countryCode;
+      userCountryISO = result.isoCode || 'MX';
       selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
       
       // Esperar spinner
@@ -334,6 +337,7 @@
       const result = await searchByIP();
       mapCoords = { lat: result.lat, lng: result.lng };
       userCountryCode = result.countryCode;
+      userCountryISO = result.isoCode || 'MX';
       selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
       
       // Esperar spinner
@@ -371,6 +375,7 @@
     isVisible={showModal} 
     onClose={closeModal}
     countryCode={userCountryCode}
+    countryISO={userCountryISO}
     mapLat={mapCoords.lat}
     mapLng={mapCoords.lng}
   />
