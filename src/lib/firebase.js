@@ -208,6 +208,52 @@ export function onSellChange(callback) {
 }
 
 /**
+ * Obtiene el Payment Method Configuration (PMC) de Stripe desde Firestore
+ * @returns {Promise<string|null>} ID del PMC o null si no existe
+ */
+export async function getPMCConfig() {
+  try {
+    const configRef = doc(db, 'configuraciones', 'geo-stripe');
+    const configSnap = await getDoc(configRef);
+    
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      const pmc = data.PMC || null;
+      log('💳 PMC cargado:', pmc || 'no configurado');
+      return pmc;
+    }
+    
+    return null;
+  } catch (err) {
+    error('❌ Error al cargar PMC:', err);
+    return null;
+  }
+}
+
+/**
+ * Escucha cambios en tiempo real del Payment Method Configuration (PMC)
+ * @param {Function} callback - Función a llamar cuando cambie (recibe string|null)
+ * @returns {Function} Función para detener la escucha
+ */
+export function onPMCChange(callback) {
+  const configRef = doc(db, 'configuraciones', 'geo-stripe');
+  
+  return onSnapshot(configRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      const pmc = data.PMC || null;
+      log('💳 PMC actualizado:', pmc || 'no configurado');
+      callback(pmc);
+    } else {
+      callback(null);
+    }
+  }, (err) => {
+    error('❌ Error al escuchar cambios de PMC:', err);
+    callback(null);
+  });
+}
+
+/**
  * Obtiene la configuración de verbose (si se muestran logs en consola)
  * @returns {Promise<boolean>} true = mostrar logs, false = ocultar logs
  */

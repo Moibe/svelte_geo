@@ -2,13 +2,16 @@
   import { onMount, onDestroy } from 'svelte';
   import { _ } from 'svelte-i18n';
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
-  import { getStripeModeConfig, onStripeModeChange } from './firebase.js';
+  import { getPMCConfig, onPMCChange, getStripeModeConfig, onStripeModeChange } from './firebase.js';
   import { log, warn, error } from './logger.js';
   
   export let isVisible = false;
   export let onClose = () => {};
   export let countryCode = '';
   export let countryISO = 'MX'; // Código ISO del país (de geolocalización real)
+
+  let paymentMethodConfig = null; // PMC desde Firestore (geo-stripe.PMC)
+  let unsubscribePMC;
   export let mapLat = 19.4326;
   export let mapLng = -99.1332;
   
@@ -58,13 +61,21 @@
       error('❌ Error al cargar Stripe Mode:', err);
       isProductionMode = false; // Default a sandbox por seguridad
     }
+
+    try {
+      paymentMethodConfig = await getPMCConfig();
+      unsubscribePMC = onPMCChange((pmc) => {
+        paymentMethodConfig = pmc;
+      });
+    } catch (err) {
+      error('❌ Error al cargar PMC:', err);
+      paymentMethodConfig = null;
+    }
   });
 
   onDestroy(() => {
-    // Detener listener de Stripe Mode
-    if (unsubscribeStripeMode) {
-      unsubscribeStripeMode();
-    }
+    if (unsubscribeStripeMode) unsubscribeStripeMode();
+    if (unsubscribePMC) unsubscribePMC();
   });
 
   function getCurrency(code) {
@@ -141,7 +152,7 @@
           gaCliente: gaClientId,
           sitio: 'svelte-geo',
           app: 'geo',
-          paymentMethodConfiguration: 'pmc_1QDDpyIYi36CbmfWdLw5IBMc',
+          ...(paymentMethodConfig ? { paymentMethodConfiguration: paymentMethodConfig } : {}),
           successUrl: `${baseUrl}?payment=success`,
           cancelUrl: baseUrl,
           isProductionMode: isProductionMode // Pasar modo de Stripe
