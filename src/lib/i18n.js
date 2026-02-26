@@ -4,11 +4,13 @@ import { addMessages, init, locale } from 'svelte-i18n';
 import en from './locales/en.json';
 import es from './locales/es.json';
 import pt from './locales/pt.json';
+import fr from './locales/fr.json';
 
 // Registrar traducciones
 addMessages('en', en);
 addMessages('es', es);
 addMessages('pt', pt);
+addMessages('fr', fr);
 
 // Mapeo de códigos de país (+código telefónico) a idiomas
 export const countryToLanguage = {
@@ -42,9 +44,19 @@ export const countryToLanguage = {
   // Portugués
   '+351': 'pt', // Portugal
   '+55': 'pt',  // Brasil
+
+  // Francés
+  '+33': 'fr',  // Francia
+  '+32': 'fr',  // Bélgica
+  '+41': 'fr',  // Suiza (francófona)
+  '+352': 'fr', // Luxemburgo
+  '+237': 'fr', // Camerún
+  '+225': 'fr', // Costa de Marfil
+  '+221': 'fr', // Senegal
+  '+243': 'fr', // RD Congo
+  '+509': 'fr', // Haití
   
-  // Otros países europeos (pueden tener inglés como fallback)
-  '+33': 'en',  // Francia
+  // Otros países europeos (inglés como fallback)
   '+49': 'en',  // Alemania
   '+39': 'en',  // Italia
 };
@@ -64,10 +76,10 @@ export function getLanguageFromCountry(countryCode) {
  */
 export function getLanguageFromBrowser() {
   const browserLang = navigator.language || navigator.userLanguage;
-  // Obtener solo el código de idioma (ej: 'es-MX' -> 'es')
   const langCode = browserLang.split('-')[0].toLowerCase();
   if (langCode === 'es') return 'es';
   if (langCode === 'pt') return 'pt';
+  if (langCode === 'fr') return 'fr';
   return 'en';
 }
 
@@ -80,6 +92,7 @@ export function getLanguageFromPath() {
   if (path.startsWith('/es')) return 'es';
   if (path.startsWith('/en')) return 'en';
   if (path.startsWith('/pt')) return 'pt';
+  if (path.startsWith('/fr')) return 'fr';
   return null;
 }
 

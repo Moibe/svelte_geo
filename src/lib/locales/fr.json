@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "Localisateur GPS"
+  },
+  "search": {
+    "phoneNumber": "Numéro de téléphone",
+    "okButton": "Rechercher",
+    "phonePlaceholder": "Entrez le numéro",
+    "safeMode": "Mode Sécurisé",
+    "normalMode": "Mode Normal",
+    "searchByBrowser": "Recherche par Navigateur",
+    "searchByIP": "Recherche par IP",
+    "safeModeTitle": "geoservices.space",
+    "safeModeSubtitle": "Localisez votre appareil sur une carte via IP et GPS"
+  },
+  "spinner": {
+    "generatingGPS": "Génération de la position GPS ...",
+    "triangulating": "Triangulation des antennes ...",
+    "reactivating": "Réactivation sur les différents opérateurs ...",
+    "positionDefined": "Position définie ...",
+    "deviceFound": "Appareil Trouvé",
+    "safe": {
+      "searchingGPS": "Recherche via GPS",
+      "searchingBrowser": "Recherche via Navigateur",
+      "searchingIPv4": "Recherche par IP v4",
+      "searchingIPv6": "Recherche par IP v6",
+      "positionDefined": "Position Définie",
+      "deviceLocated": "Appareil Localisé",
+      "buildingMap": "Construction de la Carte",
+      "placingMarkers": "Placement des Marqueurs",
+      "loading": "Chargement"
+    }
+  },
+  "map": {
+    "deviceFound": "Appareil Trouvé",
+    "device": "Appareil Trouvé",
+    "antenna": "Antenne Mobile Proche",
+    "currentPosition": "Position actuelle"
+  },
+  "modal": {
+    "loading": "Chargement...",
+    "title": "Carte Complète - Paiement Unique",
+    "premium": "Accès Premium",
+    "buyButton": "Acheter",
+    "processing": "Traitement en cours...",
+    "securePayment": "Paiement Sécurisé avec Stripe ®"
+  }
+}

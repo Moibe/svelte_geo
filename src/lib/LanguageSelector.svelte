@@ -4,7 +4,8 @@
   const languages = [
     { code: 'es', label: '🇪🇸 Español' },
     { code: 'en', label: '🇺🇸 English' },
-    { code: 'pt', label: '🇧🇷 Português' }
+    { code: 'pt', label: '🇧🇷 Português' },
+    { code: 'fr', label: '🇫🇷 Français' }
   ];
 
   function changeLanguage(lang) {
