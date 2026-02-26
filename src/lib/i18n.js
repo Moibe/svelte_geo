@@ -5,12 +5,14 @@ import en from './locales/en.json';
 import es from './locales/es.json';
 import pt from './locales/pt.json';
 import fr from './locales/fr.json';
+import de from './locales/de.json';
 
 // Registrar traducciones
 addMessages('en', en);
 addMessages('es', es);
 addMessages('pt', pt);
 addMessages('fr', fr);
+addMessages('de', de);
 
 // Mapeo de códigos de país (+código telefónico) a idiomas
 export const countryToLanguage = {
@@ -55,9 +57,13 @@ export const countryToLanguage = {
   '+221': 'fr', // Senegal
   '+243': 'fr', // RD Congo
   '+509': 'fr', // Haití
+
+  // Alemán
+  '+49': 'de',  // Alemania
+  '+43': 'de',  // Austria
+  '+423': 'de', // Liechtenstein
   
   // Otros países europeos (inglés como fallback)
-  '+49': 'en',  // Alemania
   '+39': 'en',  // Italia
 };
 
@@ -80,6 +86,7 @@ export function getLanguageFromBrowser() {
   if (langCode === 'es') return 'es';
   if (langCode === 'pt') return 'pt';
   if (langCode === 'fr') return 'fr';
+  if (langCode === 'de') return 'de';
   return 'en';
 }
 
@@ -93,6 +100,7 @@ export function getLanguageFromPath() {
   if (path.startsWith('/en')) return 'en';
   if (path.startsWith('/pt')) return 'pt';
   if (path.startsWith('/fr')) return 'fr';
+  if (path.startsWith('/de')) return 'de';
   return null;
 }
 

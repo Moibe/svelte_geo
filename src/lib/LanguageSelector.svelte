@@ -5,7 +5,8 @@
     { code: 'es', label: '🇪🇸 Español' },
     { code: 'en', label: '🇺🇸 English' },
     { code: 'pt', label: '🇧🇷 Português' },
-    { code: 'fr', label: '🇫🇷 Français' }
+    { code: 'fr', label: '🇫🇷 Français' },
+    { code: 'de', label: '🇩🇪 Deutsch' }
   ];
 
   function changeLanguage(lang) {

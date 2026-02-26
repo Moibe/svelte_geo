@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "GPS-Ortung"
+  },
+  "search": {
+    "phoneNumber": "Telefonnummer",
+    "okButton": "Suchen",
+    "phonePlaceholder": "Nummer eingeben",
+    "safeMode": "Sicherer Modus",
+    "normalMode": "Normaler Modus",
+    "searchByBrowser": "Suche über Browser",
+    "searchByIP": "Suche über IP",
+    "safeModeTitle": "geoservices.space",
+    "safeModeSubtitle": "Gerät auf einer Karte über IP und GPS orten"
+  },
+  "spinner": {
+    "generatingGPS": "GPS-Position wird ermittelt ...",
+    "triangulating": "Antennen werden trianguliert ...",
+    "reactivating": "Reaktivierung bei verschiedenen Mobilfunkanbietern ...",
+    "positionDefined": "Position festgelegt ...",
+    "deviceFound": "Gerät gefunden",
+    "safe": {
+      "searchingGPS": "Suche über GPS",
+      "searchingBrowser": "Suche über Browser",
+      "searchingIPv4": "Suche über IP v4",
+      "searchingIPv6": "Suche über IP v6",
+      "positionDefined": "Position festgelegt",
+      "deviceLocated": "Gerät lokalisiert",
+      "buildingMap": "Karte wird erstellt",
+      "placingMarkers": "Markierungen werden gesetzt",
+      "loading": "Laden"
+    }
+  },
+  "map": {
+    "deviceFound": "Gerät gefunden",
+    "device": "Gerät gefunden",
+    "antenna": "Nahe Mobilfunkantenne",
+    "currentPosition": "Aktuelle Position"
+  },
+  "modal": {
+    "loading": "Laden...",
+    "title": "Vollständige Karte - Einmalige Zahlung",
+    "premium": "Premium-Zugang",
+    "buyButton": "Kaufen",
+    "processing": "Wird verarbeitet...",
+    "securePayment": "Sichere Zahlung mit Stripe ®"
+  }
+}
