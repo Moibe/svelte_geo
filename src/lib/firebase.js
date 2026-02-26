@@ -253,6 +253,46 @@ export function onPMCChange(callback) {
   });
 }
 
+/**
+ * Obtiene la configuración de map-interaction desde Firestore
+ * Documento: geo-conversiones, campo: map-interaction (boolean)
+ * @returns {Promise<boolean>}
+ */
+export async function getMapInteractionConfig() {
+  try {
+    const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return data['map-interaction'] || false;
+    }
+    return false;
+  } catch (err) {
+    error('❌ Error al cargar map-interaction:', err);
+    return false;
+  }
+}
+
+/**
+ * Escucha cambios en tiempo real de map-interaction
+ * @param {Function} callback
+ * @returns {Function} Función para detener la escucha
+ */
+export function onMapInteractionChange(callback) {
+  const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+  return onSnapshot(configRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      callback(data['map-interaction'] || false);
+    } else {
+      callback(false);
+    }
+  }, (err) => {
+    error('❌ Error al escuchar cambios de map-interaction:', err);
+    callback(false);
+  });
+}
+
 // true si estamos en entorno local de desarrollo (npm run dev)
 const isDev = import.meta.env.DEV;
 

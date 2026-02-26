@@ -1,13 +1,16 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { _ } from 'svelte-i18n';
   import L from 'leaflet';
 
-  export let lat = 19.4326; // Default CDMX lat
-  export let lng = -99.1332; // Default CDMX lng
+  export let lat = 19.4326;
+  export let lng = -99.1332;
+  export let mapInteractionEnabled = false; // Si true, emite evento al interactuar
 
+  const dispatch = createEventDispatcher();
   let mapContainer;
   let map;
+  let interactionFired = false; // Solo disparar una vez por sesión
   
   // Función para generar puntos aleatorios alrededor del principal
   function generateRandomPoints(centerLat, centerLng, count = 8) {
@@ -161,6 +164,17 @@
         .addTo(map)
         .bindPopup(`📡 Torre de antena ${index + 1}`);
     });
+
+    // Detectar cualquier interacción con el mapa (solo se dispara una vez)
+    const fireInteraction = () => {
+      if (!interactionFired && mapInteractionEnabled) {
+        interactionFired = true;
+        dispatch('mapInteracted');
+      }
+    };
+    map.on('click', fireInteraction);
+    map.on('dragstart', fireInteraction);
+    map.on('zoomstart', fireInteraction);
   });
 </script>
 

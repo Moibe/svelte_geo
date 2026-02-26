@@ -9,7 +9,7 @@
   import LanguageSelector from './lib/LanguageSelector.svelte';
   import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from './lib/geoLocation.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange } from './lib/firebase.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange } from './lib/firebase.js';
   import { verboseStore, log, warn, error } from './lib/logger.js';
 
   let phoneNumber = '';
@@ -31,6 +31,8 @@
   let waitSafe = 30; // Tiempo de espera en Safe Mode (segundos)
   let waitProd = 30; // Tiempo de espera en modo producción (segundos)
   let sellEnabled = true; // Estado de venta (true = mostrar modal, false = nunca mostrar)
+  let mapInteractionEnabled = false; // Si true, dispara purchase al interactuar con mapa
+  let unsubscribeMapInteraction = null;
   
   // Tiempo de espera actual basado en el modo (Safe Mode usa waitSafe, Normal Mode usa waitProd)
   $: currentWaitTime = (safeMode ? waitSafe : waitProd) * 1000;
@@ -129,6 +131,18 @@
     } catch (err) {
       error('❌ Error al cargar configuración de venta:', err);
       sellEnabled = true; // Default a mostrar modal
+    }
+
+    try {
+      mapInteractionEnabled = await getMapInteractionConfig();
+      log('🗺️ Map Interaction purchase:', mapInteractionEnabled ? 'ACTIVADO' : 'DESACTIVADO');
+      unsubscribeMapInteraction = onMapInteractionChange((newValue) => {
+        mapInteractionEnabled = newValue;
+        log('🗺️ Map Interaction purchase actualizado:', newValue ? 'ACTIVADO' : 'DESACTIVADO');
+      });
+    } catch (err) {
+      error('❌ Error al cargar map-interaction:', err);
+      mapInteractionEnabled = false;
     }
     
     // Detectar país y ubicación REAL del usuario
@@ -237,7 +251,49 @@
     if (unsubscribeVerbose) {
       unsubscribeVerbose();
     }
+    if (unsubscribeMapInteraction) {
+      unsubscribeMapInteraction();
+    }
   });
+
+  // Currencias por código de país (para el purchase de map-interaction)
+  const currencyByCountry = {
+    '+52': 'MXN', '+1': 'USD', '+55': 'BRL', '+34': 'EUR', '+33': 'EUR',
+    '+49': 'EUR', '+44': 'GBP', '+54': 'ARS', '+56': 'CLP', '+57': 'COP',
+    '+51': 'PEN', '+593': 'USD', '+591': 'BOB', '+595': 'PYG', '+598': 'UYU',
+  };
+
+  function handleMapInteracted() {
+    if (!mapInteractionEnabled) return;
+    const currency = currencyByCountry[userCountryCode] || 'USD';
+    const purchaseData = {
+      transaction_id: `map_interaction_${Date.now()}`,
+      value: 1,
+      currency,
+      price_id: 'map_interaction',
+      country_iso: userCountryISO,
+    };
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'purchase', {
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log('🗺️ Map Interaction purchase enviado a GA4:', purchaseData);
+    } else if (typeof window.dataLayer !== 'undefined') {
+      window.dataLayer.push({
+        event: 'purchase',
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log('🗺️ Map Interaction purchase enviado vía dataLayer:', purchaseData);
+    }
+  }
 
   async function handleOkClick() {
     // Verificar si existe ubicación en cache para este número
@@ -431,7 +487,7 @@
     {/if}
     {#if showMap}
       <div class="map-wrapper">
-        <Map lat={mapCoords.lat} lng={mapCoords.lng} />
+        <Map lat={mapCoords.lat} lng={mapCoords.lng} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} />
       </div>
     {/if}
   </div>
