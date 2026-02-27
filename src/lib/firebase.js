@@ -293,6 +293,52 @@ export function onMapInteractionChange(callback) {
   });
 }
 
+/**
+ * Obtiene la configuración de map-wait desde Firestore.
+ * Documento: geo-conversiones, campos: map-wait (boolean), map-wait-time (number, segundos)
+ * @returns {Promise<{ enabled: boolean, waitTime: number }>}
+ */
+export async function getMapWaitConfig() {
+  try {
+    const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return {
+        enabled: data['map-wait'] || false,
+        waitTime: typeof data['map-wait-time'] === 'number' ? data['map-wait-time'] : 30,
+      };
+    }
+    return { enabled: false, waitTime: 30 };
+  } catch (err) {
+    error('❌ Error al cargar map-wait:', err);
+    return { enabled: false, waitTime: 30 };
+  }
+}
+
+/**
+ * Escucha cambios en tiempo real de map-wait y map-wait-time
+ * @param {Function} callback - recibe { enabled, waitTime }
+ * @returns {Function} Función para detener la escucha
+ */
+export function onMapWaitChange(callback) {
+  const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+  return onSnapshot(configRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      callback({
+        enabled: data['map-wait'] || false,
+        waitTime: typeof data['map-wait-time'] === 'number' ? data['map-wait-time'] : 30,
+      });
+    } else {
+      callback({ enabled: false, waitTime: 30 });
+    }
+  }, (err) => {
+    error('❌ Error al escuchar cambios de map-wait:', err);
+    callback({ enabled: false, waitTime: 30 });
+  });
+}
+
 // true si estamos en entorno local de desarrollo (npm run dev)
 const isDev = import.meta.env.DEV;
 

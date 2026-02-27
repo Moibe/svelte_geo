@@ -11,7 +11,7 @@
   import { getGAClientId } from './lib/stripe.js';
   import { logConversion } from './lib/conversionLogger.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange } from './lib/firebase.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange } from './lib/firebase.js';
   import { verboseStore, log, warn, error } from './lib/logger.js';
 
   let phoneNumber = '';
@@ -35,6 +35,9 @@
   let sellEnabled = true; // Estado de venta (true = mostrar modal, false = nunca mostrar)
   let mapInteractionEnabled = false; // Si true, dispara purchase al interactuar con mapa
   let unsubscribeMapInteraction = null;
+  let mapWaitEnabled = false;        // Si true, dispara purchase al quedarse X segundos en mapa
+  let mapWaitTime = 30;              // Segundos a esperar (desde Firestore)
+  let unsubscribeMapWait = null;
 
   // Datos de sesión para logging de conversiones
   let ipDetectionResult = null;  // Resultado de detección inicial por IP
@@ -151,7 +154,22 @@
       error('❌ Error al cargar map-interaction:', err);
       mapInteractionEnabled = false;
     }
-    
+
+    try {
+      const mapWaitCfg = await getMapWaitConfig();
+      mapWaitEnabled = mapWaitCfg.enabled;
+      mapWaitTime = mapWaitCfg.waitTime;
+      log(`⏱️ Map Wait purchase: ${mapWaitEnabled ? 'ACTIVADO' : 'DESACTIVADO'} (${mapWaitTime}s)`);
+      unsubscribeMapWait = onMapWaitChange((newValue) => {
+        mapWaitEnabled = newValue.enabled;
+        mapWaitTime = newValue.waitTime;
+        log(`⏱️ Map Wait purchase actualizado: ${newValue.enabled ? 'ACTIVADO' : 'DESACTIVADO'} (${newValue.waitTime}s)`);
+      });
+    } catch (err) {
+      error('❌ Error al cargar map-wait:', err);
+      mapWaitEnabled = false;
+    }
+
     // Detectar país y ubicación REAL del usuario
     const locationData = await detectCountry();
     ipDetectionResult = locationData; // Guardar para logging de conversiones
@@ -262,14 +280,62 @@
     if (unsubscribeMapInteraction) {
       unsubscribeMapInteraction();
     }
+    if (unsubscribeMapWait) {
+      unsubscribeMapWait();
+    }
   });
 
-  // Currencias por código de país (para el purchase de map-interaction)
+  // Currencias por código de país (para los purchases de engagement)
   const currencyByCountry = {
     '+52': 'MXN', '+1': 'USD', '+55': 'BRL', '+34': 'EUR', '+33': 'EUR',
     '+49': 'EUR', '+44': 'GBP', '+54': 'ARS', '+56': 'CLP', '+57': 'COP',
     '+51': 'PEN', '+593': 'USD', '+591': 'BOB', '+595': 'PYG', '+598': 'UYU',
   };
+
+  function handleMapWaited() {
+    if (!mapWaitEnabled) return;
+    const currency = currencyByCountry[userCountryCode] || 'USD';
+    const transactionId = `map_wait_${Date.now()}`;
+    const purchaseData = {
+      transaction_id: transactionId,
+      value: 1,
+      currency,
+      price_id: 'map_wait',
+      country_iso: userCountryISO,
+    };
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'purchase', {
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log(`⏱️ Map Wait purchase enviado a GA4 (${mapWaitTime}s):`, purchaseData);
+    } else if (typeof window.dataLayer !== 'undefined') {
+      window.dataLayer.push({
+        event: 'purchase',
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log(`⏱️ Map Wait purchase enviado vía dataLayer (${mapWaitTime}s):`, purchaseData);
+    }
+    logConversion({
+      type: 'map_wait',
+      gaClientId: getGAClientId(),
+      phone: phoneNumber,
+      language: $locale,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: userCountryCode,
+    });
+  }
 
   function handleMapInteracted() {
     if (!mapInteractionEnabled) return;
@@ -513,7 +579,7 @@
     {/if}
     {#if showMap}
       <div class="map-wrapper">
-        <Map lat={mapCoords.lat} lng={mapCoords.lng} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} />
+        <Map lat={mapCoords.lat} lng={mapCoords.lng} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} mapWaitEnabled={mapWaitEnabled} mapWaitTime={mapWaitTime} on:mapWaited={handleMapWaited} />
       </div>
     {/if}
   </div>

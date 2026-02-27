@@ -1,16 +1,20 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { _ } from 'svelte-i18n';
   import L from 'leaflet';
 
   export let lat = 19.4326;
   export let lng = -99.1332;
   export let mapInteractionEnabled = false; // Si true, emite evento al interactuar
+  export let mapWaitEnabled = false;         // Si true, emite evento al pasar X segundos
+  export let mapWaitTime = 30;               // Segundos a esperar (desde Firestore)
 
   const dispatch = createEventDispatcher();
   let mapContainer;
   let map;
   let interactionFired = false; // Solo disparar una vez por sesión
+  let waitFired = false;        // Solo disparar una vez por sesión
+  let waitTimer = null;
   
   // Función para generar puntos aleatorios alrededor del principal
   function generateRandomPoints(centerLat, centerLng, count = 8) {
@@ -175,6 +179,20 @@
     map.on('click', fireInteraction);
     map.on('dragstart', fireInteraction);
     map.on('zoomstart', fireInteraction);
+
+    // Timer de permanencia en mapa
+    if (mapWaitEnabled && mapWaitTime > 0) {
+      waitTimer = setTimeout(() => {
+        if (!waitFired) {
+          waitFired = true;
+          dispatch('mapWaited');
+        }
+      }, mapWaitTime * 1000);
+    }
+  });
+
+  onDestroy(() => {
+    if (waitTimer) clearTimeout(waitTimer);
   });
 </script>
 
