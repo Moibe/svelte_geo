@@ -6,7 +6,8 @@
     { code: 'en', label: 'English' },
     { code: 'pt', label: 'Português' },
     { code: 'fr', label: 'Français' },
-    { code: 'de', label: 'Deutsch' }
+    { code: 'de', label: 'Deutsch' },
+    { code: 'ar', label: 'العربية' }
   ];
 
   function changeLanguage(lang) {

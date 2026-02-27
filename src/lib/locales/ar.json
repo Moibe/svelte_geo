@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "تحديد الموقع GPS"
+  },
+  "search": {
+    "phoneNumber": "رقم الهاتف",
+    "okButton": "بحث",
+    "phonePlaceholder": "أدخل الرقم",
+    "safeMode": "الوضع الآمن",
+    "normalMode": "الوضع العادي",
+    "searchByBrowser": "بحث عبر المتصفح",
+    "searchByIP": "بحث عبر IP",
+    "safeModeTitle": "geoservices.space",
+    "safeModeSubtitle": "حدد موقع جهازك على الخريطة عبر IP و GPS"
+  },
+  "spinner": {
+    "generatingGPS": "جارٍ توليد إحداثيات GPS ...",
+    "triangulating": "تثليث الهوائيات ...",
+    "reactivating": "إعادة التنشيط على مشغلي الشبكات المختلفين ...",
+    "positionDefined": "تم تحديد الموقع ...",
+    "deviceFound": "تم العثور على الجهاز",
+    "safe": {
+      "searchingGPS": "جارٍ البحث عبر GPS",
+      "searchingBrowser": "جارٍ البحث عبر المتصفح",
+      "searchingIPv4": "جارٍ البحث عبر IP v4",
+      "searchingIPv6": "جارٍ البحث عبر IP v6",
+      "positionDefined": "تم تحديد الموقع",
+      "deviceLocated": "تم تحديد موقع الجهاز",
+      "buildingMap": "جارٍ بناء الخريطة",
+      "placingMarkers": "جارٍ وضع العلامات",
+      "loading": "جارٍ التحميل"
+    }
+  },
+  "map": {
+    "deviceFound": "تم العثور على الجهاز",
+    "device": "تم العثور على الجهاز",
+    "antenna": "هوائي محمول قريب",
+    "currentPosition": "الموقع الحالي"
+  },
+  "modal": {
+    "loading": "جارٍ التحميل...",
+    "title": "خريطة كاملة - دفعة واحدة",
+    "premium": "وصول مميز",
+    "buyButton": "شراء",
+    "processing": "جارٍ المعالجة...",
+    "securePayment": "دفع آمن مع Stripe ®"
+  }
+}

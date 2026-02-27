@@ -6,6 +6,7 @@ import es from './locales/es.json';
 import pt from './locales/pt.json';
 import fr from './locales/fr.json';
 import de from './locales/de.json';
+import ar from './locales/ar.json';
 
 // Registrar traducciones
 addMessages('en', en);
@@ -13,6 +14,7 @@ addMessages('es', es);
 addMessages('pt', pt);
 addMessages('fr', fr);
 addMessages('de', de);
+addMessages('ar', ar);
 
 // Mapeo de códigos de país (+código telefónico) a idiomas
 export const countryToLanguage = {
@@ -62,7 +64,29 @@ export const countryToLanguage = {
   '+49': 'de',  // Alemania
   '+43': 'de',  // Austria
   '+423': 'de', // Liechtenstein
-  
+
+  // Árabe
+  '+966': 'ar', // Arabia Saudita
+  '+971': 'ar', // Emiratos Árabes Unidos
+  '+20':  'ar', // Egipto
+  '+212': 'ar', // Marruecos
+  '+213': 'ar', // Argelia
+  '+216': 'ar', // Túnez
+  '+218': 'ar', // Libia
+  '+962': 'ar', // Jordania
+  '+961': 'ar', // Líbano
+  '+963': 'ar', // Siria
+  '+964': 'ar', // Iraq
+  '+965': 'ar', // Kuwait
+  '+968': 'ar', // Omán
+  '+974': 'ar', // Qatar
+  '+973': 'ar', // Baréin
+  '+967': 'ar', // Yemen
+  '+970': 'ar', // Palestina
+  '+249': 'ar', // Sudán
+  '+222': 'ar', // Mauritania
+  '+252': 'ar', // Somalia
+
   // Otros países europeos (inglés como fallback)
   '+39': 'en',  // Italia
 };
@@ -87,6 +111,7 @@ export function getLanguageFromBrowser() {
   if (langCode === 'pt') return 'pt';
   if (langCode === 'fr') return 'fr';
   if (langCode === 'de') return 'de';
+  if (langCode === 'ar') return 'ar';
   return 'en';
 }
 
@@ -101,6 +126,7 @@ export function getLanguageFromPath() {
   if (path.startsWith('/pt')) return 'pt';
   if (path.startsWith('/fr')) return 'fr';
   if (path.startsWith('/de')) return 'de';
+  if (path.startsWith('/ar')) return 'ar';
   return null;
 }
 

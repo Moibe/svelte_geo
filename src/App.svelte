@@ -517,7 +517,7 @@
 
 </script>
 
-<main>
+<main dir={$locale === 'ar' ? 'rtl' : 'ltr'}>
   <LoadingSpinner isVisible={showSpinner} countryCode={selectedCountry} isSafeMode={safeMode === true} />
   <Modal 
     isVisible={showModal} 
