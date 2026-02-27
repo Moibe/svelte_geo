@@ -18,6 +18,22 @@ import { log } from './logger.js';
  * @param {string} params.countryISO     - ISO del país del usuario (MX, US, etc.)
  * @param {string} params.countryCode    - Código telefónico del país (+52, +1, etc.)
  */
+/**
+ * Formatea una fecha en una zona horaria dada como string legible tipo ISO.
+ * @param {Date} date
+ * @param {string} timeZone - IANA timezone string (e.g. 'America/Mexico_City')
+ * @returns {string}
+ */
+function formatInTimezone(date, timeZone) {
+  const formatted = new Intl.DateTimeFormat('sv-SE', {
+    timeZone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).format(date).replace(' ', 'T');
+  return `${formatted} (${timeZone})`;
+}
+
 export function logConversion({
   type,
   gaClientId = null,
@@ -30,10 +46,15 @@ export function logConversion({
   countryISO = null,
   countryCode = null,
 }) {
+  const now = new Date();
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   const conversionData = {
     // — Identificación —
     type,
-    timestamp: new Date().toISOString(),
+    timestamp_utc:   now.toISOString(),
+    timestamp_user:  formatInTimezone(now, userTimezone),
+    timestamp_cdmx:  formatInTimezone(now, 'America/Mexico_City'),
 
     // — Usuario —
     gaClientId: gaClientId || '(no disponible)',
