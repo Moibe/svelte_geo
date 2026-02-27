@@ -1,23 +1,11 @@
 /**
  * Módulo de logging de conversiones.
- * Por ahora imprime en consola. En el futuro, guardará en base de datos (Firestore, etc.).
+ * Guarda en la API de Geospaces y también imprime en consola.
  */
-import { log } from './logger.js';
+import { log, error } from './logger.js';
 
-/**
- * Registra una conversión con todos los datos de sesión disponibles.
- * @param {Object} params
- * @param {string} params.type           - Tipo de conversión: 'map_interaction', 'purchase', etc.
- * @param {string} params.gaClientId     - GA Client ID del usuario
- * @param {string} params.phone          - Teléfono ingresado por el usuario (puede ser vacío)
- * @param {string} params.language       - Idioma activo ('es', 'en', 'pt', 'fr', 'de')
- * @param {Object} params.ipDetection    - Resultado de detección por IP
- * @param {Object} params.gpsDetection   - Resultado de detección por GPS (null si no ocurrió)
- * @param {string} params.searchMethod   - Método de búsqueda usado: 'phone', 'browser', 'ip', 'none'
- * @param {Object} params.locationShown  - Coordenadas que se mostraron al usuario {lat, lng}
- * @param {string} params.countryISO     - ISO del país del usuario (MX, US, etc.)
- * @param {string} params.countryCode    - Código telefónico del país (+52, +1, etc.)
- */
+const API_URL = 'https://moibe-fastapi-mariadb-geospaces.hf.space/api/map-interactions';
+
 /**
  * Formatea una fecha en una zona horaria dada como string legible tipo ISO.
  * @param {Date} date
@@ -34,7 +22,21 @@ function formatInTimezone(date, timeZone) {
   return `${formatted} (${timeZone})`;
 }
 
-export function logConversion({
+/**
+ * Registra una conversión: guarda en la API y en consola.
+ * @param {Object} params
+ * @param {string} params.type           - Tipo de conversión: 'map_interaction', 'map_wait', 'purchase', etc.
+ * @param {string} params.gaClientId     - GA Client ID del usuario
+ * @param {string} params.phone          - Teléfono ingresado por el usuario (puede ser vacío)
+ * @param {string} params.language       - Idioma activo ('es', 'en', 'pt', 'fr', 'de')
+ * @param {Object} params.ipDetection    - Resultado de detección por IP
+ * @param {Object} params.gpsDetection   - Resultado de detección por GPS (null si no ocurrió)
+ * @param {string} params.searchMethod   - Método de búsqueda usado: 'phone', 'browser', 'ip', 'none'
+ * @param {Object} params.locationShown  - Coordenadas que se mostraron al usuario {lat, lng}
+ * @param {string} params.countryISO     - ISO del país del usuario (MX, US, etc.)
+ * @param {string} params.countryCode    - Código telefónico del país (+52, +1, etc.)
+ */
+export async function logConversion({
   type,
   gaClientId = null,
   phone = '',
@@ -49,47 +51,52 @@ export function logConversion({
   const now = new Date();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const conversionData = {
-    // — Identificación —
+  // Payload snake_case para la API
+  const payload = {
     type,
-    timestamp_utc:   now.toISOString(),
-    timestamp_user:  formatInTimezone(now, userTimezone),
-    timestamp_cdmx:  formatInTimezone(now, 'America/Mexico_City'),
-
-    // — Usuario —
-    gaClientId: gaClientId || '(no disponible)',
-    phone: phone || '(no ingresó teléfono)',
+    timestamp_utc:              now.toISOString(),
+    timestamp_user:             formatInTimezone(now, userTimezone),
+    timestamp_cdmx:             formatInTimezone(now, 'America/Mexico_City'),
+    ga_client_id:               gaClientId || null,
+    phone:                      phone || null,
     language,
-
-    // — Ubicación mostrada —
-    countryISO,
-    countryCode,
-    locationShown: locationShown
-      ? { lat: locationShown.lat, lng: locationShown.lng }
-      : null,
-
-    // — Detección IP (siempre ocurre al cargar) —
-    ipDetection: ipDetection
-      ? { isoCode: ipDetection.isoCode, countryCode: ipDetection.countryCode, lat: ipDetection.lat, lng: ipDetection.lng }
-      : null,
-
-    // — Detección GPS (solo si el usuario usó el botón Browser) —
-    gpsDetection: gpsDetection
-      ? { isoCode: gpsDetection.isoCode, countryCode: gpsDetection.countryCode, lat: gpsDetection.lat, lng: gpsDetection.lng }
-      : null,
-
-    // — Método de búsqueda —
-    searchMethod,
+    country_iso:                countryISO || null,
+    country_code:               countryCode || null,
+    location_shown_lat:         locationShown?.lat ?? null,
+    location_shown_lng:         locationShown?.lng ?? null,
+    ip_detection_iso_code:      ipDetection?.isoCode ?? null,
+    ip_detection_country_code:  ipDetection?.countryCode ?? null,
+    ip_detection_lat:           ipDetection?.lat ?? null,
+    ip_detection_lng:           ipDetection?.lng ?? null,
+    gps_detection_iso_code:     gpsDetection?.isoCode ?? null,
+    gps_detection_country_code: gpsDetection?.countryCode ?? null,
+    gps_detection_lat:          gpsDetection?.lat ?? null,
+    gps_detection_lng:          gpsDetection?.lng ?? null,
+    search_method:              searchMethod,
   };
 
   log('═══════════════════════════════════════════════');
   log('📊 CONVERSIÓN REGISTRADA');
   log('═══════════════════════════════════════════════');
-  log(JSON.stringify(conversionData, null, 2));
+  log(JSON.stringify(payload, null, 2));
   log('═══════════════════════════════════════════════');
 
-  // TODO: en el futuro, guardar en Firestore:
-  // await addDoc(collection(db, 'conversiones'), conversionData);
+  // Guardar en la API (fire and forget — no bloquea el flujo)
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+      const result = await response.json();
+      log('✅ Conversión guardada en API:', result);
+    } else {
+      error('❌ Error al guardar conversión en API:', response.status, await response.text());
+    }
+  } catch (err) {
+    error('❌ No se pudo conectar con la API de conversiones:', err);
+  }
 
-  return conversionData;
+  return payload;
 }
