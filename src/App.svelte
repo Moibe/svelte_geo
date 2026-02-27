@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { _ } from 'svelte-i18n';
+  import { _ , locale } from 'svelte-i18n';
   import CountrySelect from './lib/CountrySelect.svelte';
   import PhoneInput from './lib/PhoneInput.svelte';
   import Map from './lib/Map.svelte';
@@ -8,6 +8,8 @@
   import Modal from './lib/Modal.svelte';
   import LanguageSelector from './lib/LanguageSelector.svelte';
   import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from './lib/geoLocation.js';
+  import { getGAClientId } from './lib/stripe.js';
+  import { logConversion } from './lib/conversionLogger.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
   import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange } from './lib/firebase.js';
   import { verboseStore, log, warn, error } from './lib/logger.js';
@@ -33,6 +35,11 @@
   let sellEnabled = true; // Estado de venta (true = mostrar modal, false = nunca mostrar)
   let mapInteractionEnabled = false; // Si true, dispara purchase al interactuar con mapa
   let unsubscribeMapInteraction = null;
+
+  // Datos de sesión para logging de conversiones
+  let ipDetectionResult = null;  // Resultado de detección inicial por IP
+  let gpsDetectionResult = null; // Resultado de detección por GPS (si ocurrió)
+  let searchMethod = 'none';     // 'phone', 'browser', 'ip', 'none'
   
   // Tiempo de espera actual basado en el modo (Safe Mode usa waitSafe, Normal Mode usa waitProd)
   $: currentWaitTime = (safeMode ? waitSafe : waitProd) * 1000;
@@ -147,6 +154,7 @@
     
     // Detectar país y ubicación REAL del usuario
     const locationData = await detectCountry();
+    ipDetectionResult = locationData; // Guardar para logging de conversiones
     userCountryCode = locationData.countryCode; // Para precio Stripe
     userCountryISO = locationData.isoCode || 'MX'; // Código ISO del país
     selectedCountry = locationData.countryCode; // Para dropdown (inicia con país del usuario)
@@ -266,8 +274,9 @@
   function handleMapInteracted() {
     if (!mapInteractionEnabled) return;
     const currency = currencyByCountry[userCountryCode] || 'USD';
+    const transactionId = `map_interaction_${Date.now()}`;
     const purchaseData = {
-      transaction_id: `map_interaction_${Date.now()}`,
+      transaction_id: transactionId,
       value: 1,
       currency,
       price_id: 'map_interaction',
@@ -293,9 +302,23 @@
       });
       log('🗺️ Map Interaction purchase enviado vía dataLayer:', purchaseData);
     }
+    // Logging detallado de la conversión
+    logConversion({
+      type: 'map_interaction',
+      gaClientId: getGAClientId(),
+      phone: phoneNumber,
+      language: $locale,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: userCountryCode,
+    });
   }
 
   async function handleOkClick() {
+    searchMethod = 'phone';
     // Verificar si existe ubicación en cache para este número
     let cached = getLocationCache(phoneNumber, selectedCountry);
     
@@ -356,6 +379,8 @@
     showSpinner = true;
     try {
       const result = await searchByBrowser();
+      gpsDetectionResult = result; // Guardar para logging
+      searchMethod = 'browser';
       mapCoords = { lat: result.lat, lng: result.lng };
       userCountryCode = result.countryCode;
       userCountryISO = result.isoCode || 'MX';
@@ -391,6 +416,7 @@
     showSpinner = true;
     try {
       const result = await searchByIP();
+      searchMethod = 'ip';
       mapCoords = { lat: result.lat, lng: result.lng };
       userCountryCode = result.countryCode;
       userCountryISO = result.isoCode || 'MX';
