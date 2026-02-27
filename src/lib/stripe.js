@@ -6,39 +6,32 @@ const STRIPE_BACKEND_PROD = 'https://moibe-stripe-kraken-prod.hf.space/creaLinkS
 
 /**
  * Obtiene el Google Analytics Client ID
+ * GA4 almacena el client_id en la cookie _ga con formato GA1.X.XXXXXXX.XXXXXXX
+ * El client_id real son los últimos dos segmentos: XXXXXXX.XXXXXXX
  * @returns {string|null} GA Client ID si está disponible
  */
 export function getGAClientId() {
-  // Intenta obtener el GA Client ID de múltiples fuentes
-  
-  // 1. Desde gtag.js (Google Analytics 4)
-  if (typeof window.gtag !== 'undefined') {
-    try {
-      window.gtag('get', 'G-XXXXXXXXXX', 'client_id', (clientId) => {
-        return clientId;
-      });
-    } catch (e) {
-      warn('Error obteniendo GA Client ID de gtag:', e);
+  // 1. Desde la cookie _ga (más confiable — funciona con GTM y gtag directo)
+  try {
+    const gaCookie = document.cookie
+      .split(';')
+      .map(c => c.trim())
+      .find(c => c.startsWith('_ga='));
+    if (gaCookie) {
+      const value = gaCookie.split('=')[1]; // e.g. "GA1.1.1234567890.1709058600"
+      const parts = value.split('.');
+      if (parts.length >= 4) {
+        return parts.slice(2).join('.'); // "1234567890.1709058600"
+      }
     }
+  } catch (e) {
+    warn('Error leyendo cookie _ga:', e);
   }
 
-  // 2. Desde localStorage (si lo guardamos manualmente)
+  // 2. Desde localStorage (si fue guardado manualmente en otro flujo)
   const storedGAClientId = localStorage.getItem('ga_client_id');
   if (storedGAClientId) {
     return storedGAClientId;
-  }
-
-  // 3. Desde universalGA (GA clásico)
-  if (typeof _gaq !== 'undefined') {
-    try {
-      let clientId = null;
-      _gaq.push(function() {
-        clientId = _gat._getTrackerByName()._getVisitorId();
-      });
-      if (clientId) return clientId;
-    } catch (e) {
-      warn('Error obteniendo GA Client ID de _gaq:', e);
-    }
   }
 
   return null;
