@@ -2,11 +2,11 @@
   import { locale } from 'svelte-i18n';
 
   const languages = [
-    { code: 'es', label: '🇪🇸 Español' },
-    { code: 'en', label: '🇺🇸 English' },
-    { code: 'pt', label: '🇧🇷 Português' },
-    { code: 'fr', label: '🇫🇷 Français' },
-    { code: 'de', label: '🇩🇪 Deutsch' }
+    { code: 'es', label: 'Español' },
+    { code: 'en', label: 'English' },
+    { code: 'pt', label: 'Português' },
+    { code: 'fr', label: 'Français' },
+    { code: 'de', label: 'Deutsch' }
   ];
 
   function changeLanguage(lang) {
