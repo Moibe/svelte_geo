@@ -339,6 +339,46 @@ export function onMapWaitChange(callback) {
   });
 }
 
+/**
+ * Obtiene la configuración de sell-pop desde Firestore.
+ * Documento: geo-conversiones, campo: sell-pop (boolean)
+ * @returns {Promise<boolean>}
+ */
+export async function getSellPopConfig() {
+  try {
+    const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return data['sell-pop'] || false;
+    }
+    return false;
+  } catch (err) {
+    error('❌ Error al cargar sell-pop:', err);
+    return false;
+  }
+}
+
+/**
+ * Escucha cambios en tiempo real de sell-pop
+ * @param {Function} callback
+ * @returns {Function} Función para detener la escucha
+ */
+export function onSellPopChange(callback) {
+  const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+  return onSnapshot(configRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      callback(data['sell-pop'] || false);
+    } else {
+      callback(false);
+    }
+  }, (err) => {
+    error('❌ Error al escuchar cambios de sell-pop:', err);
+    callback(false);
+  });
+}
+
 // true si estamos en entorno local de desarrollo (npm run dev)
 const isDev = import.meta.env.DEV;
 

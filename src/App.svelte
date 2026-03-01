@@ -11,7 +11,7 @@
   import { getGAClientId } from './lib/stripe.js';
   import { logConversion } from './lib/conversionLogger.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange } from './lib/firebase.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange } from './lib/firebase.js';
   import { verboseStore, log, warn, error } from './lib/logger.js';
 
   let phoneNumber = '';
@@ -38,6 +38,8 @@
   let mapWaitEnabled = false;        // Si true, dispara purchase al quedarse X segundos en mapa
   let mapWaitTime = 30;              // Segundos a esperar (desde Firestore)
   let unsubscribeMapWait = null;
+  let sellPopEnabled = false;        // Si true, dispara purchase cuando se abre el modal de ventas
+  let unsubscribeSellPop = null;
 
   // Datos de sesión para logging de conversiones
   let ipDetectionResult = null;  // Resultado de detección inicial por IP
@@ -170,6 +172,18 @@
       mapWaitEnabled = false;
     }
 
+    try {
+      sellPopEnabled = await getSellPopConfig();
+      log(`🛒 Sell Pop purchase: ${sellPopEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      unsubscribeSellPop = onSellPopChange((newValue) => {
+        sellPopEnabled = newValue;
+        log(`🛒 Sell Pop purchase actualizado: ${newValue ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      });
+    } catch (err) {
+      error('❌ Error al cargar sell-pop:', err);
+      sellPopEnabled = false;
+    }
+
     // Detectar país y ubicación REAL del usuario
     const locationData = await detectCountry();
     ipDetectionResult = locationData; // Guardar para logging de conversiones
@@ -283,7 +297,55 @@
     if (unsubscribeMapWait) {
       unsubscribeMapWait();
     }
+    if (unsubscribeSellPop) {
+      unsubscribeSellPop();
+    }
   });
+
+  function handleSellPop() {
+    if (!sellPopEnabled) return;
+    const currency = currencyByCountry[userCountryCode] || 'USD';
+    const transactionId = `sell_pop_${Date.now()}`;
+    const purchaseData = {
+      transaction_id: transactionId,
+      value: 1,
+      currency,
+      price_id: 'sell_pop',
+      country_iso: userCountryISO,
+    };
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'purchase', {
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log('🛒 Sell Pop purchase enviado a GA4:', purchaseData);
+    } else if (typeof window.dataLayer !== 'undefined') {
+      window.dataLayer.push({
+        event: 'purchase',
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log('🛒 Sell Pop purchase enviado vía dataLayer:', purchaseData);
+    }
+    logConversion({
+      type: 'sell_pop',
+      gaClientId: getGAClientId(),
+      phone: phoneNumber,
+      language: $locale,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: userCountryCode,
+    });
+  }
 
   // Currencias por código de país (para los purchases de engagement)
   const currencyByCountry = {
@@ -421,6 +483,7 @@
     setTimeout(() => {
       if (sellEnabled) {
         showModal = true;
+        handleSellPop();
       } else {
         log('🚫 Venta desactivada - Modal no se mostrará');
       }
@@ -467,6 +530,7 @@
       setTimeout(() => {
         if (sellEnabled) {
           showModal = true;
+          handleSellPop();
         } else {
           log('🚫 Venta desactivada - Modal no se mostrará');
         }
@@ -503,6 +567,7 @@
       setTimeout(() => {
         if (sellEnabled) {
           showModal = true;
+          handleSellPop();
         } else {
           log('🚫 Venta desactivada - Modal no se mostrará');
         }
