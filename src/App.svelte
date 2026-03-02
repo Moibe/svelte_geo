@@ -253,6 +253,22 @@
       if (gclid)       log('│   🟦 gclid        :', gclid);
       if (fbclid)      log('│   🟦 fbclid       :', fbclid);
       log('└─────────────────────────────────────────');
+
+      // Registrar visita desde anuncio en MariaDB
+      logConversion({
+        type: 'ad_visit',
+        gaClientId: getGAClientId(),
+        phone: '',
+        language: $locale,
+        ipDetection: ipDetectionResult,
+        gpsDetection: null,
+        searchMethod: 'none',
+        locationShown: mapCoords,
+        countryISO: userCountryISO,
+        countryCode: userCountryCode,
+        utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
+      });
+      log('📣 ad_visit registrado en MariaDB');
     } else {
       log('📡 Sin parámetros de campaña (tráfico directo u orgánico)');
     }
