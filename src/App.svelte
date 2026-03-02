@@ -677,7 +677,7 @@
         </div>
       {:else if safeMode === false}
         <!-- Modo Normal: Dropdown + Phone + Buscar -->
-        <div class="input-wrapper">
+        <div class="input-wrapper" dir="ltr">
           <CountrySelect bind:value={selectedCountry} />
           <PhoneInput 
             bind:value={phoneNumber}
