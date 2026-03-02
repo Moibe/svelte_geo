@@ -50,7 +50,8 @@
     '+31': { code: 'EUR', symbol: '€' },
     '+30': { code: 'EUR', symbol: '€' },
     '+358': { code: 'EUR', symbol: '€' },
-    '+44': { code: 'GBP', symbol: '£' }
+    '+44': { code: 'GBP', symbol: '£' },
+    '+359': { code: 'BGN', symbol: 'лв' }
   };
 
   onMount(async () => {
