@@ -674,7 +674,7 @@
         <!-- Cargando configuración desde Firebase -->
         <div class="loading-config">
           <div class="spinner-small"></div>
-          <p>Cargando...</p>
+          <p>{$_('modal.loading')}</p>
         </div>
       {:else if safeMode === false}
         <!-- Modo Normal: Dropdown + Phone + Buscar -->
