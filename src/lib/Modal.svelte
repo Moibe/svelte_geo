@@ -41,6 +41,15 @@
     '+34': { code: 'EUR', symbol: '€' },
     '+33': { code: 'EUR', symbol: '€' },
     '+49': { code: 'EUR', symbol: '€' },
+    '+351': { code: 'EUR', symbol: '€' },
+    '+43': { code: 'EUR', symbol: '€' },
+    '+32': { code: 'EUR', symbol: '€' },
+    '+352': { code: 'EUR', symbol: '€' },
+    '+353': { code: 'EUR', symbol: '€' },
+    '+39': { code: 'EUR', symbol: '€' },
+    '+31': { code: 'EUR', symbol: '€' },
+    '+30': { code: 'EUR', symbol: '€' },
+    '+358': { code: 'EUR', symbol: '€' },
     '+44': { code: 'GBP', symbol: '£' }
   };
 
