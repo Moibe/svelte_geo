@@ -47,6 +47,15 @@
   let ipDetectionResult = null;  // Resultado de detección inicial por IP
   let gpsDetectionResult = null; // Resultado de detección por GPS (si ocurrió)
   let searchMethod = 'none';     // 'phone', 'browser', 'ip', 'none'
+
+  // Parámetros de campaña (UTM + Click IDs)
+  let utmSource   = null;
+  let utmMedium   = null;
+  let utmCampaign = null;
+  let utmTerm     = null;
+  let utmContent  = null;
+  let gclid       = null;
+  let fbclid      = null;
   
   // Tiempo de espera actual basado en el modo (Safe Mode usa waitSafe, Normal Mode usa waitProd)
   $: currentWaitTime = (safeMode ? waitSafe : waitProd) * 1000;
@@ -224,13 +233,13 @@
     // 📡 PARÁMETROS DE CAMPAÑA (UTM + Click IDs)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     const urlParams = new URLSearchParams(window.location.search);
-    const utmSource   = urlParams.get('utm_source');
-    const utmMedium   = urlParams.get('utm_medium');
-    const utmCampaign = urlParams.get('utm_campaign');
-    const utmTerm     = urlParams.get('utm_term');
-    const utmContent  = urlParams.get('utm_content');
-    const gclid       = urlParams.get('gclid');
-    const fbclid      = urlParams.get('fbclid');
+    utmSource   = urlParams.get('utm_source');
+    utmMedium   = urlParams.get('utm_medium');
+    utmCampaign = urlParams.get('utm_campaign');
+    utmTerm     = urlParams.get('utm_term');
+    utmContent  = urlParams.get('utm_content');
+    gclid       = urlParams.get('gclid');
+    fbclid      = urlParams.get('fbclid');
 
     const hasUtm = utmSource || utmMedium || utmCampaign || utmTerm || utmContent || gclid || fbclid;
     if (hasUtm) {
@@ -311,6 +320,13 @@
                 locationShown: ctx.locationShown || mapCoords,
                 countryISO: data.country_iso || ctx.countryISO || 'MX',
                 countryCode: data.country_code || ctx.countryCode || '+52',
+                utmSource: ctx.utmSource || null,
+                utmMedium: ctx.utmMedium || null,
+                utmCampaign: ctx.utmCampaign || null,
+                utmTerm: ctx.utmTerm || null,
+                utmContent: ctx.utmContent || null,
+                gclid: ctx.gclid || null,
+                fbclid: ctx.fbclid || null,
               });
               log('✅ Compra real registrada en MariaDB');
 
@@ -375,6 +391,7 @@
       locationShown: mapCoords,
       countryISO: userCountryISO,
       countryCode: userCountryCode,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     }));
 
     if (!sellPopEnabled) return;
@@ -418,6 +435,7 @@
       locationShown: mapCoords,
       countryISO: userCountryISO,
       countryCode: userCountryCode,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
   }
 
@@ -470,6 +488,7 @@
       locationShown: mapCoords,
       countryISO: userCountryISO,
       countryCode: userCountryCode,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
   }
 
@@ -525,6 +544,7 @@
       locationShown: mapCoords,
       countryISO: userCountryISO,
       countryCode: userCountryCode,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
   }
 
@@ -571,6 +591,7 @@
       locationShown: mapCoords,
       countryISO: userCountryISO,
       countryCode: userCountryCode,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
   }
 

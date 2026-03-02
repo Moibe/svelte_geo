@@ -35,6 +35,13 @@ function formatInTimezone(date, timeZone) {
  * @param {Object} params.locationShown  - Coordenadas que se mostraron al usuario {lat, lng}
  * @param {string} params.countryISO     - ISO del país del usuario (MX, US, etc.)
  * @param {string} params.countryCode    - Código telefónico del país (+52, +1, etc.)
+ * @param {string} params.utmSource      - utm_source
+ * @param {string} params.utmMedium      - utm_medium
+ * @param {string} params.utmCampaign    - utm_campaign
+ * @param {string} params.utmTerm        - utm_term
+ * @param {string} params.utmContent     - utm_content
+ * @param {string} params.gclid          - Google Ads click ID
+ * @param {string} params.fbclid         - Meta Ads click ID
  */
 export async function logConversion({
   type,
@@ -47,6 +54,13 @@ export async function logConversion({
   locationShown = null,
   countryISO = null,
   countryCode = null,
+  utmSource = null,
+  utmMedium = null,
+  utmCampaign = null,
+  utmTerm = null,
+  utmContent = null,
+  gclid = null,
+  fbclid = null,
 }) {
   const now = new Date();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -72,8 +86,13 @@ export async function logConversion({
     gps_detection_country_code: gpsDetection?.countryCode ?? null,
     gps_detection_lat:          gpsDetection?.lat ?? null,
     gps_detection_lng:          gpsDetection?.lng ?? null,
-    search_method:              searchMethod,
-  };
+    search_method:              searchMethod,    utm_source:                 utmSource || null,
+    utm_medium:                 utmMedium || null,
+    utm_campaign:               utmCampaign || null,
+    utm_term:                   utmTerm || null,
+    utm_content:                utmContent || null,
+    gclid:                      gclid || null,
+    fbclid:                     fbclid || null,  };
 
   log('═══════════════════════════════════════════════');
   log('📊 CONVERSIÓN REGISTRADA');
