@@ -270,8 +270,26 @@
                 log('✅ Evento purchase enviado vía dataLayer:', data);
               }
               
+              // Registrar compra real en MariaDB
+              const conversionCtxRaw = localStorage.getItem('conversion_context');
+              const ctx = conversionCtxRaw ? JSON.parse(conversionCtxRaw) : {};
+              logConversion({
+                type: 'purchase',
+                gaClientId: getGAClientId(),
+                phone: ctx.phone || localStorage.getItem('last_phone_number') || '',
+                language: ctx.language || 'es',
+                ipDetection: ctx.ipDetection || null,
+                gpsDetection: ctx.gpsDetection || null,
+                searchMethod: ctx.searchMethod || 'none',
+                locationShown: ctx.locationShown || mapCoords,
+                countryISO: data.country_iso || ctx.countryISO || 'MX',
+                countryCode: data.country_code || ctx.countryCode || '+52',
+              });
+              log('✅ Compra real registrada en MariaDB');
+
               // Limpiar datos de compra (ya enviados)
               localStorage.removeItem('purchase_data');
+              localStorage.removeItem('conversion_context');
             } catch (e) {
               error('Error al procesar datos de compra:', e);
             }
@@ -320,6 +338,18 @@
   });
 
   function handleSellPop() {
+    // Siempre guardar contexto para logConversion si el usuario termina comprando
+    localStorage.setItem('conversion_context', JSON.stringify({
+      phone: phoneNumber,
+      language: $locale,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: userCountryCode,
+    }));
+
     if (!sellPopEnabled) return;
     const currency = currencyByCountry[userCountryCode] || 'USD';
     const transactionId = `sell_pop_${Date.now()}`;
