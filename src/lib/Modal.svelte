@@ -41,7 +41,7 @@
     '+34': { code: 'EUR', symbol: '€' },
     '+33': { code: 'EUR', symbol: '€' },
     '+49': { code: 'EUR', symbol: '€' },
-    '+351': { code: 'EUR', symbol: '€' },    '+355': { code: 'ALL', symbol: 'L' },    '+43': { code: 'EUR', symbol: '€' },
+    '+351': { code: 'EUR', symbol: '€' },    '+355': { code: 'EUR', symbol: '€' },    '+43': { code: 'EUR', symbol: '€' },
     '+32': { code: 'EUR', symbol: '€' },
     '+352': { code: 'EUR', symbol: '€' },
     '+353': { code: 'EUR', symbol: '€' },

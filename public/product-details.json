@@ -29,6 +29,21 @@
       "nickname": "Default"
     }
   },
+  "+355": {
+    "priceId": "price_1T1cgEIYi36CbmfWbx8ngeex",
+    "product": {
+      "id": "prod_TzbGHlbKHkeGiq",
+      "name": "GPS SMS Location",
+      "description": "Acceso a Mapa Completo"
+    },
+    "price": {
+      "id": "price_1T1cgEIYi36CbmfWbx8ngeex",
+      "unit_amount": 1000,
+      "currency": "eur",
+      "formatted": "€10",
+      "nickname": "Unión Europea - GPS SMS Location"
+    }
+  },
   "+30": {
     "priceId": "price_1T1cgEIYi36CbmfWbx8ngeex",
     "product": {
