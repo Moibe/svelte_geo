@@ -220,8 +220,35 @@
     const lastPhone = localStorage.getItem('last_phone_number');
     lastUsedPhoneNumber = lastPhone || '';
 
-    // Detectar retorno exitoso de Stripe
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 📡 PARÁMETROS DE CAMPAÑA (UTM + Click IDs)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     const urlParams = new URLSearchParams(window.location.search);
+    const utmSource   = urlParams.get('utm_source');
+    const utmMedium   = urlParams.get('utm_medium');
+    const utmCampaign = urlParams.get('utm_campaign');
+    const utmTerm     = urlParams.get('utm_term');
+    const utmContent  = urlParams.get('utm_content');
+    const gclid       = urlParams.get('gclid');
+    const fbclid      = urlParams.get('fbclid');
+
+    const hasUtm = utmSource || utmMedium || utmCampaign || utmTerm || utmContent || gclid || fbclid;
+    if (hasUtm) {
+      log('┌─────────────────────────────────────────');
+      log('│ 🎯 CAMPAÑA DE ADS DETECTADA');
+      if (utmSource)   log('│   🔎 utm_source   :', utmSource);
+      if (utmMedium)   log('│   📡 utm_medium   :', utmMedium);
+      if (utmCampaign) log('│   📣 utm_campaign :', utmCampaign);
+      if (utmTerm)     log('│   🔤 utm_term     :', utmTerm);
+      if (utmContent)  log('│   🖼️  utm_content  :', utmContent);
+      if (gclid)       log('│   🟦 gclid        :', gclid);
+      if (fbclid)      log('│   🟦 fbclid       :', fbclid);
+      log('└─────────────────────────────────────────');
+    } else {
+      log('📡 Sin parámetros de campaña (tráfico directo u orgánico)');
+    }
+
+    // Detectar retorno exitoso de Stripe
     if (urlParams.get('payment') === 'success') {
       // Restaurar coordenadas del mapa desde localStorage
       const savedCoords = localStorage.getItem('map_coords');
