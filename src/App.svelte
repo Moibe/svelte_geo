@@ -11,7 +11,7 @@
   import { getGAClientId } from './lib/stripe.js';
   import { logConversion } from './lib/conversionLogger.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange } from './lib/firebase.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange } from './lib/firebase.js';
   import { verboseStore, log, warn, error } from './lib/logger.js';
 
   let phoneNumber = '';
@@ -40,6 +40,8 @@
   let unsubscribeMapWait = null;
   let sellPopEnabled = false;        // Si true, dispara purchase cuando se abre el modal de ventas
   let unsubscribeSellPop = null;
+  let phoneSearchEnabled = false;    // Si true, dispara purchase cuando el usuario busca un teléfono
+  let unsubscribePhoneSearch = null;
 
   // Datos de sesión para logging de conversiones
   let ipDetectionResult = null;  // Resultado de detección inicial por IP
@@ -184,6 +186,18 @@
       sellPopEnabled = false;
     }
 
+    try {
+      phoneSearchEnabled = await getPhoneSearchConfig();
+      log(`📱 Phone Search purchase: ${phoneSearchEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      unsubscribePhoneSearch = onPhoneSearchChange((newValue) => {
+        phoneSearchEnabled = newValue;
+        log(`📱 Phone Search purchase actualizado: ${newValue ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      });
+    } catch (err) {
+      error('❌ Error al cargar phone-search:', err);
+      phoneSearchEnabled = false;
+    }
+
     // Detectar país y ubicación REAL del usuario
     const locationData = await detectCountry();
     ipDetectionResult = locationData; // Guardar para logging de conversiones
@@ -300,6 +314,9 @@
     if (unsubscribeSellPop) {
       unsubscribeSellPop();
     }
+    if (unsubscribePhoneSearch) {
+      unsubscribePhoneSearch();
+    }
   });
 
   function handleSellPop() {
@@ -335,6 +352,51 @@
     }
     logConversion({
       type: 'sell_pop',
+      gaClientId: getGAClientId(),
+      phone: phoneNumber,
+      language: $locale,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: userCountryCode,
+    });
+  }
+
+  function handlePhoneSearch() {
+    if (!phoneSearchEnabled) return;
+    const currency = currencyByCountry[userCountryCode] || 'USD';
+    const transactionId = `phone_search_${Date.now()}`;
+    const purchaseData = {
+      transaction_id: transactionId,
+      value: 1,
+      currency,
+      price_id: 'phone_search',
+      country_iso: userCountryISO,
+    };
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'purchase', {
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log('📱 Phone Search purchase enviado a GA4:', purchaseData);
+    } else if (typeof window.dataLayer !== 'undefined') {
+      window.dataLayer.push({
+        event: 'purchase',
+        transaction_id: purchaseData.transaction_id,
+        value: purchaseData.value,
+        currency: purchaseData.currency,
+        country_iso: purchaseData.country_iso,
+        items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
+      });
+      log('📱 Phone Search purchase enviado vía dataLayer:', purchaseData);
+    }
+    logConversion({
+      type: 'phone_search',
       gaClientId: getGAClientId(),
       phone: phoneNumber,
       language: $locale,
@@ -447,6 +509,7 @@
 
   async function handleOkClick() {
     searchMethod = 'phone';
+    handlePhoneSearch();
     // Verificar si existe ubicación en cache para este número
     let cached = getLocationCache(phoneNumber, selectedCountry);
     

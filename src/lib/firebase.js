@@ -340,6 +340,46 @@ export function onMapWaitChange(callback) {
 }
 
 /**
+ * Obtiene la configuración de phone-search desde Firestore.
+ * Documento: geo-conversiones, campo: phone-search (boolean)
+ * @returns {Promise<boolean>}
+ */
+export async function getPhoneSearchConfig() {
+  try {
+    const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return data['phone-search'] || false;
+    }
+    return false;
+  } catch (err) {
+    error('❌ Error al cargar phone-search:', err);
+    return false;
+  }
+}
+
+/**
+ * Escucha cambios en tiempo real de phone-search
+ * @param {Function} callback
+ * @returns {Function} Función para detener la escucha
+ */
+export function onPhoneSearchChange(callback) {
+  const configRef = doc(db, 'configuraciones', 'geo-conversiones');
+  return onSnapshot(configRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      callback(data['phone-search'] || false);
+    } else {
+      callback(false);
+    }
+  }, (err) => {
+    error('❌ Error al escuchar cambios de phone-search:', err);
+    callback(false);
+  });
+}
+
+/**
  * Obtiene la configuración de sell-pop desde Firestore.
  * Documento: geo-conversiones, campo: sell-pop (boolean)
  * @returns {Promise<boolean>}
