@@ -365,36 +365,43 @@
   }
 
   function handlePhoneSearch() {
-    if (!phoneSearchEnabled) return;
+    // logConversion SIEMPRE se ejecuta (MariaDB registra toda búsqueda)
+    // phoneSearchEnabled solo controla si se marca como conversión en GA4
     const currency = currencyByCountry[userCountryCode] || 'USD';
-    const transactionId = `phone_search_${Date.now()}`;
-    const purchaseData = {
-      transaction_id: transactionId,
-      value: 1,
-      currency,
-      price_id: 'phone_search',
-      country_iso: userCountryISO,
-    };
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'purchase', {
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log('📱 Phone Search purchase enviado a GA4:', purchaseData);
-    } else if (typeof window.dataLayer !== 'undefined') {
-      window.dataLayer.push({
-        event: 'purchase',
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log('📱 Phone Search purchase enviado vía dataLayer:', purchaseData);
+
+    if (phoneSearchEnabled) {
+      const transactionId = `phone_search_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'phone_search',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('📱 Phone Search purchase enviado a GA4:', purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('📱 Phone Search purchase enviado vía dataLayer:', purchaseData);
+      }
+    } else {
+      log('📱 Phone Search: solo logging a DB (conversión GA4 desactivada)');
     }
+
     logConversion({
       type: 'phone_search',
       gaClientId: getGAClientId(),
