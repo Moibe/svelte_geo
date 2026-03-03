@@ -30,18 +30,18 @@
     }
   },
   "+355": {
-    "priceId": "price_1T1cgEIYi36CbmfWbx8ngeex",
+    "priceId": "price_1T6gkEIYi36CbmfWdlKGrzoj",
     "product": {
       "id": "prod_TzbGHlbKHkeGiq",
       "name": "GPS SMS Location",
       "description": "Acceso a Mapa Completo"
     },
     "price": {
-      "id": "price_1T1cgEIYi36CbmfWbx8ngeex",
-      "unit_amount": 1000,
-      "currency": "eur",
-      "formatted": "€10",
-      "nickname": "Unión Europea - GPS SMS Location"
+      "id": "price_1T6gkEIYi36CbmfWdlKGrzoj",
+      "unit_amount": 1100,
+      "currency": "all",
+      "formatted": "L1100",
+      "nickname": "Albania - GPS SMS Location"
     }
   },
   "+30": {
