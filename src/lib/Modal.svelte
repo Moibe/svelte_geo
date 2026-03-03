@@ -3,6 +3,7 @@
   import { _ } from 'svelte-i18n';
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
   import { getPMCConfig, onPMCChange, getStripeModeConfig, onStripeModeChange, getPriceTestConfig, onPriceTestChange } from './firebase.js';
+  import { logConversion } from './conversionLogger.js';
   import { log, warn, error } from './logger.js';
   
   export let isVisible = false;
@@ -174,6 +175,30 @@
       };
       localStorage.setItem('purchase_data', JSON.stringify(purchaseData));
       log('💾 Datos de compra guardados para conversión:', purchaseData);
+
+      // Registrar clic en botón de compra en MariaDB
+      const ctxRaw = localStorage.getItem('conversion_context');
+      const ctx = ctxRaw ? JSON.parse(ctxRaw) : {};
+      logConversion({
+        type: 'buy_click',
+        gaClientId: getGAClientId(),
+        phone: ctx.phone || '',
+        language: ctx.language || 'es',
+        ipDetection: ctx.ipDetection || null,
+        gpsDetection: ctx.gpsDetection || null,
+        searchMethod: ctx.searchMethod || 'none',
+        locationShown: { lat: mapLat, lng: mapLng },
+        countryISO: countryISO,
+        countryCode: countryCode,
+        utmSource: ctx.utmSource || null,
+        utmMedium: ctx.utmMedium || null,
+        utmCampaign: ctx.utmCampaign || null,
+        utmTerm: ctx.utmTerm || null,
+        utmContent: ctx.utmContent || null,
+        gclid: ctx.gclid || null,
+        fbclid: ctx.fbclid || null,
+      });
+      log('🛒 buy_click registrado en MariaDB');
 
       const gaClientId = getGAClientId();
       const baseUrl = window.location.origin;
