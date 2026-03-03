@@ -244,7 +244,7 @@
           <div class="content">
             <h2>{$_('modal.title')}</h2>
           </div>
-          <div class="price">{productDetails.price.formatted} {getCurrency(countryCode).code}</div>
+          <div class="price">{productDetails.price.formatted}{productDetails.price.formatted.endsWith(getCurrency(countryCode).code) ? '' : ' ' + getCurrency(countryCode).code}</div>
           <button 
             class="payment-button"
             on:click={handlePayment}
