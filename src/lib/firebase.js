@@ -466,8 +466,46 @@ export function onPriceTestChange(callback) {
   });
 }
 
+/** * Obtiene el nivel de precio activo desde Firestore
+ * Campos en geo-stripe: 'price-level' (number: 100 | 200)
+ * @returns {Promise<number>} Nivel de precio (default: 200)
+ */
+export async function getPriceLevelConfig() {
+  try {
+    const configRef = doc(db, 'configuraciones', 'geo-stripe');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return data['price-level'] || 200;
+    }
+    return 200;
+  } catch (err) {
+    error('\u274c Error al cargar price-level:', err);
+    return 200;
+  }
+}
+
 /**
- * Obtiene la configuración de verbose (si se muestran logs en consola)
+ * Escucha cambios en tiempo real del nivel de precio
+ * @param {Function} callback - recibe number (100 o 200)
+ * @returns {Function} Funci\u00f3n para detener la escucha
+ */
+export function onPriceLevelChange(callback) {
+  const configRef = doc(db, 'configuraciones', 'geo-stripe');
+  return onSnapshot(configRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      callback(data['price-level'] || 200);
+    } else {
+      callback(200);
+    }
+  }, (err) => {
+    error('\u274c Error al escuchar cambios de price-level:', err);
+    callback(200);
+  });
+}
+
+/** * Obtiene la configuración de verbose (si se muestran logs en consola)
  * Lee 'verbose-dev' en desarrollo y 'verbose-prod' en producción
  * @returns {Promise<boolean>} true = mostrar logs, false = ocultar logs
  */

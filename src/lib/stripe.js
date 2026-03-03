@@ -207,9 +207,9 @@ export async function crearSesionPago(
  * @param {boolean} isProductionMode - true = producción, false = sandbox
  * @returns {Promise<Object>} Detalles del precio y producto
  */
-export async function getProductDetailsByCountry(countryCode, isProductionMode = true) {
+export async function getProductDetailsByCountry(countryCode, isProductionMode = true, priceLevel = 200) {
   try {
-    log(`🔍 Buscando detalles para país: ${countryCode} (Modo: ${isProductionMode ? 'PRODUCTION' : 'SANDBOX'})`);
+    log(`\ud83d\udd0d Buscando detalles para pa\u00eds: ${countryCode} (Modo: ${isProductionMode ? 'PRODUCTION' : 'SANDBOX'}, Nivel: $${priceLevel})`);
     
     // En modo sandbox, esta función no debería llamarse, pero devolver algo por si acaso
     if (!isProductionMode) {
@@ -223,7 +223,8 @@ export async function getProductDetailsByCountry(countryCode, isProductionMode =
       };
     }
     
-    const response = await fetch('/product-details.json');
+    const fileName = priceLevel === 100 ? '/product-details-100.json' : '/product-details.json';
+    const response = await fetch(fileName);
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
@@ -254,21 +255,15 @@ export async function getProductDetailsByCountry(countryCode, isProductionMode =
   } catch (err) {
     error('❌ Error al obtener detalles del producto:', err);
     
-    // Fallback final con México
-    const fallback = {
-      priceId: 'price_1T1c40IYi36CbmfWavUj4xxu', // México
-      product: {
-        id: 'prod_TzbGHlbKHkeGiq',
-        name: 'GPS SMS Location',
-        description: 'Acceso a Mapa Completo'
-      },
-      price: {
-        id: 'price_1T1c40IYi36CbmfWavUj4xxu',
-        unit_amount: 20000,
-        currency: 'mxn',
-        formatted: '$200',
-        nickname: 'Default'
-      }
+    // Fallback final con México (según nivel de precio)
+    const fallback = priceLevel === 100 ? {
+      priceId: 'price_1T6msaIYi36CbmfWYxbCIfix', // México $100
+      product: { id: 'prod_U4wmT5U2hLGQoM', name: 'GPS SMS Location', description: 'Acceso a Mapa Completo' },
+      price: { id: 'price_1T6msaIYi36CbmfWYxbCIfix', unit_amount: 10000, currency: 'mxn', formatted: '$100', nickname: 'Default $100' }
+    } : {
+      priceId: 'price_1T1c40IYi36CbmfWavUj4xxu', // México $200
+      product: { id: 'prod_TzbGHlbKHkeGiq', name: 'GPS SMS Location', description: 'Acceso a Mapa Completo' },
+      price: { id: 'price_1T1c40IYi36CbmfWavUj4xxu', unit_amount: 20000, currency: 'mxn', formatted: '$200', nickname: 'Default $200' }
     };
     
     log('🚨 Usando fallback de México:', fallback);

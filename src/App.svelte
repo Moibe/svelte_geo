@@ -11,7 +11,7 @@
   import { getGAClientId } from './lib/stripe.js';
   import { logConversion } from './lib/conversionLogger.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange } from './lib/firebase.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange, getPriceLevelConfig, onPriceLevelChange } from './lib/firebase.js';
   import { verboseStore, log, warn, error } from './lib/logger.js';
 
   let phoneNumber = '';
@@ -42,6 +42,8 @@
   let unsubscribeSellPop = null;
   let phoneSearchEnabled = false;    // Si true, dispara purchase cuando el usuario busca un teléfono
   let unsubscribePhoneSearch = null;
+  let priceLevel = 200;              // Nivel de precio (100 = producto barato, 200 = producto original)
+  let unsubscribePriceLevel = null;  // Función para detener listener de Price Level
 
   // Datos de sesión para logging de conversiones
   let ipDetectionResult = null;  // Resultado de detección inicial por IP
@@ -205,6 +207,18 @@
     } catch (err) {
       error('❌ Error al cargar phone-search:', err);
       phoneSearchEnabled = false;
+    }
+
+    try {
+      priceLevel = await getPriceLevelConfig();
+      log(`💲 Price Level: ${priceLevel}`);
+      unsubscribePriceLevel = onPriceLevelChange((newValue) => {
+        priceLevel = newValue;
+        log(`💲 Price Level actualizado: ${newValue}`);
+      });
+    } catch (err) {
+      error('❌ Error al cargar price-level:', err);
+      priceLevel = 200;
     }
 
     // Detectar país y ubicación REAL del usuario
@@ -393,6 +407,9 @@
     }
     if (unsubscribePhoneSearch) {
       unsubscribePhoneSearch();
+    }
+    if (unsubscribePriceLevel) {
+      unsubscribePriceLevel();
     }
   });
 
@@ -759,6 +776,7 @@
     countryISO={userCountryISO}
     mapLat={mapCoords.lat}
     mapLng={mapCoords.lng}
+    priceLevel={priceLevel}
   />
   <div class="language-selector-wrapper">
     <LanguageSelector />

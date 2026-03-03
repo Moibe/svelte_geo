@@ -1,0 +1,17 @@
+{
+  "+52": {
+    "priceId": "price_1T6msaIYi36CbmfWYxbCIfix",
+    "product": {
+      "id": "prod_U4wmT5U2hLGQoM",
+      "name": "GPS SMS Location",
+      "description": "Acceso a Mapa Completo"
+    },
+    "price": {
+      "id": "price_1T6msaIYi36CbmfWYxbCIfix",
+      "unit_amount": 10000,
+      "currency": "mxn",
+      "formatted": "$100",
+      "nickname": "México $100 - GPS SMS Location"
+    }
+  }
+}

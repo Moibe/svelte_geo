@@ -17,6 +17,7 @@
   let unsubscribePriceTest;
   export let mapLat = 19.4326;
   export let mapLng = -99.1332;
+  export let priceLevel = 200;
   
   let isLoading = false;
   let errorMessage = '';
@@ -111,7 +112,7 @@
     return currencyMap[code] || { code: 'USD', symbol: '$' };
   }
 
-  // Cargar detalles del producto cuando se muestra el modal o cambia el país
+  // Cargar detalles del producto cuando se muestra el modal, cambia el pa\u00eds o cambia el nivel de precio
   $: if (isVisible && countryCode) {
     productDetails = null;
     loadProductDetails();
@@ -135,7 +136,7 @@
         log('🧪 SANDBOX MODE - Usando precio de prueba:', testPriceId);
       } else {
         // En modo PRODUCCIÓN, usar precios por país
-        productDetails = await getProductDetailsByCountry(countryCode, isProductionMode);
+        productDetails = await getProductDetailsByCountry(countryCode, isProductionMode, priceLevel);
         // Aplicar override de price-test si está activo
         if (priceTestOverride) {
           log('🧪 PROD TEST PRICE aplicado:', priceTestOverride, '(reemplaza:', productDetails.priceId + ')');
