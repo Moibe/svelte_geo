@@ -52,7 +52,8 @@
     '+30': { code: 'EUR', symbol: '€' },
     '+358': { code: 'EUR', symbol: '€' },
     '+44': { code: 'GBP', symbol: '£' },
-    '+359': { code: 'EUR', symbol: '€' }
+    '+359': { code: 'EUR', symbol: '€' },
+    '+61': { code: 'AUD', symbol: '$' }
   };
 
   onMount(async () => {
