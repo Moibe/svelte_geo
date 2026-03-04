@@ -285,6 +285,21 @@
       log('📣 ad_visit registrado en MariaDB');
     } else {
       log('📡 Sin parámetros de campaña (tráfico directo u orgánico)');
+      // Registrar visita orgánica en MariaDB
+      logConversion({
+        type: 'organic_visit',
+        gaClientId: getGAClientId(),
+        phone: '',
+        language: $locale,
+        ipDetection: ipDetectionResult,
+        gpsDetection: null,
+        searchMethod: 'none',
+        locationShown: mapCoords,
+        countryISO: userCountryISO,
+        countryCode: userCountryCode,
+        utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
+      });
+      log('🌿 organic_visit registrado en MariaDB');
     }
 
     // Detectar retorno exitoso de Stripe
