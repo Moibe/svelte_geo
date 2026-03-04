@@ -170,8 +170,9 @@
     });
 
     // Detectar cualquier interacción con el mapa (solo se dispara una vez)
+    // Siempre dispara el evento - App.svelte decide si enviar a GA4
     const fireInteraction = () => {
-      if (!interactionFired && mapInteractionEnabled) {
+      if (!interactionFired) {
         interactionFired = true;
         dispatch('mapInteracted');
       }
@@ -180,8 +181,9 @@
     map.on('dragstart', fireInteraction);
     map.on('zoomstart', fireInteraction);
 
-    // Timer de permanencia en mapa
-    if (mapWaitEnabled && mapWaitTime > 0) {
+    // Timer de permanencia en mapa (siempre se ejecuta si hay tiempo configurado)
+    // App.svelte decide si enviar a GA4
+    if (mapWaitTime > 0) {
       waitTimer = setTimeout(() => {
         if (!waitFired) {
           waitFired = true;
