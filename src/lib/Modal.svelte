@@ -267,6 +267,25 @@
         {/if}
         
         <p class="stripe-text">{$_('modal.securePayment')}</p>
+        <div class="card-icons">
+          <!-- Visa -->
+          <svg viewBox="0 0 48 32" class="card-icon">
+            <rect fill="#1A1F71" width="48" height="32" rx="4"/>
+            <path fill="#FFFFFF" d="M19.5 21h-2.7l1.7-10.5h2.7L19.5 21zm-5.3 0h-2.8l-2.5-8.1-.3 1.6-.9 5.3s-.1.6-.4.9c-.3.3-.7.3-.7.3h-4.1l-.1-.3s1.5-.3 2.9-1.5c1.4-1.2 2.1-3 2.1-3l3.4-8.2h2.8l4.3 10.5h-2.8l-.9-2.5zm16.5-7.8c0-.6.5-1.2 1.6-1.2.8 0 1.5.2 1.9.4l.3-2s-.7-.3-1.9-.3c-2.9 0-4.6 1.5-4.6 3.6 0 1.6 1.4 2.5 2.5 3 1.1.5 1.5.9 1.5 1.4 0 .7-.9 1.1-1.7 1.1-1.2 0-2-.3-2.5-.5l-.4 2.1s.9.4 2.4.4c3 0 4.8-1.5 4.8-3.7 0-2.8-3.9-3-3.9-4.3zm11.8-2.7h-2.2c-.7 0-1.2.2-1.5.8L34 21h2.8l.6-1.6h3.4l.3 1.6h2.5l-2.1-10.5zm-3.2 6.8l1.4-3.8.8 3.8h-2.2z"/>
+          </svg>
+          <!-- Mastercard -->
+          <svg viewBox="0 0 48 32" class="card-icon">
+            <rect fill="#000000" width="48" height="32" rx="4"/>
+            <circle fill="#EB001B" cx="18" cy="16" r="9"/>
+            <circle fill="#F79E1B" cx="30" cy="16" r="9"/>
+            <path fill="#FF5F00" d="M24 9.2c2.2 1.7 3.6 4.4 3.6 7.3s-1.4 5.6-3.6 7.3c-2.2-1.7-3.6-4.4-3.6-7.3s1.4-5.6 3.6-7.3z"/>
+          </svg>
+          <!-- American Express -->
+          <svg viewBox="0 0 48 32" class="card-icon">
+            <rect fill="#006FCF" width="48" height="32" rx="4"/>
+            <path fill="#FFFFFF" d="M12 12h3l.5 1.2.5-1.2h3v6h-2v-4l-1 2.5h-1.5l-1-2.5v4h-2v-6h.5zm10 0h5v1.5h-3v1h3v1.5h-3v1h3v1.5h-5v-6.5zm7 0h2.5l1.5 2 1.5-2h2.5l-2.8 3.3 2.8 3.2h-2.5l-1.5-2-1.5 2h-2.5l2.8-3.2-2.8-3.3z"/>
+          </svg>
+        </div>
       </div>
     </div>
   </div>
@@ -392,7 +411,7 @@
 
   .stripe-text {
     position: absolute;
-    bottom: 1rem;
+    bottom: 2.5rem;
     left: 0;
     right: 0;
     margin: 0;
@@ -400,5 +419,26 @@
     color: #888;
     text-align: center;
     width: 100%;
+  }
+
+  .card-icons {
+    position: absolute;
+    bottom: 0.8rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .card-icon {
+    width: 36px;
+    height: 24px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+
+  .card-icon:hover {
+    opacity: 1;
   }
 </style>
