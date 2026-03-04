@@ -427,36 +427,8 @@
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     }));
 
-    if (!sellPopEnabled) return;
-    const currency = currencyByCountry[userCountryCode] || 'USD';
-    const transactionId = `sell_pop_${Date.now()}`;
-    const purchaseData = {
-      transaction_id: transactionId,
-      value: 1,
-      currency,
-      price_id: 'sell_pop',
-      country_iso: userCountryISO,
-    };
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'purchase', {
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log('🛒 Sell Pop purchase enviado a GA4:', purchaseData);
-    } else if (typeof window.dataLayer !== 'undefined') {
-      window.dataLayer.push({
-        event: 'purchase',
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log('🛒 Sell Pop purchase enviado vía dataLayer:', purchaseData);
-    }
+    // logConversion SIEMPRE se ejecuta (MariaDB registra todo)
+    // sellPopEnabled solo controla si se marca como conversión en GA4
     logConversion({
       type: 'sell_pop',
       gaClientId: getGAClientId(),
@@ -470,6 +442,40 @@
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
+
+    if (sellPopEnabled) {
+      const currency = currencyByCountry[userCountryCode] || 'USD';
+      const transactionId = `sell_pop_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'sell_pop',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🛒 Sell Pop purchase enviado a GA4:', purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🛒 Sell Pop purchase enviado vía dataLayer:', purchaseData);
+      }
+    } else {
+      log('🛒 Sell Pop: solo logging a DB (conversión GA4 desactivada)');
+    }
   }
 
   function handlePhoneSearch() {
@@ -537,36 +543,8 @@
   };
 
   function handleMapWaited() {
-    if (!mapWaitEnabled) return;
-    const currency = currencyByCountry[userCountryCode] || 'USD';
-    const transactionId = `map_wait_${Date.now()}`;
-    const purchaseData = {
-      transaction_id: transactionId,
-      value: 1,
-      currency,
-      price_id: 'map_wait',
-      country_iso: userCountryISO,
-    };
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'purchase', {
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log(`⏱️ Map Wait purchase enviado a GA4 (${mapWaitTime}s):`, purchaseData);
-    } else if (typeof window.dataLayer !== 'undefined') {
-      window.dataLayer.push({
-        event: 'purchase',
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log(`⏱️ Map Wait purchase enviado vía dataLayer (${mapWaitTime}s):`, purchaseData);
-    }
+    // logConversion SIEMPRE se ejecuta (MariaDB registra todo)
+    // mapWaitEnabled solo controla si se marca como conversión en GA4
     logConversion({
       type: 'map_wait',
       gaClientId: getGAClientId(),
@@ -580,40 +558,45 @@
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
+
+    if (mapWaitEnabled) {
+      const currency = currencyByCountry[userCountryCode] || 'USD';
+      const transactionId = `map_wait_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'map_wait',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log(`⏱️ Map Wait purchase enviado a GA4 (${mapWaitTime}s):`, purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log(`⏱️ Map Wait purchase enviado vía dataLayer (${mapWaitTime}s):`, purchaseData);
+      }
+    } else {
+      log('⏱️ Map Wait: solo logging a DB (conversión GA4 desactivada)');
+    }
   }
 
   function handleMapInteracted() {
-    if (!mapInteractionEnabled) return;
-    const currency = currencyByCountry[userCountryCode] || 'USD';
-    const transactionId = `map_interaction_${Date.now()}`;
-    const purchaseData = {
-      transaction_id: transactionId,
-      value: 1,
-      currency,
-      price_id: 'map_interaction',
-      country_iso: userCountryISO,
-    };
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'purchase', {
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log('🗺️ Map Interaction purchase enviado a GA4:', purchaseData);
-    } else if (typeof window.dataLayer !== 'undefined') {
-      window.dataLayer.push({
-        event: 'purchase',
-        transaction_id: purchaseData.transaction_id,
-        value: purchaseData.value,
-        currency: purchaseData.currency,
-        country_iso: purchaseData.country_iso,
-        items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
-      });
-      log('🗺️ Map Interaction purchase enviado vía dataLayer:', purchaseData);
-    }
-    // Logging detallado de la conversión
+    // logConversion SIEMPRE se ejecuta (MariaDB registra todo)
+    // mapInteractionEnabled solo controla si se marca como conversión en GA4
     logConversion({
       type: 'map_interaction',
       gaClientId: getGAClientId(),
@@ -627,6 +610,40 @@
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
+
+    if (mapInteractionEnabled) {
+      const currency = currencyByCountry[userCountryCode] || 'USD';
+      const transactionId = `map_interaction_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'map_interaction',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🗺️ Map Interaction purchase enviado a GA4:', purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🗺️ Map Interaction purchase enviado vía dataLayer:', purchaseData);
+      }
+    } else {
+      log('🗺️ Map Interaction: solo logging a DB (conversión GA4 desactivada)');
+    }
   }
 
   async function handleOkClick() {
