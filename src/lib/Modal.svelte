@@ -280,11 +280,6 @@
             <circle fill="#F79E1B" cx="30" cy="16" r="9"/>
             <path fill="#FF5F00" d="M24 9.2c2.2 1.7 3.6 4.4 3.6 7.3s-1.4 5.6-3.6 7.3c-2.2-1.7-3.6-4.4-3.6-7.3s1.4-5.6 3.6-7.3z"/>
           </svg>
-          <!-- American Express -->
-          <svg viewBox="0 0 48 32" class="card-icon">
-            <rect fill="#006FCF" width="48" height="32" rx="4"/>
-            <path fill="#FFFFFF" d="M12 12h3l.5 1.2.5-1.2h3v6h-2v-4l-1 2.5h-1.5l-1-2.5v4h-2v-6h.5zm10 0h5v1.5h-3v1h3v1.5h-3v1h3v1.5h-5v-6.5zm7 0h2.5l1.5 2 1.5-2h2.5l-2.8 3.3 2.8 3.2h-2.5l-1.5-2-1.5 2h-2.5l2.8-3.2-2.8-3.3z"/>
-          </svg>
         </div>
       </div>
     </div>
