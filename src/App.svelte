@@ -58,6 +58,7 @@
   let utmContent  = null;
   let gclid       = null;
   let fbclid      = null;
+  let handleVisibilityChange = null;
   
   // Tiempo de espera actual basado en el modo (Safe Mode usa waitSafe, Normal Mode usa waitProd)
   $: currentWaitTime = (safeMode ? waitSafe : waitProd) * 1000;
@@ -413,9 +414,34 @@
         });
       }
     }
+    // Detectar cierre de pestaña / abandono de la página
+    handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        log('🚪 Pestaña o ventana ocultada/cerrada (page_close)');
+        logConversion({
+          type: 'page_close',
+          gaClientId: getGAClientId(),
+          phone: lastUsedPhoneNumber || '',
+          language: $locale,
+          ipDetection: ipDetectionResult,
+          gpsDetection: gpsDetectionResult,
+          searchMethod,
+          locationShown: mapCoords,
+          countryISO: userCountryISO,
+          countryCode: userCountryCode,
+          utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
   });
 
   onDestroy(() => {
+    // Limpiar event listener de visibilitychange
+    if (typeof document !== 'undefined' && handleVisibilityChange) {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }
+
     // Detener listeners de Firestore cuando se destruya el componente
     if (unsubscribe) {
       unsubscribe();

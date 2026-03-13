@@ -106,6 +106,7 @@ export async function logConversion({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      keepalive: true, // Importante para que no se aborte al cerrar la pestaña
     });
     if (response.ok) {
       const result = await response.json();
