@@ -777,6 +777,24 @@
     log('🔄 Cambio de Lada registrado (lada_change):', selectedCountry);
   }
 
+  function handleLanguageChange(event) {
+    const newLang = event.detail.language;
+    logConversion({
+      type: 'language_change',
+      gaClientId: getGAClientId(),
+      phone: phoneNumber,
+      language: newLang,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: selectedCountry,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
+    });
+    log('🗣️ Cambio de Idiona registrado (language_change):', newLang);
+  }
+
   function handlePhoneKeydown(event) {
     // Ejecutar handleOkClick si se presiona Enter y hay al menos 7 números
     if (event.key === 'Enter' && phoneNumber.length >= 7) {
@@ -875,7 +893,7 @@
     priceLevel={priceLevel}
   />
   <div class="language-selector-wrapper">
-    <LanguageSelector />
+    <LanguageSelector on:change={handleLanguageChange} />
   </div>
   <div class="container">
     {#if !showMap && !showSpinner}

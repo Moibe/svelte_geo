@@ -1,5 +1,8 @@
 <script>
   import { locale } from 'svelte-i18n';
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
 
   // Los 6 idiomas siempre visibles
   const PINNED = ['es', 'en', 'pt', 'fr', 'de', 'ar'];
@@ -28,6 +31,7 @@
     locale.set(lang);
     localStorage.setItem('preferred_language', lang);
     menuOpen = false;
+    dispatch('change', { language: lang });
   }
 
   function toggleMenu() {
