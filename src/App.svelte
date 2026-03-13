@@ -392,6 +392,27 @@
         }
       }
     }
+
+    // Detectar si fue un refresh de la página
+    if (typeof performance !== 'undefined' && performance.getEntriesByType) {
+      const navEntries = performance.getEntriesByType('navigation');
+      if (navEntries.length > 0 && navEntries[0].type === 'reload') {
+        log('🔄 Page reload detectado (page_refresh)');
+        logConversion({
+          type: 'page_refresh',
+          gaClientId: getGAClientId(),
+          phone: lastUsedPhoneNumber || '',
+          language: $locale,
+          ipDetection: ipDetectionResult,
+          gpsDetection: null,
+          searchMethod: 'none',
+          locationShown: mapCoords,
+          countryISO: userCountryISO,
+          countryCode: userCountryCode,
+          utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
+        });
+      }
+    }
   });
 
   onDestroy(() => {
