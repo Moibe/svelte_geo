@@ -79,7 +79,7 @@
     : [{ abbr: getIsoFromPhone(value), code: value }, ...countries];
 </script>
 
-<select class="country-select" bind:value>
+<select class="country-select" bind:value on:change>
   {#each displayCountries as country}
     <option value={country.code}>{country.abbr} {country.code}</option>
   {/each}

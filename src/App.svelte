@@ -713,6 +713,23 @@
     phoneNumber = '';
   }
 
+  function handleLadaChange() {
+    logConversion({
+      type: 'lada_change',
+      gaClientId: getGAClientId(),
+      phone: phoneNumber,
+      language: $locale,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: selectedCountry,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
+    });
+    log('🔄 Cambio de Lada registrado (lada_change):', selectedCountry);
+  }
+
   function handlePhoneKeydown(event) {
     // Ejecutar handleOkClick si se presiona Enter y hay al menos 7 números
     if (event.key === 'Enter' && phoneNumber.length >= 7) {
@@ -824,7 +841,7 @@
       {:else if safeMode === false}
         <!-- Modo Normal: Dropdown + Phone + Buscar -->
         <div class="input-wrapper" dir="ltr">
-          <CountrySelect bind:value={selectedCountry} />
+          <CountrySelect bind:value={selectedCountry} on:change={handleLadaChange} />
           <PhoneInput 
             bind:value={phoneNumber}
             onSubmit={() => phoneNumber.length >= 7 && handleOkClick()}
