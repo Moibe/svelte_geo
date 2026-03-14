@@ -1,37 +1,35 @@
 <script>
-  import { locale } from 'svelte-i18n';
-  import { createEventDispatcher } from 'svelte';
+  import { locale } from "svelte-i18n";
+  import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 
   // Los 6 idiomas siempre visibles
-  const PINNED = ['es', 'en', 'pt', 'fr', 'de', 'ar'];
+  const PINNED = ["es", "en", "pt", "fr", "de", "ar"];
 
   const languages = [
-    { code: 'es', label: 'Español' },
-    { code: 'en', label: 'English' },
-    { code: 'pt', label: 'Português' },
-    { code: 'fr', label: 'Français' },
-    { code: 'de', label: 'Deutsch' },
-    { code: 'ar', label: 'العربية' }
+    { code: "es", label: "Español" },
+    { code: "en", label: "English" },
+    { code: "pt", label: "Português" },
+    { code: "fr", label: "Français" },
+    { code: "de", label: "Deutsch" },
+    { code: "ar", label: "العربية" },
     // Agregar nuevos idiomas aquí — aparecerán en el menú "···" automáticamente
   ];
 
   // Visible: los 6 fijos + el idioma activo si está en overflow
-  $: pinned = languages.filter(l => PINNED.includes(l.code));
-  $: overflow = languages.filter(l => !PINNED.includes(l.code));
-  $: activeInOverflow = overflow.find(l => l.code === $locale) || null;
-  $: visible = activeInOverflow
-    ? [...pinned, activeInOverflow]
-    : pinned;
+  $: pinned = languages.filter((l) => PINNED.includes(l.code));
+  $: overflow = languages.filter((l) => !PINNED.includes(l.code));
+  $: activeInOverflow = overflow.find((l) => l.code === $locale) || null;
+  $: visible = activeInOverflow ? [...pinned, activeInOverflow] : pinned;
 
   let menuOpen = false;
 
   function changeLanguage(lang) {
     locale.set(lang);
-    localStorage.setItem('preferred_language', lang);
+    localStorage.setItem("preferred_language", lang);
     menuOpen = false;
-    dispatch('change', { language: lang });
+    dispatch("change", { language: lang });
   }
 
   function toggleMenu() {
@@ -40,7 +38,7 @@
 
   // Cerrar menú al hacer click fuera
   function handleOutsideClick(e) {
-    if (!e.target.closest('.lang-overflow')) {
+    if (!e.target.closest(".lang-overflow")) {
       menuOpen = false;
     }
   }
@@ -139,7 +137,7 @@
     padding: 4px;
     z-index: 1000;
     min-width: 130px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   }
 
   .overflow-item {
@@ -164,4 +162,3 @@
     font-weight: 600;
   }
 </style>
-
