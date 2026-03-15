@@ -267,20 +267,6 @@
         {/if}
         
         <p class="stripe-text">{$_('modal.securePayment')}</p>
-        <div class="card-icons">
-          <!-- Visa -->
-          <svg viewBox="0 0 48 32" class="card-icon">
-            <rect fill="#1A1F71" width="48" height="32" rx="4"/>
-            <text x="24" y="20" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="12" font-weight="bold" font-style="italic" text-anchor="middle">VISA</text>
-          </svg>
-          <!-- Mastercard -->
-          <svg viewBox="0 0 48 32" class="card-icon">
-            <rect fill="#000000" width="48" height="32" rx="4"/>
-            <circle fill="#EB001B" cx="18" cy="16" r="9"/>
-            <circle fill="#F79E1B" cx="30" cy="16" r="9"/>
-            <path fill="#FF5F00" d="M24 9.2c2.2 1.7 3.6 4.4 3.6 7.3s-1.4 5.6-3.6 7.3c-2.2-1.7-3.6-4.4-3.6-7.3s1.4-5.6 3.6-7.3z"/>
-          </svg>
-        </div>
       </div>
     </div>
   </div>
@@ -406,7 +392,7 @@
 
   .stripe-text {
     position: absolute;
-    bottom: 2.5rem;
+    bottom: 1rem;
     left: 0;
     right: 0;
     margin: 0;
@@ -414,26 +400,5 @@
     color: #888;
     text-align: center;
     width: 100%;
-  }
-
-  .card-icons {
-    position: absolute;
-    bottom: 0.8rem;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-  }
-
-  .card-icon {
-    width: 36px;
-    height: 24px;
-    opacity: 0.7;
-    transition: opacity 0.2s ease;
-  }
-
-  .card-icon:hover {
-    opacity: 1;
   }
 </style>
