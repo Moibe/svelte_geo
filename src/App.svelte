@@ -602,6 +602,8 @@
     '+39': 'EUR', '+31': 'EUR', '+30': 'EUR', '+358': 'EUR',
     '+359': 'EUR',
     '+355': 'ALL',
+    '+36': 'HUF',
+    '+82': 'KRW',
   };
 
   function handleMapWaited() {
