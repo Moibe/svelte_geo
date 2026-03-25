@@ -373,6 +373,8 @@
                 utmContent: ctx.utmContent || null,
                 gclid: ctx.gclid || null,
                 fbclid: ctx.fbclid || null,
+                purchaseValue: data.value,
+                purchaseCurrency: data.currency,
               });
               log('✅ Compra real registrada en MariaDB');
 

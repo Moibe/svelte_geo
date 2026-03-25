@@ -42,6 +42,8 @@ function formatInTimezone(date, timeZone) {
  * @param {string} params.utmContent     - utm_content
  * @param {string} params.gclid          - Google Ads click ID
  * @param {string} params.fbclid         - Meta Ads click ID
+ * @param {number} params.purchaseValue  - Valor de la compra (solo para type='purchase')
+ * @param {string} params.purchaseCurrency - Moneda de la compra (solo para type='purchase')
  */
 export async function logConversion({
   type,
@@ -61,6 +63,8 @@ export async function logConversion({
   utmContent = null,
   gclid = null,
   fbclid = null,
+  purchaseValue = null,
+  purchaseCurrency = null,
 }) {
   const now = new Date();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -92,7 +96,10 @@ export async function logConversion({
     utm_term:                   utmTerm || null,
     utm_content:                utmContent || null,
     gclid:                      gclid || null,
-    fbclid:                     fbclid || null,  };
+    fbclid:                     fbclid || null,
+    purchase_value:             purchaseValue ?? null,
+    purchase_currency:          purchaseCurrency || null,
+  };
 
   log('═══════════════════════════════════════════════');
   log('📊 CONVERSIÓN REGISTRADA');
