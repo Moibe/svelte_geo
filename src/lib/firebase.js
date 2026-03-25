@@ -209,17 +209,19 @@ export function onSellChange(callback) {
 
 /**
  * Obtiene el Payment Method Configuration (PMC) de Stripe desde Firestore
+ * @param {boolean} isProductionMode - true = producción (campo PMC), false = sandbox (campo PMC_test)
  * @returns {Promise<string|null>} ID del PMC o null si no existe
  */
-export async function getPMCConfig() {
+export async function getPMCConfig(isProductionMode = true) {
   try {
     const configRef = doc(db, 'configuraciones', 'geo-stripe');
     const configSnap = await getDoc(configRef);
     
     if (configSnap.exists()) {
       const data = configSnap.data();
-      const pmc = data.PMC || null;
-      log('💳 PMC cargado:', pmc || 'no configurado');
+      const pmcField = isProductionMode ? 'PMC' : 'PMC_test';
+      const pmc = data[pmcField] || null;
+      log(`💳 PMC cargado (${isProductionMode ? 'PROD' : 'SANDBOX'}):`, pmc || 'no configurado');
       return pmc;
     }
     
@@ -233,16 +235,18 @@ export async function getPMCConfig() {
 /**
  * Escucha cambios en tiempo real del Payment Method Configuration (PMC)
  * @param {Function} callback - Función a llamar cuando cambie (recibe string|null)
+ * @param {boolean} isProductionMode - true = producción (campo PMC), false = sandbox (campo PMC_test)
  * @returns {Function} Función para detener la escucha
  */
-export function onPMCChange(callback) {
+export function onPMCChange(callback, isProductionMode = true) {
   const configRef = doc(db, 'configuraciones', 'geo-stripe');
+  const pmcField = isProductionMode ? 'PMC' : 'PMC_test';
   
   return onSnapshot(configRef, (snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.data();
-      const pmc = data.PMC || null;
-      log('💳 PMC actualizado:', pmc || 'no configurado');
+      const pmc = data[pmcField] || null;
+      log(`💳 PMC actualizado (${isProductionMode ? 'PROD' : 'SANDBOX'}):`, pmc || 'no configurado');
       callback(pmc);
     } else {
       callback(null);

@@ -171,10 +171,10 @@
     }
 
     try {
-      paymentMethodConfig = await getPMCConfig();
+      paymentMethodConfig = await getPMCConfig(isProductionMode);
       unsubscribePMC = onPMCChange((pmc) => {
         paymentMethodConfig = pmc;
-      });
+      }, isProductionMode);
     } catch (err) {
       error('❌ Error al cargar PMC:', err);
       paymentMethodConfig = null;
