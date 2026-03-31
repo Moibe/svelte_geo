@@ -319,36 +319,8 @@
             try {
               const data = JSON.parse(purchaseData);
               
-              // Enviar evento purchase a GA4 (Google Ads lo importará automáticamente)
-              if (typeof gtag !== 'undefined') {
-                gtag('event', 'purchase', {
-                  transaction_id: data.transaction_id,
-                  value: data.value,
-                  currency: data.currency,
-                  items: [{
-                    item_id: data.price_id,
-                    item_name: 'Mapa Completo GPS',
-                    item_category: 'Geolocalización',
-                    price: data.value,
-                    quantity: 1
-                  }]
-                });
-                // Evento de conversión principal para Google Ads (compra_geo)
-                gtag('event', 'compra_geo', {
-                  transaction_id: data.transaction_id,
-                  value: data.value,
-                  currency: data.currency,
-                  items: [{
-                    item_id: data.price_id,
-                    item_name: 'Mapa Completo GPS',
-                    item_category: 'Geolocalización',
-                    price: data.value,
-                    quantity: 1
-                  }]
-                });
-                log('✅ Evento purchase enviado a GA4/Google Ads:', data);
-              } else if (typeof window.dataLayer !== 'undefined') {
-                // Fallback: usar dataLayer directamente
+              // Enviar eventos de compra a GA4 vía GTM (dataLayer)
+              if (typeof window.dataLayer !== 'undefined') {
                 window.dataLayer.push({
                   event: 'purchase',
                   transaction_id: data.transaction_id,
@@ -362,7 +334,14 @@
                     quantity: 1
                   }]
                 });
-                log('✅ Evento purchase enviado vía dataLayer:', data);
+                // Evento de conversión principal para Google Ads
+                window.dataLayer.push({
+                  event: 'compra_geo',
+                  transaction_id: data.transaction_id,
+                  value: data.value,
+                  currency: data.currency
+                });
+                log('✅ Eventos purchase y compra_geo enviados vía GTM:', data);
               }
               
               // Registrar compra real en MariaDB
