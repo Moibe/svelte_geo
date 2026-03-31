@@ -227,7 +227,13 @@
       productDetails = await getProductDetailsByCountry(countryCode, isProductionMode, priceLevel);
       
       if (!isProductionMode) {
-        log('🧪 SANDBOX MODE - Precio por país cargado');
+        const testPriceId = import.meta.env.VITE_STRIPE_TEST_PRICE_ID;
+        if (testPriceId) {
+          log('🧪 SANDBOX MODE - Precio por país cargado, overridiendo priceId con test:', testPriceId, '(original:', productDetails.priceId + ')');
+          productDetails = { ...productDetails, priceId: testPriceId };
+        } else {
+          log('🧪 SANDBOX MODE - Precio por país cargado (sin test price override)');
+        }
       } else if (priceTestOverride) {
         log('🧪 PROD TEST PRICE aplicado:', priceTestOverride, '(reemplaza:', productDetails.priceId + ')');
         productDetails = { ...productDetails, priceId: priceTestOverride };
