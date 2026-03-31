@@ -156,9 +156,15 @@
       isProductionMode = await getStripeModeConfig();
       
       // Escuchar cambios en tiempo real
-      unsubscribeStripeMode = onStripeModeChange((isProd) => {
+      unsubscribeStripeMode = onStripeModeChange(async (isProd) => {
         isProductionMode = isProd;
         log('💳 Stripe Mode actualizado:', isProd ? 'PRODUCTION' : 'SANDBOX');
+        // Recargar PMC con el nuevo modo
+        if (unsubscribePMC) unsubscribePMC();
+        paymentMethodConfig = await getPMCConfig(isProd);
+        unsubscribePMC = onPMCChange((pmc) => {
+          paymentMethodConfig = pmc;
+        }, isProd);
         // Recargar detalles del producto si el modal está visible
         if (isVisible && countryCode) {
           productDetails = null;
