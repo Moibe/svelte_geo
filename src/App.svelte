@@ -411,6 +411,13 @@
     // Detectar cierre de pestaña / abandono de la página
     handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
+        // Ignorar si es un reload — el navegador dispara 'hidden' durante recarga también
+        const isReload = performance?.getEntriesByType?.('navigation')?.[0]?.type === 'reload'
+          || performance?.navigation?.type === 1;
+        if (isReload) {
+          log('🔄 visibilitychange hidden ignorado (es un reload)');
+          return;
+        }
         log('🚪 Pestaña o ventana ocultada/cerrada (page_close)');
         logConversion({
           type: 'page_close',
