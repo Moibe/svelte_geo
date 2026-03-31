@@ -217,28 +217,16 @@
     loadingDetails = true;
     
     try {
-      // En modo SANDBOX, usar un precio fijo para todos los países
+      // Siempre consultar precios por país (tanto en sandbox como producción)
+      productDetails = await getProductDetailsByCountry(countryCode, isProductionMode, priceLevel);
+      
       if (!isProductionMode) {
-        // Usar configuración de sandbox desde variables de entorno
-        const testPriceId = import.meta.env.VITE_STRIPE_TEST_PRICE_ID || 'price_test_default';
-        productDetails = {
-          priceId: testPriceId,
-          price: {
-            amount: 100, // $1.00 en sandbox
-            formatted: '1.00'
-          }
-        };
-        log('🧪 SANDBOX MODE - Usando precio de prueba:', testPriceId);
+        log('🧪 SANDBOX MODE - Precio por país cargado');
+      } else if (priceTestOverride) {
+        log('🧪 PROD TEST PRICE aplicado:', priceTestOverride, '(reemplaza:', productDetails.priceId + ')');
+        productDetails = { ...productDetails, priceId: priceTestOverride };
       } else {
-        // En modo PRODUCCIÓN, usar precios por país
-        productDetails = await getProductDetailsByCountry(countryCode, isProductionMode, priceLevel);
-        // Aplicar override de price-test si está activo
-        if (priceTestOverride) {
-          log('🧪 PROD TEST PRICE aplicado:', priceTestOverride, '(reemplaza:', productDetails.priceId + ')');
-          productDetails = { ...productDetails, priceId: priceTestOverride };
-        } else {
-          log('🏭 PRODUCTION MODE - Precio por país cargado');
-        }
+        log('🏭 PRODUCTION MODE - Precio por país cargado');
       }
     } catch (err) {
       error('Error loading product details:', err);

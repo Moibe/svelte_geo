@@ -333,6 +333,19 @@
                     quantity: 1
                   }]
                 });
+                // Evento de conversión principal para Google Ads (compra_geo)
+                gtag('event', 'compra_geo', {
+                  transaction_id: data.transaction_id,
+                  value: data.value,
+                  currency: data.currency,
+                  items: [{
+                    item_id: data.price_id,
+                    item_name: 'Mapa Completo GPS',
+                    item_category: 'Geolocalización',
+                    price: data.value,
+                    quantity: 1
+                  }]
+                });
                 log('✅ Evento purchase enviado a GA4/Google Ads:', data);
               } else if (typeof window.dataLayer !== 'undefined') {
                 // Fallback: usar dataLayer directamente

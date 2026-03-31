@@ -211,17 +211,7 @@ export async function getProductDetailsByCountry(countryCode, isProductionMode =
   try {
     log(`\ud83d\udd0d Buscando detalles para pa\u00eds: ${countryCode} (Modo: ${isProductionMode ? 'PRODUCTION' : 'SANDBOX'}, Nivel: $${priceLevel})`);
     
-    // En modo sandbox, esta función no debería llamarse, pero devolver algo por si acaso
-    if (!isProductionMode) {
-      warn('⚠️ getProductDetailsByCountry llamado en modo SANDBOX - esto no debería pasar');
-      return {
-        priceId: import.meta.env.VITE_STRIPE_TEST_PRICE_ID || 'price_test_default',
-        price: {
-          amount: 100,
-          formatted: '1.00'
-        }
-      };
-    }
+    const testPriceId = import.meta.env.VITE_STRIPE_TEST_PRICE_ID || 'price_test_default';
     
     const fileName = priceLevel === 100 ? '/product-details-100.json' : '/product-details.json';
     const response = await fetch(fileName);
