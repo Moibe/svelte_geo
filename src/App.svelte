@@ -408,6 +408,8 @@
               localStorage.removeItem('purchase_data');
               localStorage.removeItem('pending_checkout');
               localStorage.removeItem('conversion_context');
+              // Marcar que venimos de Stripe para que beforeunload no dispare page_close en el primer refresh
+              sessionStorage.setItem('stripe_return', 'true');
             } catch (e) {
               error('Error al procesar datos de compra:', e);
             }
@@ -447,6 +449,11 @@
     handleVisibilityChange = (event) => {
       // Ignorar si es navegación a Stripe
       if (localStorage.getItem('pending_checkout')) return;
+      // Ignorar primer refresh después de retorno de Stripe (navigation type aún es 'navigate')
+      if (sessionStorage.getItem('stripe_return')) {
+        sessionStorage.removeItem('stripe_return');
+        return;
+      }
       // Ignorar reload — ya se registra como page_refresh
       const isReload = performance?.getEntriesByType?.('navigation')?.[0]?.type === 'reload'
         || performance?.navigation?.type === 1;
