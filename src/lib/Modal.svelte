@@ -309,7 +309,7 @@
           app: 'geo',
           ...(paymentMethodConfig ? { paymentMethodConfiguration: paymentMethodConfig } : {}),
           successUrl: `${baseUrl}?payment=success`,
-          cancelUrl: baseUrl,
+          cancelUrl: `${baseUrl}?payment=cancelled`,
           isProductionMode: isProductionMode // Pasar modo de Stripe
         }
       );

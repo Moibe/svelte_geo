@@ -284,6 +284,24 @@
         utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
       });
       log('📣 ad_visit registrado en MariaDB');
+    } else if (urlParams.get('payment') === 'cancelled') {
+      log('🚫 Retorno de Stripe sin comprar (flake_out)');
+      logConversion({
+        type: 'flake_out',
+        gaClientId: getGAClientId(),
+        phone: localStorage.getItem('last_phone_number') || '',
+        language: $locale,
+        ipDetection: ipDetectionResult,
+        gpsDetection: null,
+        searchMethod: 'none',
+        locationShown: mapCoords,
+        countryISO: userCountryISO,
+        countryCode: userCountryCode,
+        utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
+      });
+      log('🚫 flake_out registrado en MariaDB');
+      // Limpiar parámetro de la URL
+      window.history.replaceState({}, document.title, window.location.pathname);
     } else {
       log('📡 Sin parámetros de campaña (tráfico directo u orgánico)');
       // Registrar visita orgánica en MariaDB
