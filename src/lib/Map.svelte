@@ -181,6 +181,18 @@
     map.on('dragstart', fireInteraction);
     map.on('zoomstart', fireInteraction);
 
+    // Detectar zoom in/out
+    let previousZoom = map.getZoom();
+    map.on('zoomend', () => {
+      const currentZoom = map.getZoom();
+      if (currentZoom > previousZoom) {
+        dispatch('mapZoom', { direction: 'in', from: previousZoom, to: currentZoom });
+      } else if (currentZoom < previousZoom) {
+        dispatch('mapZoom', { direction: 'out', from: previousZoom, to: currentZoom });
+      }
+      previousZoom = currentZoom;
+    });
+
     // Timer de permanencia en mapa (siempre se ejecuta si hay tiempo configurado)
     // App.svelte decide si enviar a GA4
     if (mapWaitTime > 0) {

@@ -812,6 +812,25 @@
     phoneNumber = '';
   }
 
+  function handleMapZoom(event) {
+    const { direction, from, to } = event.detail;
+    const type = direction === 'in' ? 'zoom_in' : 'zoom_out';
+    log(`🔍 Map ${type}: ${from} → ${to}`);
+    logConversion({
+      type,
+      gaClientId: getGAClientId(),
+      phone: lastUsedPhoneNumber || '',
+      language: $locale,
+      ipDetection: ipDetectionResult,
+      gpsDetection: gpsDetectionResult,
+      searchMethod,
+      locationShown: mapCoords,
+      countryISO: userCountryISO,
+      countryCode: userCountryCode,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
+    });
+  }
+
   function handleLadaChange() {
     logConversion({
       type: 'lada_change',
@@ -996,7 +1015,7 @@
     {/if}
     {#if showMap}
       <div class="map-wrapper">
-        <Map lat={mapCoords.lat} lng={mapCoords.lng} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} mapWaitEnabled={mapWaitEnabled} mapWaitTime={mapWaitTime} on:mapWaited={handleMapWaited} />
+        <Map lat={mapCoords.lat} lng={mapCoords.lng} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} mapWaitEnabled={mapWaitEnabled} mapWaitTime={mapWaitTime} on:mapWaited={handleMapWaited} on:mapZoom={handleMapZoom} />
       </div>
     {/if}
   </div>
