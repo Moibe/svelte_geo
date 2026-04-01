@@ -443,41 +443,37 @@
         });
       }
     }
-    // Detectar cierre de pestaña / abandono de la página
-    let pageCloseSent = false;
-    handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && !pageCloseSent) {
-        // Ignorar si es un reload — el navegador dispara 'hidden' durante recarga también
-        const isReload = performance?.getEntriesByType?.('navigation')?.[0]?.type === 'reload'
-          || performance?.navigation?.type === 1;
-        if (isReload) {
-          log('🔄 visibilitychange hidden ignorado (es un reload)');
-          return;
-        }
-        pageCloseSent = true;
-        log('🚪 Pestaña o ventana ocultada/cerrada (page_close)');
-        logConversion({
-          type: 'page_close',
-          gaClientId: getGAClientId(),
-          phone: lastUsedPhoneNumber || '',
-          language: $locale,
-          ipDetection: ipDetectionResult,
-          gpsDetection: gpsDetectionResult,
-          searchMethod,
-          locationShown: mapCoords,
-          countryISO: userCountryISO,
-          countryCode: userCountryCode,
-          utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
-        });
-      }
+    // Detectar cierre real de pestaña/ventana (no cambio de pestaña)
+    handleVisibilityChange = (event) => {
+      // Ignorar si es navegación a Stripe
+      if (localStorage.getItem('pending_checkout')) return;
+      // Ignorar reload — ya se registra como page_refresh
+      const isReload = performance?.getEntriesByType?.('navigation')?.[0]?.type === 'reload'
+        || performance?.navigation?.type === 1;
+      if (isReload) return;
+
+      log('🚪 Pestaña o ventana cerrada (page_close)');
+      logConversion({
+        type: 'page_close',
+        gaClientId: getGAClientId(),
+        phone: lastUsedPhoneNumber || '',
+        language: $locale,
+        ipDetection: ipDetectionResult,
+        gpsDetection: gpsDetectionResult,
+        searchMethod,
+        locationShown: mapCoords,
+        countryISO: userCountryISO,
+        countryCode: userCountryCode,
+        utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
+      });
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleVisibilityChange);
   });
 
   onDestroy(() => {
-    // Limpiar event listener de visibilitychange
-    if (typeof document !== 'undefined' && handleVisibilityChange) {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    // Limpiar event listener de beforeunload
+    if (typeof window !== 'undefined' && handleVisibilityChange) {
+      window.removeEventListener('beforeunload', handleVisibilityChange);
     }
 
     // Detener listeners de Firestore cuando se destruya el componente
