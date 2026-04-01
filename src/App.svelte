@@ -450,8 +450,9 @@
       }
     }
     // Detectar cierre de pestaña / abandono de la página
+    let pageCloseSent = false;
     handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
+      if (document.visibilityState === 'hidden' && !pageCloseSent) {
         // Ignorar si es un reload — el navegador dispara 'hidden' durante recarga también
         const isReload = performance?.getEntriesByType?.('navigation')?.[0]?.type === 'reload'
           || performance?.navigation?.type === 1;
@@ -459,6 +460,7 @@
           log('🔄 visibilitychange hidden ignorado (es un reload)');
           return;
         }
+        pageCloseSent = true;
         log('🚪 Pestaña o ventana ocultada/cerrada (page_close)');
         logConversion({
           type: 'page_close',
