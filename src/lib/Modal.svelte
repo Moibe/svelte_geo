@@ -269,7 +269,9 @@
         country_iso: countryISO, // Usar ISO real de geolocalización
         timestamp: Date.now()
       };
+      purchaseData.isProduction = isProductionMode;
       localStorage.setItem('purchase_data', JSON.stringify(purchaseData));
+      localStorage.setItem('pending_checkout', 'true');
       log('💾 Datos de compra guardados para conversión:', purchaseData);
 
       // Registrar clic en botón de compra en MariaDB

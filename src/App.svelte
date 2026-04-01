@@ -321,6 +321,28 @@
       log('🌿 organic_visit registrado en MariaDB');
     }
 
+    // Detectar retorno de Stripe sin comprar (flake_out)
+    const pendingCheckout = localStorage.getItem('pending_checkout');
+    if (pendingCheckout && urlParams.get('payment') !== 'success') {
+      localStorage.removeItem('pending_checkout');
+      localStorage.removeItem('purchase_data');
+      log('🚫 Retorno de Stripe sin comprar (flake_out)');
+      logConversion({
+        type: 'flake_out',
+        gaClientId: getGAClientId(),
+        phone: localStorage.getItem('last_phone_number') || '',
+        language: $locale,
+        ipDetection: ipDetectionResult,
+        gpsDetection: null,
+        searchMethod: 'none',
+        locationShown: mapCoords,
+        countryISO: userCountryISO,
+        countryCode: userCountryCode,
+        utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
+      });
+      log('🚫 flake_out registrado en MariaDB');
+    }
+
     // Detectar retorno exitoso de Stripe
     if (urlParams.get('payment') === 'success') {
       // Restaurar coordenadas del mapa desde localStorage
@@ -390,6 +412,7 @@
 
               // Limpiar datos de compra (ya enviados)
               localStorage.removeItem('purchase_data');
+              localStorage.removeItem('pending_checkout');
               localStorage.removeItem('conversion_context');
             } catch (e) {
               error('Error al procesar datos de compra:', e);
