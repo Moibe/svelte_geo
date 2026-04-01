@@ -285,40 +285,34 @@
       });
       log('📣 ad_visit registrado en MariaDB');
     } else if (urlParams.get('payment') === 'cancelled') {
-      log('🚫 Retorno de Stripe sin comprar (flake_out)');
-      logConversion({
-        type: 'flake_out',
-        gaClientId: getGAClientId(),
-        phone: localStorage.getItem('last_phone_number') || '',
-        language: $locale,
-        ipDetection: ipDetectionResult,
-        gpsDetection: null,
-        searchMethod: 'none',
-        locationShown: mapCoords,
-        countryISO: userCountryISO,
-        countryCode: userCountryCode,
-        utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
-      });
-      log('🚫 flake_out registrado en MariaDB');
-      // Limpiar parámetro de la URL
+      log('🚫 Retorno de Stripe sin comprar (flake_out vía cancel_url)');
+      // flake_out se registra abajo con pending_checkout
       window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('payment') === 'success') {
+      // purchase se registra más abajo — no registrar organic_visit
+    } else if (localStorage.getItem('pending_checkout')) {
+      // flake_out se registra abajo — no registrar organic_visit
     } else {
-      log('📡 Sin parámetros de campaña (tráfico directo u orgánico)');
-      // Registrar visita orgánica en MariaDB
-      logConversion({
-        type: 'organic_visit',
-        gaClientId: getGAClientId(),
-        phone: '',
-        language: $locale,
-        ipDetection: ipDetectionResult,
-        gpsDetection: null,
-        searchMethod: 'none',
-        locationShown: mapCoords,
-        countryISO: userCountryISO,
-        countryCode: userCountryCode,
-        utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
-      });
-      log('🌿 organic_visit registrado en MariaDB');
+      // Solo registrar organic_visit si es una visita genuina nueva (no refresh, no retorno de Stripe)
+      const isReload = performance?.getEntriesByType?.('navigation')?.[0]?.type === 'reload'
+        || performance?.navigation?.type === 1;
+      if (!isReload) {
+        log('📡 Sin parámetros de campaña (tráfico directo u orgánico)');
+        logConversion({
+          type: 'organic_visit',
+          gaClientId: getGAClientId(),
+          phone: '',
+          language: $locale,
+          ipDetection: ipDetectionResult,
+          gpsDetection: null,
+          searchMethod: 'none',
+          locationShown: mapCoords,
+          countryISO: userCountryISO,
+          countryCode: userCountryCode,
+          utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
+        });
+        log('🌿 organic_visit registrado en MariaDB');
+      }
     }
 
     // Detectar retorno de Stripe sin comprar (flake_out)
