@@ -37,14 +37,14 @@ jobs:
 
       - name: verify
         run: |
-          ssh root@165.22.53.200 'curl -sf -o /dev/null -w "app en :3900 -> HTTP %{http_code}
-" http://127.0.0.1:3900/'
-          curl -sf -o /dev/null -w "geoservices.space -> HTTP %{http_code}
-" https://geoservices.space/
-          curl -sf -o /dev/null -w "product-details.json -> HTTP %{http_code}
-" https://geoservices.space/product-details.json
-          curl -sf -o /dev/null -w "track/health -> HTTP %{http_code}
-" https://geoservices.space/track/health
+          ssh root@165.22.53.200 'curl -sf -o /dev/null -w "app en :3900 -> HTTP %{http_code}" http://127.0.0.1:3900/'
+          echo
+          curl -sf -o /dev/null -w "geoservices.space -> HTTP %{http_code}" https://geoservices.space/
+          echo
+          curl -sf -o /dev/null -w "product-details.json -> HTTP %{http_code}" https://geoservices.space/product-details.json
+          echo
+          curl -sf -o /dev/null -w "track/health -> HTTP %{http_code}" https://geoservices.space/track/health
+          echo
 
       - name: cleanup
         run: rm -rf ~/.ssh
