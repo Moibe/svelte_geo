@@ -32,6 +32,12 @@ jobs:
       # el PATH, por eso se carga nvm explicitamente. La cadena con && aborta si
       # algo falla, asi pm2 NO reinicia con un build roto.
       #
+      # db:migrate y db:seed corren en CADA deploy y son idempotentes: migrate
+      # solo aplica lo que falte, y seed usa INSERT OR IGNORE, asi que NO pisa
+      # un flag que hayas cambiado desde el panel ni recrea una cuenta. Eso es
+      # lo que permite dejarlos aca sin miedo: un flag nuevo agregado al seed
+      # aparece solo, y los que ya estaban quedan como los dejaste.
+      #
       # El `set -a && . ./.env && set +a` antes del restart NO sobra: pm2 con
       # --update-env reusa las variables que YA tiene guardadas, pero no relee
       # el archivo .env. Sin este paso, una variable nueva agregada al .env
@@ -40,7 +46,7 @@ jobs:
       # deteccion por IP habria geolocalizado al droplet).
       - name: deploy on droplet
         run: |
-          ssh root@165.22.53.200 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/svelte_geo_kit && git checkout main && git pull origin main && npm ci && npm run build && set -a && . ./.env && set +a && pm2 restart svelte-geo-kit --update-env'
+          ssh root@165.22.53.200 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/svelte_geo_kit && git checkout main && git pull origin main && npm ci && npm run db:migrate && npm run db:seed && npm run build && set -a && . ./.env && set +a && pm2 restart svelte-geo-kit --update-env'
 
       - name: verify
         run: |

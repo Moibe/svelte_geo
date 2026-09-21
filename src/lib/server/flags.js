@@ -1,123 +1,179 @@
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '$lib/firebase.js'
+import { eq, sql } from 'drizzle-orm'
+import { db } from './db/index.js'
+import { flags } from './db/schema.js'
 
 /**
- * Cache en memoria de los flags de Firestore, para que el servidor pueda
- * renderizar la primera pantalla ya decidida en vez de mandar un spinner.
+ * Los flags, ahora en la base local de la app.
  *
  * ---
  *
- * POR QUÉ SE SONDEA Y NO SE USA onSnapshot (esto es deliberado)
+ * POR QUÉ YA NO ES UN CACHE
  *
- * Lo natural sería poner un onSnapshot por documento y tener el cache siempre
- * fresco. No se hace, y el motivo importa: un stream gRPC persistente dentro de
- * un proceso pm2 que corre meses se puede congelar por un blip de red o por un
- * token vencido SIN lanzar error y SIN escribir en el log. Los flags quedarían
- * clavados en RAM y los toggles dejarían de funcionar en silencio — que es
- * exactamente la falla que este cache viene a evitar, reintroducida por el
- * cache.
+ * La versión anterior sondeaba Firestore cada 60s y guardaba el resultado en
+ * RAM, porque cada lectura era un viaje a otro proveedor. Ahora la fuente es un
+ * archivo en el mismo disco: leer es cuestión de microsegundos, así que no hay
+ * nada que cachear — y desaparecen de un saque el sondeo, la antigüedad del
+ * cache, el riesgo de servir valores viejos y todo el modo de falla que eso
+ * traía.
  *
- * Un sondeo periódico no tiene ese modo de falla: si una lectura falla, se
- * sabe, se registra y /api/health lo expone.
- *
- * Y el costo de sondear es bajo porque el cache NO necesita estar al día al
- * segundo: solo tiene que estar bien para el PRIMER PAINT. El cliente conserva
- * sus onSnapshot, así que cambiar un flag desde la consola de Firebase sigue
- * llegando al instante a todas las sesiones abiertas. Lo único que tarda hasta
- * un intervalo es lo que ve alguien que entra justo en esa ventana.
+ * El efecto secundario más grande es que el SDK de Firebase deja de hacer falta
+ * en el cliente: eran ~400 KB de JavaScript que cada visitante se bajaba.
  */
 
-const COLECCION = 'configuraciones'
-const DOCUMENTOS = ['geo-modes', 'geo-stripe', 'geo-wait', 'geo-sell', 'geo-verbose']
-
-/** Cada cuánto se refresca el cache. */
-const INTERVALO_MS = 60_000
-
 /**
- * Valores con los que se renderiza si Firestore todavía no respondió o falló.
- * Son los MISMOS defaults que ya usaba el cliente, para que un fallo del cache
- * degrade exactamente al comportamiento anterior y no a otro distinto.
+ * Valores con los que se renderiza si la base todavía no tiene un flag.
+ * Son los que estaban vivos en Firestore al migrar, no los del código viejo
+ * (que en varios casos decían otra cosa).
  */
 export const FLAGS_POR_DEFECTO = {
   safeMode: false,
-  isProductionMode: false, // sandbox por seguridad
   sellEnabled: true,
+  isProductionMode: false,
   priceLevel: 200,
+  priceTesting: false,
+  priceTest: null,
+  pmc: null,
+  pmcTest: null,
   waitSafe: 30,
   waitProd: 30,
-}
-
-let cache = { ...FLAGS_POR_DEFECTO }
-let actualizadoEn = null
-let ultimoError = null
-let cargaInicial = null
-let temporizador = null
-
-/** Traduce los documentos crudos a los flags que necesita el primer paint. */
-function mapear(docs) {
-  const modes = docs['geo-modes'] || {}
-  const stripe = docs['geo-stripe'] || {}
-  const wait = docs['geo-wait'] || {}
-  const sell = docs['geo-sell'] || {}
-
-  return {
-    safeMode: modes['safe-mode'] || false,
-    isProductionMode: stripe.prod || false,
-    sellEnabled: sell.sell !== undefined ? sell.sell : true,
-    priceLevel: stripe['price-level'] || 200,
-    waitSafe: wait['wait-safe'] || 30,
-    waitProd: wait['wait-prod'] || 30,
-  }
-}
-
-async function refrescar() {
-  try {
-    const leidos = await Promise.all(
-      DOCUMENTOS.map(async (id) => {
-        const snap = await getDoc(doc(db, COLECCION, id))
-        return [id, snap.exists() ? snap.data() : null]
-      })
-    )
-
-    cache = mapear(Object.fromEntries(leidos))
-    actualizadoEn = Date.now()
-    ultimoError = null
-  } catch (err) {
-    // El cache anterior se CONSERVA a propósito: unos flags de hace un minuto
-    // son mejores que los defaults. Lo que no se toca es `actualizadoEn`, así
-    // que /api/health delata que el cache se está quedando viejo.
-    ultimoError = String(err?.message || err)
-    console.error('[flags] no se pudo refrescar el cache de Firestore:', ultimoError)
-  }
+  mapWaitTime: 30,
+  mapInteractionEnabled: false,
+  mapWaitEnabled: false,
+  sellPopEnabled: false,
+  phoneSearchEnabled: false,
+  verbose: true,
 }
 
 /**
- * Flags para renderizar. En el primer request tras un arranque espera la
- * lectura inicial; después devuelve el cache al instante.
- *
- * Esa espera es lo que evita que el primer visitante después de un deploy
- * reciba los defaults en vez de la configuración real.
+ * De clave en la base al nombre que usa la app.
+ * Tenerlo en UN lugar evita que el panel y la app llamen distinto a lo mismo.
  */
-export async function obtenerFlags() {
-  if (!cargaInicial) {
-    cargaInicial = refrescar()
-
-    // unref() para que este temporizador no mantenga vivo el proceso al apagarlo.
-    temporizador = setInterval(refrescar, INTERVALO_MS)
-    if (typeof temporizador.unref === 'function') temporizador.unref()
-  }
-
-  await cargaInicial
-
-  return cache
+const NOMBRES = {
+  'safe-mode': 'safeMode',
+  sell: 'sellEnabled',
+  'stripe-prod': 'isProductionMode',
+  'price-level': 'priceLevel',
+  'price-testing': 'priceTesting',
+  'price-test': 'priceTest',
+  pmc: 'pmc',
+  'pmc-test': 'pmcTest',
+  'wait-safe': 'waitSafe',
+  'wait-prod': 'waitProd',
+  'map-wait-time': 'mapWaitTime',
+  'map-interaction': 'mapInteractionEnabled',
+  'map-wait': 'mapWaitEnabled',
+  'sell-pop': 'sellPopEnabled',
+  'phone-search': 'phoneSearchEnabled',
+  verbose: 'verbose',
 }
 
-/** Estado del cache, para /api/health. */
-export function estadoDelCache() {
-  return {
-    actualizadoEn: actualizadoEn ? new Date(actualizadoEn).toISOString() : null,
-    antiguedadSegundos: actualizadoEn ? Math.round((Date.now() - actualizadoEn) / 1000) : null,
-    intervaloSegundos: INTERVALO_MS / 1000,
-    ultimoError,
+/** Una fila cruda de la tabla -> su valor ya tipado. */
+function parsear(fila) {
+  try {
+    return JSON.parse(fila.valor)
+  } catch {
+    console.error(`[flags] valor no parseable en "${fila.clave}": ${fila.valor}`)
+    return null
   }
+}
+
+/** Los flags tal como los consume la app. */
+export function obtenerFlags() {
+  const filas = db.select().from(flags).all()
+
+  const resultado = { ...FLAGS_POR_DEFECTO }
+
+  for (const fila of filas) {
+    const nombre = NOMBRES[fila.clave]
+    if (!nombre) continue // flag en la base que el código todavía no usa
+
+    const valor = parsear(fila)
+    if (valor !== null) resultado[nombre] = valor
+  }
+
+  return resultado
+}
+
+/** Las filas completas, para armar el formulario del panel. */
+export function obtenerFilasDeFlags() {
+  return db
+    .select()
+    .from(flags)
+    .orderBy(flags.orden)
+    .all()
+    .map((fila) => ({ ...fila, valor: parsear(fila) }))
+}
+
+/**
+ * Guarda un flag. Valida el tipo contra lo que declara la fila, así el panel
+ * no puede meter un texto donde la app espera un número.
+ *
+ * @returns {string|null} mensaje de error, o null si salió bien
+ */
+export function guardarFlag(clave, valorCrudo) {
+  const [fila] = db.select().from(flags).where(eq(flags.clave, clave)).all()
+
+  if (!fila) return `No existe el flag "${clave}"`
+
+  let valor
+
+  if (fila.tipo === 'boolean') {
+    valor = valorCrudo === true || valorCrudo === 'true' || valorCrudo === 'on'
+  } else if (fila.tipo === 'number') {
+    valor = Number(valorCrudo)
+    if (!Number.isFinite(valor)) return `"${fila.etiqueta}" tiene que ser un número`
+  } else {
+    valor = valorCrudo === null || valorCrudo === undefined ? '' : String(valorCrudo)
+  }
+
+  db.update(flags)
+    .set({ valor: JSON.stringify(valor), actualizadoEn: sql`(datetime('now'))` })
+    .where(eq(flags.clave, clave))
+    .run()
+
+  return null
+}
+
+/**
+ * Invierte un flag booleano leyendo su valor ACTUAL de la base.
+ *
+ * Existe en vez de "mandá el valor invertido desde el formulario" porque ese
+ * valor lo calcula el cliente al renderizar, y puede llegar viejo: si alguien
+ * aprieta el interruptor mientras la pantalla todavía se está refrescando por
+ * un guardado anterior, manda el valor de antes y el cambio no se aplica — el
+ * interruptor se ve "pegado" sin ningún error. Decidiéndolo acá, el estado que
+ * manda es el de la base y no hay nada que se pueda quedar viejo.
+ *
+ * @returns {{error: string}|{valor: boolean}}
+ */
+export function alternarFlag(clave) {
+  const [fila] = db.select().from(flags).where(eq(flags.clave, clave)).all()
+
+  if (!fila) return { error: `No existe el flag "${clave}"` }
+  if (fila.tipo !== 'boolean') return { error: `"${fila.etiqueta}" no es un interruptor` }
+
+  const valor = !parsear(fila)
+
+  db.update(flags)
+    .set({ valor: JSON.stringify(valor), actualizadoEn: sql`(datetime('now'))` })
+    .where(eq(flags.clave, clave))
+    .run()
+
+  return { valor }
+}
+
+/**
+ * Marca de versión de la configuración: el momento del cambio más reciente.
+ *
+ * La usa el endpoint que avisa a las pestañas abiertas. Antes eso lo hacía el
+ * onSnapshot de Firestore; acá alcanza con comparar esta marca, sin mantener
+ * ninguna conexión abierta contra la base.
+ */
+export function versionDeFlags() {
+  const [fila] = db
+    .select({ maximo: sql`MAX(actualizado_en)` })
+    .from(flags)
+    .all()
+
+  return fila?.maximo ?? ''
 }

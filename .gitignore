@@ -31,3 +31,8 @@ dist-ssr
 # SvelteKit
 .svelte-kit
 build
+
+# Base local (las migraciones SI se commitean, el .db no)
+local.db
+local.db-shm
+local.db-wal

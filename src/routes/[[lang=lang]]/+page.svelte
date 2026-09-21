@@ -11,7 +11,7 @@
   import { getGAClientId } from '$lib/stripe.js';
   import { logConversion } from '$lib/conversionLogger.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from '$lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange, getPriceLevelConfig, onPriceLevelChange } from '$lib/firebase.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange, getPriceLevelConfig, onPriceLevelChange } from '$lib/flags.js';
   import { verboseStore, log, warn, error } from '$lib/logger.js';
 
   let phoneNumber = '';

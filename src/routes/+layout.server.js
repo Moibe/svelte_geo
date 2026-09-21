@@ -2,18 +2,16 @@ import { obtenerFlags } from '$lib/server/flags.js'
 import { observarPaisPorIP } from '$lib/server/geoSombra.js'
 
 /**
- * Datos que el servidor le pasa a la pagina para poder renderizar la PRIMERA
+ * Datos que el servidor le pasa a la pagina para renderizar la PRIMERA
  * pantalla ya decidida.
  *
- * El idioma lo resolvio hooks.server.js (es tambien quien inyecta el
- * <html lang>, y tener dos lugares calculandolo es como se llega a que el
- * atributo diga una cosa y el texto muestre otra).
+ * El idioma y el usuario los resolvio hooks.server.js.
  *
- * Los flags vienen del cache de Firestore. Antes de esto, safeMode arrancaba
- * en null y la primera pantalla SIEMPRE era un spinner de "Cargando...",
- * incluso para quien ya tenia la config resuelta.
+ * Los flags ya NO se esperan: salen de la base local, o sea de un archivo en
+ * el mismo disco. Antes esto era un await contra un cache de Firestore que a
+ * su vez sondeaba otro proveedor.
  */
-export async function load({ locals, getClientAddress }) {
+export function load({ locals, getClientAddress }) {
   // MODO SOMBRA: se calcula el pais por IP pero NO se usa, solo se registra
   // para poder compararlo unos dias antes de confiarle la fuente de verdad.
   //
@@ -24,7 +22,6 @@ export async function load({ locals, getClientAddress }) {
   // rompia el load y devolvia 500. Observar no puede afectar la respuesta.
   try {
     // Sin await: no debe sumarle ni un milisegundo de espera a la pagina.
-    // El .catch evita que un rechazo quede sin manejar.
     observarPaisPorIP(getClientAddress()).catch(() => {})
   } catch {
     // Request sin cabecera de proxy: no hay IP de visitante que observar.
@@ -32,6 +29,7 @@ export async function load({ locals, getClientAddress }) {
 
   return {
     idioma: locals.idioma,
-    flags: await obtenerFlags(),
+    usuario: locals.usuario,
+    flags: obtenerFlags(),
   }
 }

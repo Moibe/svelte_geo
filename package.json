@@ -10,18 +10,24 @@
     "start": "node build",
     "prepare": "svelte-kit sync || echo ''",
     "fetch-prices": "node scripts/fetch-stripe-prices.js",
-    "fetch-product-details": "node scripts/fetch-product-details.js"
+    "fetch-product-details": "node scripts/fetch-product-details.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file=.env scripts/migrate.mjs",
+    "db:seed": "node --env-file=.env scripts/seed.mjs",
+    "db:studio": "drizzle-kit studio"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/kit": "^2.57.0",
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "drizzle-kit": "^0.31.10",
     "svelte": "^5.55.2",
     "vite": "^8.0.7"
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
     "dotenv": "^16.3.1",
-    "firebase": "^12.9.0",
+    "drizzle-orm": "^0.45.2",
     "leaflet": "^1.9.4",
     "svelte-i18n": "^4.0.1"
   }

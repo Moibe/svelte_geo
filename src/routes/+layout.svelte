@@ -8,8 +8,21 @@
   import { locale } from 'svelte-i18n'
   import { browser } from '$app/environment'
   import { aplicarIdiomaAlDocumento } from '$lib/i18n.js'
+  import { sembrarFlags } from '$lib/flags.js'
 
   let { children, data } = $props()
+
+  // Los flags que el servidor ya resolvió para esta request se pasan al módulo
+  // del cliente antes de que nadie los pida. Sin esto, la primera lectura
+  // tendría que esperar un viaje de red y durante ese rato no habría valores —
+  // justo el parpadeo que renderizar en el servidor vino a eliminar.
+  //
+  // Solo en el navegador: `actuales` es una variable de MÓDULO, compartida por
+  // todas las requests del proceso. En el servidor los flags salen de
+  // $lib/server/flags.js, que lee la base por request.
+  if (browser && data?.flags) {
+    sembrarFlags(data.flags)
+  }
 
   // Fijar el idioma que el servidor resolvió para ESTA request.
   //
