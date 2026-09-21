@@ -26,16 +26,25 @@
   let showModal = false;
   let mapCoords = { lat: 19.4326, lng: -99.1332 }; // Default CDMX
   let lastUsedPhoneNumber = '';
-  let safeMode = null; // Estado de Safe Mode (cargado desde Firestore, null = cargando)
+  // Datos que resolvió el servidor: los flags de Firestore ya leídos.
+  //
+  // Inicializar el estado desde acá NO es opcional con SSR encendido: si el
+  // servidor renderiza la pantalla de safe mode y el cliente hidratara con
+  // safeMode = null, el HTML servido y el primer render del cliente no
+  // coincidirían. Los listeners de Firestore del onMount siguen puestos, así
+  // que cambiar un flag desde la consola sigue llegando al instante.
+  export let data;
+
+  let safeMode = data.flags.safeMode; // Estado de Safe Mode (resuelto en el servidor)
   let unsubscribe = null; // Función para detener listener de Firestore
   let unsubscribeStripeMode = null; // Función para detener listener de Stripe Mode
   let unsubscribeModalWait = null; // Función para detener listener de Modal Wait
   let unsubscribeSell = null; // Función para detener listener de Sell Config
   let unsubscribeVerbose = null; // Función para detener listener de Verbose Config
-  let isProductionMode = false; // Estado de Stripe Mode (false = sandbox, true = production)
-  let waitSafe = 30; // Tiempo de espera en Safe Mode (segundos)
-  let waitProd = 30; // Tiempo de espera en modo producción (segundos)
-  let sellEnabled = true; // Estado de venta (true = mostrar modal, false = nunca mostrar)
+  let isProductionMode = data.flags.isProductionMode; // Stripe Mode (false = sandbox)
+  let waitSafe = data.flags.waitSafe; // Tiempo de espera en Safe Mode (segundos)
+  let waitProd = data.flags.waitProd; // Tiempo de espera en modo producción (segundos)
+  let sellEnabled = data.flags.sellEnabled; // Estado de venta (true = mostrar modal)
   let mapInteractionEnabled = false; // Si true, dispara purchase al interactuar con mapa
   let unsubscribeMapInteraction = null;
   let mapWaitEnabled = false;        // Si true, dispara purchase al quedarse X segundos en mapa
@@ -45,7 +54,7 @@
   let unsubscribeSellPop = null;
   let phoneSearchEnabled = false;    // Si true, dispara purchase cuando el usuario busca un teléfono
   let unsubscribePhoneSearch = null;
-  let priceLevel = 200;              // Nivel de precio (100 = producto barato, 200 = producto original)
+  let priceLevel = data.flags.priceLevel;   // Nivel de precio (100 = barato, 200 = original)
   let unsubscribePriceLevel = null;  // Función para detener listener de Price Level
 
   // Datos de sesión para logging de conversiones

@@ -1,10 +1,20 @@
+import { obtenerFlags } from '$lib/server/flags.js'
+
 /**
- * Pasa a la pagina el idioma que hooks.server.js ya resolvio para esta request.
+ * Datos que el servidor le pasa a la pagina para poder renderizar la PRIMERA
+ * pantalla ya decidida.
  *
- * Se resuelve en el hook y no aca porque el hook es tambien quien inyecta el
- * <html lang>, y tener dos lugares distintos calculando el idioma es como se
- * llega a que el atributo diga una cosa y el texto muestre otra.
+ * El idioma lo resolvio hooks.server.js (es tambien quien inyecta el
+ * <html lang>, y tener dos lugares calculandolo es como se llega a que el
+ * atributo diga una cosa y el texto muestre otra).
+ *
+ * Los flags vienen del cache de Firestore. Antes de esto, safeMode arrancaba
+ * en null y la primera pantalla SIEMPRE era un spinner de "Cargando...",
+ * incluso para quien ya tenia la config resuelta.
  */
-export function load({ locals }) {
-  return { idioma: locals.idioma }
+export async function load({ locals }) {
+  return {
+    idioma: locals.idioma,
+    flags: await obtenerFlags(),
+  }
 }
