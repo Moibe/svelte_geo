@@ -1,18 +1,18 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { _ , locale } from 'svelte-i18n';
-  import CountrySelect from './lib/CountrySelect.svelte';
-  import PhoneInput from './lib/PhoneInput.svelte';
-  import Map from './lib/Map.svelte';
-  import LoadingSpinner from './lib/LoadingSpinner.svelte';
-  import Modal from './lib/Modal.svelte';
-  import LanguageSelector from './lib/LanguageSelector.svelte';
-  import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from './lib/geoLocation.js';
-  import { getGAClientId } from './lib/stripe.js';
-  import { logConversion } from './lib/conversionLogger.js';
-  import { setLanguageFromCountry, getLanguageFromCountry } from './lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange, getPriceLevelConfig, onPriceLevelChange } from './lib/firebase.js';
-  import { verboseStore, log, warn, error } from './lib/logger.js';
+  import CountrySelect from '$lib/CountrySelect.svelte';
+  import PhoneInput from '$lib/PhoneInput.svelte';
+  import Map from '$lib/Map.svelte';
+  import LoadingSpinner from '$lib/LoadingSpinner.svelte';
+  import Modal from '$lib/Modal.svelte';
+  import LanguageSelector from '$lib/LanguageSelector.svelte';
+  import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from '$lib/geoLocation.js';
+  import { getGAClientId } from '$lib/stripe.js';
+  import { logConversion } from '$lib/conversionLogger.js';
+  import { setLanguageFromCountry, getLanguageFromCountry } from '$lib/i18n.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange, getPriceLevelConfig, onPriceLevelChange } from '$lib/firebase.js';
+  import { verboseStore, log, warn, error } from '$lib/logger.js';
 
   let phoneNumber = '';
   let selectedCountry = '+1'; // País del teléfono que busca
