@@ -16,10 +16,19 @@ import { observarPaisPorIP } from '$lib/server/geoSombra.js'
 export async function load({ locals, getClientAddress }) {
   // MODO SOMBRA: se calcula el pais por IP pero NO se usa, solo se registra
   // para poder compararlo unos dias antes de confiarle la fuente de verdad.
-  // Deliberadamente SIN await: es observacion y no debe sumarle ni un
-  // milisegundo de espera a la pagina. El .catch evita que un rechazo quede
-  // sin manejar y tumbe el proceso.
-  observarPaisPorIP(getClientAddress()).catch(() => {})
+  //
+  // TODO el bloque va dentro de un try: getClientAddress() LANZA cuando
+  // ADDRESS_HEADER esta configurado y la request no trae ese header, que es el
+  // caso de cualquier peticion que no pase por nginx — por ejemplo el health
+  // check que pega directo a 127.0.0.1:3900. Sin este try, esa excepcion
+  // rompia el load y devolvia 500. Observar no puede afectar la respuesta.
+  try {
+    // Sin await: no debe sumarle ni un milisegundo de espera a la pagina.
+    // El .catch evita que un rechazo quede sin manejar.
+    observarPaisPorIP(getClientAddress()).catch(() => {})
+  } catch {
+    // Request sin cabecera de proxy: no hay IP de visitante que observar.
+  }
 
   return {
     idioma: locals.idioma,
