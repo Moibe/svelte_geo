@@ -4,79 +4,47 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # permite correrlo a mano desde la pestana Actions
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: pull - build - restart
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Setup SSH
+      - name: install ssh key
         run: |
-          mkdir -p ~/.ssh
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 165.22.53.200 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 165.22.53.200 > ~/.ssh/known_hosts
 
-      - name: Create .env file from GitHub Secrets
+      # La app dejo de ser un sitio estatico: ya no se buildea aca ni se hace
+      # rsync de dist/. Ahora es un proceso Node (adapter-node) bajo pm2 en el
+      # droplet, asi que el build ocurre ALLA y esto solo lo dispara.
+      #
+      # El .env del droplet NO se genera aca a proposito. Vive en
+      # /root/code/svelte_geo_kit/.env y ahi estan ORIGIN/PORT/HOST mas las
+      # VITE_FIREBASE_*, que se necesitan EN TIEMPO DE BUILD: sin ellas el
+      # bundle sale con la config de Firebase en undefined y la app se queda
+      # colgada para siempre en "Cargando..." sin un solo error en consola.
+      #
+      # Node/npm/pm2 viven en nvm y una shell SSH no-interactiva no los tiene en
+      # el PATH, por eso se carga nvm explicitamente. La cadena con && aborta si
+      # algo falla, asi pm2 NO reinicia con un build roto.
+      - name: deploy on droplet
         run: |
-          # Solo el price de prueba llega al bundle. Las claves sk_ de Stripe NO
-          # se escriben aca: ningun modulo de src/ las lee y el cobro lo arma
-          # stripe-kraken del lado del servidor. Los secrets viejos
-          # (VITE_STRIPE_PROD_API_KEY, VITE_STRIPE_TEST_API_KEY y los dos
-          # PRODUCT_ID) quedaron sin uso y conviene borrarlos del repo en GitHub.
-          echo "VITE_STRIPE_TEST_PRICE_ID=${{ secrets.VITE_STRIPE_TEST_PRICE_ID }}" >> .env
-          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env
-          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env
-          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env
-          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env
-          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
-          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
-          echo "VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}" >> .env
-          echo "--- Verificando .env generado ---"
-          echo "Número de líneas: $(wc -l < .env)"
-          echo "Longitud VITE_STRIPE_TEST_PRICE_ID: $(grep 'VITE_STRIPE_TEST_PRICE_ID' .env | wc -c) chars"
-          RAW=$(grep 'VITE_STRIPE_TEST_PRICE_ID' .env | cut -d'=' -f2)
-          if [ -z "$RAW" ]; then
-            echo "❌ ERROR: VITE_STRIPE_TEST_PRICE_ID está VACÍO - el secret no está configurado"
-            exit 1
-          else
-            echo "✅ VITE_STRIPE_TEST_PRICE_ID tiene valor (${#RAW} chars)"
-          fi
+          ssh root@165.22.53.200 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/svelte_geo_kit && git checkout main && git pull origin main && npm ci && npm run build && pm2 restart svelte-geo-kit --update-env'
 
-      - name: Build project
-        env:
-          VITE_STRIPE_TEST_PRICE_ID: ${{ secrets.VITE_STRIPE_TEST_PRICE_ID }}
-        run: npm run build
-
-      - name: Pull latest code on server
+      - name: verify
         run: |
-          ssh root@165.22.53.200 "cd /root/code/svelte_geo && git reset --hard && git pull origin main"
+          ssh root@165.22.53.200 'curl -sf -o /dev/null -w "app en :3900 -> HTTP %{http_code}
+" http://127.0.0.1:3900/'
+          curl -sf -o /dev/null -w "geoservices.space -> HTTP %{http_code}
+" https://geoservices.space/
+          curl -sf -o /dev/null -w "product-details.json -> HTTP %{http_code}
+" https://geoservices.space/product-details.json
+          curl -sf -o /dev/null -w "track/health -> HTTP %{http_code}
+" https://geoservices.space/track/health
 
-      - name: Deploy to server
-        run: |
-          rsync -av --delete dist/ root@165.22.53.200:/root/code/svelte_geo/dist/
-
-      - name: Verify deployment
-        run: |
-          ssh root@165.22.53.200 "ls -la /root/code/svelte_geo/dist/ | head -10"
-
-      - name: Deployment summary
-        if: success()
-        run: echo "🚀 Deploy a 165.22.53.200 completado exitosamente"
-
-      - name: Notify deployment failure
-        if: failure()
-        run: echo "❌ El deploy falló. Revisa los logs arriba."
+      - name: cleanup
+        run: rm -rf ~/.ssh
