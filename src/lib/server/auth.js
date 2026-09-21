@@ -1,5 +1,5 @@
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
-import { eq } from 'drizzle-orm'
+import { and, eq, ne } from 'drizzle-orm'
 import { env } from '$env/dynamic/private'
 import { db } from './db/index.js'
 import { sesiones, usuarios } from './db/schema.js'
@@ -107,6 +107,35 @@ export function validarTokenDeSesion(token) {
 
 export function invalidarSesion(id) {
   db.delete(sesiones).where(eq(sesiones.id, id)).run()
+}
+
+/**
+ * Cierra todas las sesiones de un usuario MENOS la que se está usando.
+ *
+ * Se llama al cambiar la contraseña. Si no se hiciera, cambiarla no serviría
+ * para el caso en que uno cambia justamente porque sospecha que alguien más
+ * tiene acceso: la sesión del intruso seguiría viva, porque una sesión no
+ * depende de la contraseña una vez creada.
+ *
+ * La actual se conserva para no echar de la página a quien acaba de cambiarla.
+ */
+export function cerrarOtrasSesiones(usuarioId, idActual) {
+  db.delete(sesiones)
+    .where(and(eq(sesiones.usuarioId, usuarioId), ne(sesiones.id, idActual)))
+    .run()
+}
+
+/** Cambia el hash de la contraseña de una cuenta. */
+export function cambiarPassword(usuarioId, passwordNueva) {
+  db.update(usuarios)
+    .set({ passwordHash: hashearPassword(passwordNueva) })
+    .where(eq(usuarios.id, usuarioId))
+    .run()
+}
+
+export function buscarUsuarioPorId(id) {
+  const [u] = db.select().from(usuarios).where(eq(usuarios.id, id)).all()
+  return u ?? null
 }
 
 export function ponerCookieDeSesion(cookies, token, expiraEn) {

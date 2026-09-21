@@ -47,16 +47,11 @@
 
 <div class="contenido">
   <header>
-    <div>
-      <h1>Flags</h1>
-      <p class="sub">
-        Los cambios se aplican al instante. Las pestañas abiertas se enteran en
-        pocos segundos, sin recargar.
-      </p>
-    </div>
-    <form method="POST" action="/admin/logout">
-      <button class="salir" type="submit">Salir</button>
-    </form>
+    <h1>Flags</h1>
+    <p class="sub">
+      Los cambios se aplican al instante. Las pestañas abiertas se enteran en
+      pocos segundos, sin recargar.
+    </p>
   </header>
 
   {#each Object.entries(grupos) as [grupo, filas] (grupo)}
@@ -135,10 +130,6 @@
   }
 
   header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
     margin-bottom: 2rem;
   }
 
@@ -153,20 +144,6 @@
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.7);
     max-width: 34rem;
-  }
-
-  .salir {
-    padding: 0.5rem 0.9rem;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    cursor: pointer;
-    font-size: 0.85rem;
-  }
-
-  .salir:hover {
-    background: rgba(255, 255, 255, 0.2);
   }
 
   section {

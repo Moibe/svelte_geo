@@ -34,6 +34,9 @@ export async function handle({ event, resolve }) {
 
     if (usuario) {
       event.locals.usuario = usuario
+      // El id de la sesión actual queda disponible para poder distinguirla de
+      // las demás: al cambiar la contraseña se cierran todas menos esta.
+      event.locals.sesion = sesion
       // La sesión se renueva sola cuando le queda poco; la cookie tiene que
       // acompañar esa fecha o el navegador la tiraría antes que el servidor.
       ponerCookieDeSesion(event.cookies, token, sesion.expiraEn)
@@ -41,10 +44,12 @@ export async function handle({ event, resolve }) {
       // Token vencido, inválido o de una cuenta borrada: se limpia para que el
       // navegador no lo siga mandando en cada request.
       event.locals.usuario = null
+      event.locals.sesion = null
       borrarCookieDeSesion(event.cookies)
     }
   } else {
     event.locals.usuario = null
+    event.locals.sesion = null
   }
 
   return resolve(event, {
