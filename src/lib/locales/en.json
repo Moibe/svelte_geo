@@ -43,6 +43,10 @@
     "premium": "Premium Access",
     "buyButton": "Buy",
     "processing": "Processing...",
-    "securePayment": "Secure Payment with Stripe ®"
+    "securePayment": "Secure Payment with Stripe ®",
+    "priceLoadError": "We could not load the price for your country. Please reload the page and try again."
+  },
+  "purchase": {
+    "coordsLost": "Your payment went through. We could not recover your previous search from this browser; enter the number again to see the map."
   }
 }

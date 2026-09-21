@@ -4,6 +4,7 @@
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
   import { getPMCConfig, onPMCChange, getStripeModeConfig, onStripeModeChange, getPriceTestConfig, onPriceTestChange } from './firebase.js';
   import { logConversion } from './conversionLogger.js';
+  import { toMajorUnits } from './currency.js';
   import { log, warn, error } from './logger.js';
   
   export let isVisible = false;
@@ -216,6 +217,7 @@
   // Cargar detalles del producto cuando se muestra el modal, cambia el pa\u00eds o cambia el nivel de precio
   $: if (isVisible && countryCode) {
     productDetails = null;
+    errorMessage = '';
     loadProductDetails();
   }
 
@@ -241,7 +243,11 @@
         log('🏭 PRODUCTION MODE - Precio por país cargado');
       }
     } catch (err) {
+      // El precio ya no cae a un fallback de México, así que este error es
+      // visible a propósito: sin precio no se puede cobrar bien.
       error('Error loading product details:', err);
+      productDetails = null;
+      errorMessage = $_('modal.priceLoadError');
     } finally {
       loadingDetails = false;
     }
@@ -260,10 +266,21 @@
       localStorage.setItem('map_coords', JSON.stringify({ lat: mapLat, lng: mapLng }));
 
       // Guardar datos de la compra para el evento de conversión
+      // El monto y la moneda se toman del objeto price de Stripe, que es lo que
+      // de verdad se cobra. `price.amount` no existe (el campo es `unit_amount`),
+      // y dividir entre 100 a ciegas rompe las monedas sin subunidad — de ahí
+      // toMajorUnits. Antes esto producía NaN, que localStorage serializaba
+      // como null y llegaba así a Google Ads: conversiones sin valor.
+      const stripePrice = productDetails.price || {};
+      const purchaseValue = toMajorUnits(stripePrice.unit_amount, stripePrice.currency);
+      if (purchaseValue === null) {
+        warn('⚠️ unit_amount no utilizable; la conversión se reportará sin valor:', stripePrice);
+      }
+
       const purchaseData = {
         transaction_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        value: productDetails.price.amount / 100, // Convertir centavos a unidad
-        currency: getCurrency(countryCode).code,
+        value: purchaseValue,
+        currency: (stripePrice.currency || getCurrency(countryCode).code).toUpperCase(),
         price_id: productDetails.priceId,
         country_code: countryCode,
         country_iso: countryISO, // Usar ISO real de geolocalización

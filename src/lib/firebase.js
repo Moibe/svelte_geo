@@ -1,5 +1,4 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { log, warn, error } from './logger.js';
 
@@ -15,7 +14,6 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 /**

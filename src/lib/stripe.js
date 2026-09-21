@@ -243,20 +243,14 @@ export async function getProductDetailsByCountry(countryCode, isProductionMode =
     
     return details;
   } catch (err) {
+    // Acá había un fallback que devolvía el precio de México en MXN ante
+    // CUALQUIER fallo: un 404 del JSON, la red caída o un JSON mal formado
+    // terminaban cobrándole MXN 200 (o 100) a un cliente de cualquier país,
+    // en silencio y con price_id de PRODUCCIÓN. Un renombre de archivo bastaba
+    // para dispararlo.
+    // Ahora se relanza: el Modal muestra el error y deshabilita el botón de
+    // compra. Es preferible no vender a vender en la moneda equivocada.
     error('❌ Error al obtener detalles del producto:', err);
-    
-    // Fallback final con México (según nivel de precio)
-    const fallback = priceLevel === 100 ? {
-      priceId: 'price_1T6msaIYi36CbmfWYxbCIfix', // México $100
-      product: { id: 'prod_U4wmT5U2hLGQoM', name: 'GPS SMS Location', description: 'Acceso a Mapa Completo' },
-      price: { id: 'price_1T6msaIYi36CbmfWYxbCIfix', unit_amount: 10000, currency: 'mxn', formatted: '$100', nickname: 'Default $100' }
-    } : {
-      priceId: 'price_1T1c40IYi36CbmfWavUj4xxu', // México $200
-      product: { id: 'prod_TzbGHlbKHkeGiq', name: 'GPS SMS Location', description: 'Acceso a Mapa Completo' },
-      price: { id: 'price_1T1c40IYi36CbmfWavUj4xxu', unit_amount: 20000, currency: 'mxn', formatted: '$200', nickname: 'Default $200' }
-    };
-    
-    log('🚨 Usando fallback de México:', fallback);
-    return fallback;
+    throw err;
   }
 }

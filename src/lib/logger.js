@@ -35,12 +35,13 @@ export function warn(...args) {
 }
 
 /**
- * console.error condicional
- * Nota: Los errores siempre se muestran para debugging crítico
- * Puedes cambiar esto si quieres ocultarlos también
+ * console.error — SIEMPRE se imprime, sin importar el flag verbose.
+ *
+ * Antes estaba condicionado a isVerbose, lo que significa que apagar verbose
+ * en Firestore también apagaba los errores: la app podía estar fallando en
+ * silencio y la consola se veía limpia. Un error es justamente lo que uno
+ * quiere ver cuando decidió bajar el ruido.
  */
 export function error(...args) {
-  if (isVerbose) {
-    console.error(...args);
-  }
+  console.error(...args);
 }

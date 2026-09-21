@@ -217,28 +217,27 @@ En tu archivo `.env` necesitas configurar:
 
 ```dotenv
 # Stripe Production (Cobros reales)
-VITE_STRIPE_PROD_API_KEY=sk_live_XXXXXXXXXXXXX
-VITE_STRIPE_PROD_PRODUCT_ID=prod_XXXXXXXXXXXXX
+VITE_STRIPE_TEST_PRICE_ID=price_test_XXXXXXXXXXXXX
 
 # Stripe Sandbox (Pruebas)
-VITE_STRIPE_TEST_API_KEY=sk_test_XXXXXXXXXXXXX
-VITE_STRIPE_TEST_PRODUCT_ID=prod_test_XXXXXXXXXXXXX
-VITE_STRIPE_TEST_PRICE_ID=price_test_XXXXXXXXXXXXX
+
 ```
 
-> **⚠️ Importante**: El prefijo `VITE_` es requerido para que Vite exponga estas variables al navegador. Las API Keys de Stripe serán **públicamente visibles** en el código JavaScript compilado, pero esto es seguro porque Stripe usa restricciones de dominio y las claves secretas están en el backend (Stripe Kraken).
+> **🚨 Nunca pongas una clave secreta de Stripe (`sk_live_` o `sk_test_`) detrás de `VITE_`.** El prefijo `VITE_` hace que Vite **incruste el valor en el JavaScript compilado**, o sea que queda a la vista de cualquiera que abra las herramientas de desarrollo. Una `sk_` expuesta permite emitir cobros y reembolsos, y leer los datos de tus clientes: Stripe **no** tiene "restricciones de dominio" que lo impidan (eso aplica a las claves publicables `pk_`, que son otra cosa).
+>
+> El cobro lo arma **stripe-kraken**, que guarda las claves secretas del lado del servidor. Lo único que el navegador necesita de Stripe en este proyecto es `VITE_STRIPE_TEST_PRICE_ID`, que es un identificador de precio y no autoriza nada.
 
 ### 🎯 Dónde Obtener las Credenciales
 
 1. **Production Keys**:
    - Stripe Dashboard → Developers → API keys → Reveal live key
-   - Copia `Secret key` (empieza con `sk_live_`)
+   - La `Secret key` (`sk_live_`) va en stripe-kraken, NUNCA en este repo
    - Ve a Products → Selecciona tu producto
    - Copia el `Product ID` (empieza con `prod_`)
 
 2. **Test Keys**:
    - Stripe Dashboard → Developers → API keys (toggle a "Test mode")
-   - Copia `Secret key` (empieza con `sk_test_`)
+   - La `Secret key` (`sk_test_`) va en stripe-kraken, NUNCA en este repo
    - Ve a Products → Selecciona un producto de prueba
    - Copia el `Product ID` y un `Price ID` cualquiera
 
@@ -529,7 +528,7 @@ En la consola del navegador verás información detallada:
 
 ```
 💳 Stripe Mode: 🏭 PRODUCTION
-🔑 Using API Key: sk_live_XXXXXXX...
+🔑 Using API Key: (la maneja stripe-kraken del lado del servidor)
 📦 Product ID: prod_XXXXXXXXXXXXX
 🔍 Buscando detalles para país: +52 (Modo: PRODUCTION)
 ```

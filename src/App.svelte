@@ -20,6 +20,9 @@
   let userCountryISO = 'MX'; // Código ISO del país del usuario (MX, US, BR, etc.)
   let showMap = false;
   let showSpinner = false;
+  // El pago se completó pero no sobrevivieron las coordenadas del redirect:
+  // hay que avisarle al cliente y pedirle que repita la búsqueda.
+  let purchaseCoordsLost = false;
   let showModal = false;
   let mapCoords = { lat: 19.4326, lng: -99.1332 }; // Default CDMX
   let lastUsedPhoneNumber = '';
@@ -339,20 +342,44 @@
 
     // Detectar retorno exitoso de Stripe
     if (urlParams.get('payment') === 'success') {
-      // Restaurar coordenadas del mapa desde localStorage
-      const savedCoords = localStorage.getItem('map_coords');
-      if (savedCoords) {
-        try {
-          const coords = JSON.parse(savedCoords);
-          mapCoords = coords;
-          showMap = true;
-          
-          // Enviar evento de conversión a Google Analytics/Ads
-          const purchaseData = localStorage.getItem('purchase_data');
-          if (purchaseData) {
+      // Cada parte de este bloque va por separado A PROPÓSITO. Antes todo colgaba
+      // de un único `if (savedCoords)`: si localStorage no sobrevivía el redirect
+      // a Stripe (ITP de Safari, modo privado, navegadores in-app de Instagram o
+      // TikTok), el cliente PAGABA y se quedaba viendo una página en blanco — y
+      // como el registro de la compra vivía en el mismo bloque, tampoco quedaba
+      // fila en la base para encontrarlo y reembolsarlo.
+      // El arreglo de raíz es llevar las coordenadas en la metadata de la sesión
+      // de Stripe; esto es la red de seguridad mientras tanto.
+
+      // 1. Coordenadas: recuperarlas si sobrevivieron.
+      let restoredCoords = null;
+      try {
+        const savedCoords = localStorage.getItem('map_coords');
+        if (savedCoords) restoredCoords = JSON.parse(savedCoords);
+      } catch (e) {
+        error('Error al restaurar coordenadas:', e);
+      }
+
+      if (restoredCoords) {
+        mapCoords = restoredCoords;
+        showMap = true;
+        log('✅ Pago exitoso - Mapa restaurado');
+      } else {
+        // No mostramos el mapa en la ubicación por defecto: enseñarle CDMX a
+        // quien pagó por localizar otro número es peor que pedirle que repita
+        // la búsqueda. Se le avisa que el pago sí se procesó.
+        purchaseCoordsLost = true;
+        warn('⚠️ Pago exitoso pero se perdió map_coords; se pedirá repetir la búsqueda');
+      }
+
+      // 2. Registrar la compra SIEMPRE, haya o no coordenadas.
+      {
+        // Enviar evento de conversión a Google Analytics/Ads
+        const purchaseData = localStorage.getItem('purchase_data');
+        if (purchaseData) {
             try {
               const data = JSON.parse(purchaseData);
-              
+
               // Enviar eventos de compra a GA4 vía GTM (dataLayer)
               if (typeof window.dataLayer !== 'undefined') {
                 window.dataLayer.push({
@@ -411,16 +438,14 @@
             } catch (e) {
               error('Error al procesar datos de compra:', e);
             }
-          }
-          
-          // Limpiar el parámetro de la URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          log('✅ Pago exitoso - Mapa restaurado');
-        } catch (e) {
-          error('Error al restaurar coordenadas:', e);
+        } else {
+          // Hubo pago pero se perdió purchase_data: igual conviene dejar rastro.
+          warn('⚠️ payment=success sin purchase_data: la compra no se puede reportar con valor');
         }
       }
+
+      // 3. Limpiar el parámetro de la URL, haya funcionado o no lo anterior.
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     // Detectar si fue un refresh de la página
@@ -444,9 +469,14 @@
       }
     }
     // Detectar cierre real de pestaña/ventana (no cambio de pestaña)
+    let pageCloseLogged = false;
     handleVisibilityChange = (event) => {
       // Ignorar si es navegación a Stripe (el usuario va a pagar, no es un cierre real)
       if (localStorage.getItem('pending_checkout')) return;
+
+      // beforeunload y pagehide pueden dispararse los dos en el mismo cierre.
+      if (pageCloseLogged) return;
+      pageCloseLogged = true;
 
       // Nota: no intentamos distinguir refresh de cierre real porque beforeunload
       // no puede diferenciarlos. En caso de refresh, se registra page_close aquí
@@ -466,13 +496,21 @@
         utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
       });
     };
+    // beforeunload no dispara de forma confiable en iOS Safari, que en su lugar
+    // manda pagehide. Se escuchan los dos y el flag evita la fila duplicada
+    // cuando el navegador dispara ambos.
+    // Nota: NO se usa visibilitychange a propósito — dispara en cada cambio de
+    // pestaña y cada vez que la app pasa a segundo plano en móvil, que es justo
+    // lo que este evento quiere NO contar como cierre.
     window.addEventListener('beforeunload', handleVisibilityChange);
+    window.addEventListener('pagehide', handleVisibilityChange);
   });
 
   onDestroy(() => {
-    // Limpiar event listener de beforeunload
+    // Limpiar event listeners de cierre de página
     if (typeof window !== 'undefined' && handleVisibilityChange) {
       window.removeEventListener('beforeunload', handleVisibilityChange);
+      window.removeEventListener('pagehide', handleVisibilityChange);
     }
 
     // Detener listeners de Firestore cuando se destruya el componente
@@ -966,6 +1004,9 @@
     <LanguageSelector on:change={handleLanguageChange} />
   </div>
   <div class="container">
+    {#if purchaseCoordsLost}
+      <div class="purchase-notice" role="status">{$_('purchase.coordsLost')}</div>
+    {/if}
     {#if !showMap && !showSpinner}
       {#if safeMode === null}
         <!-- Cargando configuración desde Firebase -->
@@ -1073,6 +1114,20 @@
     color: white;
     margin: 0 0 1rem 0;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .purchase-notice {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #ffffff;
+    background: rgba(16, 122, 62, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+    margin: 0 0 1.5rem 0;
+    max-width: 32rem;
+    text-align: center;
   }
 
   .safe-mode-subtitle {

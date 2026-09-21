@@ -43,6 +43,10 @@
     "premium": "Premium-Zugang",
     "buyButton": "Kaufen",
     "processing": "Wird verarbeitet...",
-    "securePayment": "Sichere Zahlung mit Stripe ®"
+    "securePayment": "Sichere Zahlung mit Stripe ®",
+    "priceLoadError": "Der Preis für Ihr Land konnte nicht geladen werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
+  },
+  "purchase": {
+    "coordsLost": "Ihre Zahlung war erfolgreich. Die vorherige Suche konnte in diesem Browser nicht wiederhergestellt werden; geben Sie die Nummer erneut ein, um die Karte zu sehen."
   }
 }

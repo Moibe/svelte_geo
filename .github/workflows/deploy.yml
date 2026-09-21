@@ -32,10 +32,11 @@ jobs:
 
       - name: Create .env file from GitHub Secrets
         run: |
-          echo "VITE_STRIPE_PROD_API_KEY=${{ secrets.VITE_STRIPE_PROD_API_KEY }}" >> .env
-          echo "VITE_STRIPE_PROD_PRODUCT_ID=${{ secrets.VITE_STRIPE_PROD_PRODUCT_ID }}" >> .env
-          echo "VITE_STRIPE_TEST_API_KEY=${{ secrets.VITE_STRIPE_TEST_API_KEY }}" >> .env
-          echo "VITE_STRIPE_TEST_PRODUCT_ID=${{ secrets.VITE_STRIPE_TEST_PRODUCT_ID }}" >> .env
+          # Solo el price de prueba llega al bundle. Las claves sk_ de Stripe NO
+          # se escriben aca: ningun modulo de src/ las lee y el cobro lo arma
+          # stripe-kraken del lado del servidor. Los secrets viejos
+          # (VITE_STRIPE_PROD_API_KEY, VITE_STRIPE_TEST_API_KEY y los dos
+          # PRODUCT_ID) quedaron sin uso y conviene borrarlos del repo en GitHub.
           echo "VITE_STRIPE_TEST_PRICE_ID=${{ secrets.VITE_STRIPE_TEST_PRICE_ID }}" >> .env
           echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env
           echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env
@@ -59,17 +60,6 @@ jobs:
         env:
           VITE_STRIPE_TEST_PRICE_ID: ${{ secrets.VITE_STRIPE_TEST_PRICE_ID }}
         run: npm run build
-
-      - name: Verify compiled JS contains correct price_id
-        run: |
-          echo "Checking if compiled JS has correct price_id:"
-          if grep -q "price_1SDXvuROVpWRmEfBsAGp37kf" dist/assets/*.js; then
-            echo "✅ Correct price_id found in compiled JS"
-          else
-            echo "❌ WARNING: price_1SDXvuROVpWRmEfBsAGp37kf NOT found!"
-            echo "Checking for fallback:"
-            grep -o "price_test_default" dist/assets/*.js | head -5 || echo "Fallback not found either"
-          fi
 
       - name: Pull latest code on server
         run: |

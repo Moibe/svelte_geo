@@ -43,6 +43,10 @@
     "premium": "Acceso Premium",
     "buyButton": "Comprar",
     "processing": "Procesando...",
-    "securePayment": "Pago Seguro con Stripe ®"
+    "securePayment": "Pago Seguro con Stripe ®",
+    "priceLoadError": "No pudimos cargar el precio para tu país. Recarga la página e inténtalo de nuevo."
+  },
+  "purchase": {
+    "coordsLost": "Tu pago se procesó correctamente. No pudimos recuperar la búsqueda anterior desde este navegador; vuelve a ingresar el número para ver el mapa."
   }
 }
