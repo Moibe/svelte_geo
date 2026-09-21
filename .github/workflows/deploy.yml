@@ -31,9 +31,16 @@ jobs:
       # Node/npm/pm2 viven en nvm y una shell SSH no-interactiva no los tiene en
       # el PATH, por eso se carga nvm explicitamente. La cadena con && aborta si
       # algo falla, asi pm2 NO reinicia con un build roto.
+      #
+      # El `set -a && . ./.env && set +a` antes del restart NO sobra: pm2 con
+      # --update-env reusa las variables que YA tiene guardadas, pero no relee
+      # el archivo .env. Sin este paso, una variable nueva agregada al .env
+      # nunca llega al proceso — y el sintoma puede ser silencioso (paso con
+      # ADDRESS_HEADER: getClientAddress() devolvia la IP de nginx y la
+      # deteccion por IP habria geolocalizado al droplet).
       - name: deploy on droplet
         run: |
-          ssh root@165.22.53.200 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/svelte_geo_kit && git checkout main && git pull origin main && npm ci && npm run build && pm2 restart svelte-geo-kit --update-env'
+          ssh root@165.22.53.200 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/svelte_geo_kit && git checkout main && git pull origin main && npm ci && npm run build && set -a && . ./.env && set +a && pm2 restart svelte-geo-kit --update-env'
 
       - name: verify
         run: |
