@@ -1,7 +1,16 @@
 <script>
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { _ } from 'svelte-i18n';
-  import L from 'leaflet';
+  // El CSS sí se importa estáticamente: un import de CSS no ejecuta nada en el
+  // servidor, así que no es un hazard de SSR. Antes venía de unpkg por CDN.
+  import 'leaflet/dist/leaflet.css';
+
+  // Leaflet toca `window` al evaluarse, así que NO puede importarse arriba: con
+  // SSR encendido, el bundle del servidor reventaría al cargar este módulo.
+  // Se carga dinámicamente dentro de onMount, que solo corre en el navegador.
+  // El `.default` no es opcional: leaflet no declara campo `module` en su
+  // package.json, es CJS/UMD, y sin él `L` sería el namespace del módulo.
+  let L;
 
   export let lat = 19.4326;
   export let lng = -99.1332;
@@ -144,7 +153,9 @@
     });
   }
 
-  onMount(() => {
+  onMount(async () => {
+    L = (await import('leaflet')).default;
+
     const coords = [lat, lng];
 
     // Crear el mapa
@@ -207,6 +218,13 @@
 
   onDestroy(() => {
     if (waitTimer) clearTimeout(waitTimer);
+    // Liberar el mapa: Leaflet deja listeners de resize y de rueda colgados del
+    // window. Antes daba igual porque la página se recargaba entera; ahora que
+    // SvelteKit monta y desmonta sin recargar, se acumularían.
+    if (map) {
+      map.remove();
+      map = null;
+    }
   });
 </script>
 

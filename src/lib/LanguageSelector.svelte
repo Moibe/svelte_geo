@@ -1,6 +1,7 @@
 <script>
   import { locale } from "svelte-i18n";
   import { createEventDispatcher } from "svelte";
+  import { guardarPreferencia, aplicarIdiomaAlDocumento } from "./i18n.js";
 
   const dispatch = createEventDispatcher();
 
@@ -27,7 +28,12 @@
 
   function changeLanguage(lang) {
     locale.set(lang);
-    localStorage.setItem("preferred_language", lang);
+    // Guarda en cookie ADEMÁS de localStorage: la cookie es la única que el
+    // servidor puede leer, y sin ella el primer render server-side ignoraría
+    // la elección explícita del usuario y le pintaría otro idioma.
+    guardarPreferencia(lang);
+    // Mantener el <html lang> y la dirección en sintonía con la elección.
+    aplicarIdiomaAlDocumento(lang);
     menuOpen = false;
     dispatch("change", { language: lang });
   }
