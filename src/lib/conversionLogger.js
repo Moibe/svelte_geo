@@ -4,7 +4,17 @@
  */
 import { log, error } from './logger.js';
 
-const API_URL = 'https://moibe-fastapi-mariadb-geospaces.hf.space/api/map-interactions';
+// Destino PRINCIPAL: la API de tracking del droplet, servida en el mismo
+// origen por el bloque `location /track/` de nginx. Ser mismo-origen quita el
+// preflight de CORS, el salto cross-provider y el cold start del Space.
+const API_URL = import.meta.env.VITE_TRACK_URL || '/track/api/map-interactions';
+
+// Destino LEGACY: el Space de HuggingFace, que escribe en MariaDB (Opalstack).
+// Se mantiene en paralelo un tiempo para poder reconciliar ambos lados antes
+// de dar de baja el Space. Poner VITE_LEGACY_TRACK_URL vacio apaga el solape
+// sin tocar esta linea.
+const LEGACY_API_URL = import.meta.env.VITE_LEGACY_TRACK_URL
+  ?? 'https://moibe-fastapi-mariadb-geospaces.hf.space/api/map-interactions';
 
 /**
  * Formatea una fecha en una zona horaria dada como string legible tipo ISO.
@@ -107,23 +117,45 @@ export async function logConversion({
   log(JSON.stringify(payload, null, 2));
   log('═══════════════════════════════════════════════');
 
-  // Guardar en la API (fire and forget — no bloquea el flujo)
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      keepalive: true, // Importante para que no se aborte al cerrar la pestaña
-    });
-    if (response.ok) {
-      const result = await response.json();
-      log('✅ Conversión guardada en API:', result);
-    } else {
-      error('❌ Error al guardar conversión en API:', response.status, await response.text());
-    }
-  } catch (err) {
-    error('❌ No se pudo conectar con la API de conversiones:', err);
+  // Se escribe a los DOS destinos en paralelo mientras dura la migración.
+  // Van con Promise.allSettled y no con await encadenado a propósito: si el
+  // legacy está caído (hoy lo está, la BD de Opalstack rechaza credenciales),
+  // no debe retrasar ni tumbar la escritura local.
+  const cuerpo = JSON.stringify(payload);
+  const destinos = [['local', API_URL]];
+
+  if (LEGACY_API_URL) {
+    destinos.push(['legacy', LEGACY_API_URL]);
   }
 
+  await Promise.allSettled(destinos.map(([nombre, url]) => enviar(nombre, url, cuerpo)));
+
   return payload;
+}
+
+/**
+ * Manda el payload a un destino. Nunca lanza: un fallo de tracking no puede
+ * romper el flujo de la app.
+ *
+ * `keepalive` es lo que hace que el POST sobreviva al cierre de la pestaña
+ * (es el mismo transporte que usa sendBeacon, con tope de 64KB — el payload
+ * de ~35 campos está muy por debajo). Sin esto se perderían los page_close.
+ */
+async function enviar(nombre, url, cuerpo) {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: cuerpo,
+      keepalive: true,
+    });
+
+    if (response.ok) {
+      log(`✅ Conversión guardada (${nombre}):`, await response.json());
+    } else {
+      error(`❌ Error al guardar conversión (${nombre}):`, response.status, await response.text());
+    }
+  } catch (err) {
+    error(`❌ No se pudo conectar con la API de conversiones (${nombre}):`, err);
+  }
 }
