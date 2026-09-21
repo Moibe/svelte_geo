@@ -290,7 +290,7 @@ async function fetchPrices() {
  */
 async function updatePricesJson(priceMap) {
   try {
-    const filePath = path.join(process.cwd(), 'public', 'prices-by-country.json');
+    const filePath = path.join(process.cwd(), 'static', 'prices-by-country.json');
     
     // Ordenar las claves alfabéticamente
     const sortedMap = {};
@@ -302,7 +302,7 @@ async function updatePricesJson(priceMap) {
     
     fs.writeFileSync(filePath, jsonContent + '\n');
     
-    console.log('\n✅ Archivo actualizado: public/prices-by-country.json');
+    console.log('\n✅ Archivo actualizado: static/prices-by-country.json');
     console.log(`📝 Total de países/entradas: ${Object.keys(sortedMap).length}`);
   } catch (error) {
     console.error('❌ Error escribiendo archivo:', error.message);

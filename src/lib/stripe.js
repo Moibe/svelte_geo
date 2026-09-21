@@ -213,34 +213,29 @@ export async function getProductDetailsByCountry(countryCode, isProductionMode =
     
     const testPriceId = import.meta.env.VITE_STRIPE_TEST_PRICE_ID || 'price_test_default';
     
-    const fileName = priceLevel === 100 ? '/product-details-100.json' : '/product-details.json';
-    const response = await fetch(fileName);
+    // El catálogo ya no viaja al navegador: antes se bajaba el archivo entero
+    // (25.7 KB el de $200, 48.8 KB el de $100) para usar UNA entrada. Ahora lo
+    // resuelve el servidor y manda solo el precio que toca.
+    const url = `/api/precio?pais=${encodeURIComponent(countryCode)}&nivel=${priceLevel}`;
+    const response = await fetch(url);
+
     if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
+      throw new Error(`Error HTTP ${response.status} al resolver el precio de ${countryCode}`);
     }
-    
-    const productData = await response.json();
-    log('📄 Archivo de detalles cargado, claves disponibles:', Object.keys(productData));
-    
-    // Intentar encontrar el país específico, si no existe, usar México (+52) como default
-    const details = productData[countryCode] || productData['+52'];
-    
-    if (!details) {
-      error(`❌ No se encontraron detalles para ${countryCode} ni para México (+52)`);
-      throw new Error(`No hay detalles disponibles para el país ${countryCode}`);
-    }
-    
-    if (productData[countryCode]) {
+
+    const details = await response.json();
+
+    if (details._exacto) {
       log(`✅ Detalles específicos encontrados para ${countryCode}:`, details);
     } else {
-      log(`⚠️ No hay precio específico para ${countryCode}, usando México (+52) como default:`, details);
+      log(`⚠️ No hay precio específico para ${countryCode}, se usó el de respaldo:`, details);
     }
-    
+
     if (!details.priceId) {
       error('❌ Price ID missing en detalles:', details);
       throw new Error('Price ID no disponible en los detalles del producto');
     }
-    
+
     return details;
   } catch (err) {
     // Acá había un fallback que devolvía el precio de México en MXN ante

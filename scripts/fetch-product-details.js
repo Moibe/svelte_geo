@@ -325,7 +325,7 @@ async function main() {
   });
   
   // Guardar archivo
-  const filePath = path.join(process.cwd(), 'public', 'product-details.json');
+  const filePath = path.join(process.cwd(), 'static', 'product-details.json');
   const sortedDetails = {};
   Object.keys(productDetails).sort().forEach((key) => {
     sortedDetails[key] = productDetails[key];
@@ -333,7 +333,7 @@ async function main() {
 
   fs.writeFileSync(filePath, JSON.stringify(sortedDetails, null, 2) + '\n');
   
-  console.log('\n✅ Archivo creado: public/product-details.json');
+  console.log('\n✅ Archivo creado: static/product-details.json');
   console.log(`📊 Total de países: ${Object.keys(sortedDetails).length}`);
   console.log('\n✨ ¡Listo! Detalles del producto actualizados.\n');
 }
