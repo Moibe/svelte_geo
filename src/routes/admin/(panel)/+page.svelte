@@ -18,24 +18,32 @@
   /**
    * use:enhance por fila. Un toggle se manda solo; un campo de texto o número
    * se manda al salir del campo o al apretar Enter.
+   *
+   * OJO con la forma de esta función: `enviar` TIENE QUE SER el manejador que
+   * recibe use:enhance, no una fábrica que lo devuelva. SvelteKit llama a esta
+   * función al enviar, y toma lo que devuelve como el callback de DESPUÉS de la
+   * respuesta. Si acá hubiera un nivel más de anidación, ese callback interno
+   * —el que llama a update()— nunca se ejecutaría: el POST saldría igual y el
+   * dato cambiaría en la base, pero la pantalla no se refrescaría nunca y el
+   * indicador de "guardando" quedaría pegado. Pasó exactamente eso.
    */
-  function enviar() {
-    return ({ formData }) => {
-      const clave = formData.get('clave')
-      estados[clave] = { guardando: true }
+  function enviar({ formData }) {
+    const clave = formData.get('clave')
+    estados[clave] = { guardando: true }
 
-      return async ({ result, update }) => {
-        if (result.type === 'failure') {
-          estados[clave] = { error: result.data?.error ?? 'No se pudo guardar' }
-        } else {
-          estados[clave] = { ok: true }
-          // Se limpia el tilde para que no quede pegado en pantalla.
-          setTimeout(() => {
-            if (estados[clave]?.ok) estados[clave] = {}
-          }, 2000)
-        }
-        await update({ reset: false })
+    return async ({ result, update }) => {
+      if (result.type === 'failure') {
+        estados[clave] = { error: result.data?.error ?? 'No se pudo guardar' }
+      } else {
+        estados[clave] = { ok: true }
+        // Se limpia el tilde para que no quede pegado en pantalla.
+        setTimeout(() => {
+          if (estados[clave]?.ok) estados[clave] = {}
+        }, 2000)
       }
+      // update() es lo que vuelve a correr el load y trae los valores nuevos:
+      // sin esto el interruptor seguiría dibujándose con el valor viejo.
+      await update({ reset: false })
     }
   }
 </script>
