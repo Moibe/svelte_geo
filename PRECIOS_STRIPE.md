@@ -113,3 +113,49 @@ decimales antes de decidir.
 100 a ciegas, así que el campo `formatted` seguirá mal en estas monedas
 mientras no use `toMajorUnits()`. Se dejó sin tocar para no cambiar los JSON
 en medio de la migración.
+
+---
+
+## Si algún día agregás más productos
+
+Hoy la app vende **un solo producto** en dos niveles de precio (100 y 200), así
+que hay una cosa deliberadamente apagada que convendría prender:
+
+### Los datos de artículo no se envían a GA4
+
+El código empuja un arreglo `items` en el evento `purchase`
+([+page.svelte](src/routes/[[lang=lang]]/+page.svelte), dentro del bloque de
+retorno de Stripe):
+
+```js
+items: [{
+  item_id:       data.price_id,
+  item_name:     'Mapa Completo GPS',
+  item_category: 'Geolocalización',
+  price:         data.value,
+  quantity:      1
+}]
+```
+
+Pero la etiqueta `GA4 - purchase` en GTM tiene **"Enviar datos de comercio
+electrónico" en `false`**, así que GTM ignora ese arreglo y manda solo
+`transaction_id`, `value` y `currency`.
+
+**Por qué se dejó así (2026-10-12):** con un único producto, el informe de
+artículos de GA4 mostraría siempre "Mapa Completo GPS" y una lista de
+`price_id` crípticos (uno por país). Esa misma información, con más contexto,
+ya está en la base propia de tracking (`country_iso`, `country_code`,
+`purchase_value`, `purchase_currency`).
+
+**Cuándo deja de aplicar:** en cuanto vendas **más de un producto distinto** y
+quieras comparar cuál rinde mejor. Ahí el informe de artículos sí aporta.
+
+**Cómo prenderlo:** GTM → Etiquetas → `GA4 - purchase` → lápiz → *Más ajustes*
+→ activar el envío de datos de comercio electrónico, eligiendo la capa de datos
+como origen. Después verificarlo en Vista previa: en el hit deberían aparecer
+parámetros `pr1`, `pr2`… con el detalle de cada artículo.
+
+> Ojo: `item_name` está **hardcodeado** como `'Mapa Completo GPS'`. Si agregás
+> productos, hay que hacer que ese nombre salga del producto real, o todos los
+> artículos se van a reportar con el mismo nombre y el informe no va a servir
+> para nada.
