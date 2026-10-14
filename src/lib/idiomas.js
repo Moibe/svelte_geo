@@ -90,9 +90,20 @@ export function idiomaDeAcceptLanguage(cabecera) {
 /**
  * Resuelve el idioma de una request en el SERVIDOR.
  *
- * Orden: preferencia explícita (cookie) > path de campaña > Accept-Language
- * > inglés. Es el mismo orden que usa el cliente, salvo que allá la
- * preferencia explícita puede venir de localStorage.
+ * Orden: idioma de la URL > preferencia explícita (cookie) > Accept-Language
+ * > inglés.
+ *
+ * La URL va PRIMERO, y no es un detalle: cada idioma tiene su propia URL
+ * (/es, /pt…) y el HTML, el <html lang>, el canonical y los hreflang le
+ * prometen a los buscadores que esa URL está en ese idioma. Si una cookie
+ * pudiera pisarla, la misma URL mostraría idiomas distintos según quién la
+ * abra: un visitante con la cookie en inglés vería /es en inglés, y quien
+ * comparta ese enlace estaría compartiendo algo que no dice lo que promete.
+ * Los buscadores no mandan cookie, así que para ellos esto ya era así; la
+ * incoherencia era solo para personas.
+ *
+ * Solo en la raíz (/), que no declara idioma, deciden la cookie y las
+ * preferencias del navegador.
  *
  * NO usa navigator.language: en Node esa propiedad EXISTE (v22 la define) y
  * devuelve el locale del PROCESO, o sea el del droplet. No lanza error —
@@ -103,9 +114,44 @@ export function idiomaDeAcceptLanguage(cabecera) {
  */
 export function resolverIdiomaDeRequest({ cookie, pathname, acceptLanguage }) {
   return (
-    normalizarIdioma(cookie) ||
     idiomaDeRuta(pathname) ||
+    normalizarIdioma(cookie) ||
     idiomaDeAcceptLanguage(acceptLanguage) ||
     IDIOMA_POR_DEFECTO
   )
+}
+
+/**
+ * Quita el prefijo de idioma de un path: /es/privacy -> /privacy, /es -> /.
+ * Un path sin prefijo se devuelve igual.
+ *
+ * Compara el PRIMER SEGMENTO completo y no con startsWith: /estado o /endpoint
+ * empiezan con "es" y "en" y no son idiomas.
+ *
+ * @param {string} pathname
+ * @returns {string}
+ */
+export function quitarPrefijoIdioma(pathname) {
+  const ruta = String(pathname || '/')
+  const [, primero, ...resto] = ruta.split('/')
+
+  if (primero && IDIOMAS.includes(primero.toLowerCase())) {
+    return '/' + resto.join('/')
+  }
+
+  return ruta.startsWith('/') ? ruta : '/' + ruta
+}
+
+/**
+ * El mismo path pero en otro idioma: (/privacy, 'pt') -> /pt/privacy,
+ * (/es, 'en') -> /en. La raíz se escribe /en y no /en/.
+ *
+ * @param {string} pathname
+ * @param {string} lang
+ * @returns {string}
+ */
+export function rutaEnIdioma(pathname, lang) {
+  const base = quitarPrefijoIdioma(pathname)
+
+  return base === '/' ? `/${lang}` : `/${lang}${base}`
 }

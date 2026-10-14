@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /track/
+
+Sitemap: https://geoservices.space/sitemap.xml

@@ -1,7 +1,9 @@
 <script>
-  import { locale } from "svelte-i18n";
+  import { locale, _ } from "svelte-i18n";
   import { createEventDispatcher } from "svelte";
-  import { guardarPreferencia, aplicarIdiomaAlDocumento } from "./i18n.js";
+  import { goto } from "$app/navigation";
+  import { guardarPreferencia, aplicarIdiomaAlDocumento, cambioDeIdioma } from "./i18n.js";
+  import { rutaEnIdioma } from "./idiomas.js";
 
   const dispatch = createEventDispatcher();
 
@@ -23,7 +25,10 @@
   // algo en vez de quedar vacío.
   $: activo = languages.find((l) => l.code === $locale) || languages[1];
 
-  function changeLanguage(lang) {
+  async function changeLanguage(lang) {
+    // Mientras dura el cambio, el layout no debe revertir el idioma a lo que diga
+    // la URL (que sigue siendo la vieja hasta que la navegación termina).
+    cambioDeIdioma.enCurso = true;
     locale.set(lang);
     // Guarda en cookie ADEMÁS de localStorage: la cookie es la única que el
     // servidor puede leer, y sin ella el primer render server-side ignoraría
@@ -33,6 +38,27 @@
     aplicarIdiomaAlDocumento(lang);
     cerrar();
     dispatch("change", { language: lang });
+
+    // Navegar a la URL de ese idioma (/es, /en/privacy…). Como el idioma de la
+    // URL manda sobre la cookie, quedarse en la URL anterior dejaría a quien
+    // recarga con el idioma que ya había descartado, y quien comparte el enlace
+    // compartiría una URL que dice una cosa y muestra otra. Se conservan la
+    // página y la búsqueda (UTM, gclid), y no se mueve el scroll ni el foco.
+    //
+    // La URL de partida se lee de window.location y NO de page.url: al volver de
+    // Stripe la página principal limpia `?payment=success` con history.replaceState
+    // nativo, que SvelteKit no ve, y page.url seguía diciendo `?payment=success`.
+    // Leerlo de ahí volvía a escribir el parámetro en la barra, y recargar
+    // entonces restauraba el mapa pagado sin pagar de nuevo.
+    const { pathname, search } = window.location;
+    try {
+      await goto(rutaEnIdioma(pathname, lang) + search, {
+        noScroll: true,
+        keepFocus: true,
+      });
+    } finally {
+      cambioDeIdioma.enCurso = false;
+    }
   }
 
   function cerrar() {
@@ -92,7 +118,7 @@
   </button>
 
   {#if menuOpen}
-    <ul class="menu" role="listbox" aria-label="Idioma">
+    <ul class="menu" role="listbox" aria-label={$_('footer.languages')}>
       {#each languages as lang, i (lang.code)}
         <li>
           <button
@@ -103,7 +129,7 @@
             on:click={() => changeLanguage(lang.code)}
             on:keydown={(e) => navegarConFlechas(e, i)}
           >
-            <span class="texto">{lang.label}</span>
+            <span class="texto" lang={lang.code}>{lang.label}</span>
             {#if $locale === lang.code}<span class="tilde" aria-hidden="true">✓</span>{/if}
           </button>
         </li>

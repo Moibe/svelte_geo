@@ -11,7 +11,10 @@
     "searchByBrowser": "Suche über Browser",
     "searchByIP": "Suche über IP",
     "safeModeTitle": "geoservices.space",
-    "safeModeSubtitle": "Gerät auf einer Karte über IP und GPS orten"
+    "safeModeSubtitle": "Gerät auf einer Karte über IP und GPS orten",
+    "payNotice": "Sie sehen die Karte einige Sekunden lang; um sie weiter zu sehen, wird eine einmalige Zahlung verlangt. Der Betrag wird auf der Zahlungsseite bestätigt, bevor Sie zahlen.",
+    "errorBrowser": "Ihre Position konnte über den Browser nicht ermittelt werden. Prüfen Sie, ob Sie dem Browser die Erlaubnis erteilt haben, oder versuchen Sie es mit der Suche über IP.",
+    "errorIP": "Ihre Position konnte nicht über die IP ermittelt werden. Versuchen Sie es in einigen Sekunden erneut."
   },
   "spinner": {
     "generatingGPS": "GPS-Position wird ermittelt ...",
@@ -34,8 +37,11 @@
   "map": {
     "deviceFound": "Gerät gefunden",
     "device": "Gerät gefunden",
-    "antenna": "Nahe Mobilfunkantenne",
-    "currentPosition": "Aktuelle Position"
+    "antenna": "Mobilfunkantenne (illustrativ)",
+    "currentPosition": "Aktuelle Position",
+    "devicePopup": "Ihr Gerät (ungefähre Position)",
+    "devicePopupSim": "Illustrative Position (Simulation)",
+    "antennaPopup": "Illustrative Mobilfunkantenne {n}"
   },
   "modal": {
     "loading": "Laden...",
@@ -44,9 +50,144 @@
     "buyButton": "Kaufen",
     "processing": "Wird verarbeitet...",
     "securePayment": "Sichere Zahlung mit Stripe ®",
-    "priceLoadError": "Der Preis für Ihr Land konnte nicht geladen werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
+    "priceLoadError": "Der Preis für Ihr Land konnte nicht geladen werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut.",
+    "checkoutError": "Die Zahlung konnte nicht gestartet werden. Bitte versuchen Sie es in einigen Sekunden erneut."
   },
   "purchase": {
-    "coordsLost": "Ihre Zahlung war erfolgreich. Die vorherige Suche konnte in diesem Browser nicht wiederhergestellt werden; geben Sie die Nummer erneut ein, um die Karte zu sehen."
+    "coordsLost": "Ihre Zahlung wurde erfolgreich verarbeitet. Wir konnten Ihre Suche in diesem Browser nicht wiederherstellen. Wenn Sie die Suche wiederholen, wird möglicherweise erneut eine Zahlung verlangt; bewahren Sie Ihren Zahlungsbeleg von Stripe auf."
+  },
+  "seo": {
+    "home": {
+      "title": "Ungefähre Position Ihres Geräts | geoservices.space",
+      "titleSim": "Telefonsimulator (Unterhaltung) | geoservices.space",
+      "description": "Ungefähre Position Ihres Geräts auf einer Karte, über Browser oder IP. Niemand sonst wird geortet. Einmalige Zahlung, um die Karte weiter zu sehen.",
+      "descriptionFree": "Ungefähre Position Ihres Geräts auf einer Karte, über Browser oder IP. Niemand sonst wird geortet.",
+      "descriptionSim": "Unterhaltungssimulator: Nummer eingeben, illustrativen Kartenpunkt sehen. Keine Ortung echter Telefone. Einmalige Zahlung, um die Karte weiter zu sehen.",
+      "descriptionSimFree": "Unterhaltungssimulator: Nummer eingeben, illustrativen Kartenpunkt sehen. Keine Ortung echter Telefone.",
+      "h1Sim": "Simulator zur Telefonortung (nur zur Unterhaltung)"
+    },
+    "privacy": {
+      "title": "Datenschutzerklärung | geoservices.space",
+      "description": "Welche Daten geoservices.space erhebt, wofür sie verwendet werden, mit wem sie geteilt werden und wie sich ihre Löschung beantragen lässt."
+    }
+  },
+  "info": {
+    "howTitle": "So funktioniert es",
+    "how": [
+      "Suche über Browser: Ihr Browser bittet Sie um Erlaubnis und verwendet die Position, die ihm Ihr Gerät liefert (GPS, Wi-Fi oder Mobilfunknetz, je nach Gerät), um Sie zu orten. Die Koordinaten werden an OpenStreetMap (Nominatim) gesendet, um zu ermitteln, in welchem Land Sie sich befinden.",
+      "Suche über IP: Aus Ihrer IP-Adresse, die an einen Geolokalisierungsdienst (GeoJS) gesendet wird, wird eine ungefähre Position ermittelt, ohne dass Berechtigungen angefordert werden.",
+      "In beiden Fällen zeigt die Karte einen ungefähren Punkt, weil eine zufällige Abweichung von wenigen Kilometern hinzugefügt wird. Die Antennenmarkierungen sind illustrativ und stellen keine echten Mobilfunkmasten dar.",
+      "Um die Karte weiter zu sehen, wird eine einmalige Zahlung verlangt, die Stripe verarbeitet. Die Zahlung legt kein Konto an und speichert Ihren Zugang nicht: Bei einer weiteren Suche oder nach dem Neuladen der Seite kann eine weitere Zahlung verlangt werden. Der Preis kann je nach Ihrem Land variieren und wird auf der Zahlungsseite bestätigt, bevor Sie zahlen."
+    ],
+    "howSim": [
+      "Sie geben eine Telefonnummer ein. Der Simulator sucht nicht nach ihr und fragt sie weder in einem Netz noch bei einem Mobilfunkanbieter ab.",
+      "Sie sehen eine Animation von etwa 15 Sekunden und danach eine Karte mit einem illustrativen Punkt, der zufällig in der Nähe der ungefähren Position Ihrer Verbindung gewählt wird.",
+      "Um die Karte weiter zu sehen, wird eine einmalige Zahlung verlangt, die Stripe verarbeitet. Die Zahlung legt kein Konto an und speichert Ihren Zugang nicht: Bei einer weiteren Suche oder nach dem Neuladen der Seite kann eine weitere Zahlung verlangt werden. Der Preis kann je nach Ihrem Land variieren und wird auf der Zahlungsseite bestätigt, bevor Sie zahlen."
+    ],
+    "faqTitle": "Häufig gestellte Fragen",
+    "faq": [
+      {
+        "q": "Wie genau ist die Position?",
+        "a": "Über die IP wird meist das Land richtig bestimmt und manchmal auch die Stadt; bei einem VPN, einem Proxy oder mobilen Daten kann das fehlschlagen. Mit der Position des Browsers liegt das Ergebnis näher an der tatsächlichen Position. In beiden Fällen fügt die Karte eine zufällige Abweichung von wenigen Kilometern hinzu, daher ist es eine ungefähre Position und keine genaue Adresse."
+      },
+      {
+        "q": "Kann ich das Telefon einer anderen Person orten?",
+        "a": "Nein. Diese Website kann fremde Telefone nicht orten und fragt weder ein Netz noch einen Mobilfunkanbieter ab. Sie zeigt nur eine ungefähre Position Ihres eigenen Geräts."
+      },
+      {
+        "q": "Warum werde ich um die Erlaubnis zum Zugriff auf meine Position gebeten?",
+        "a": "Nur wenn Sie die Suche über Browser wählen, damit die Position Ihres Geräts verwendet werden kann. Sie können dies ablehnen und die Suche über IP nutzen, die keine Berechtigungen anfordert."
+      },
+      {
+        "q": "Welche Daten werden gespeichert?",
+        "a": "Erfasst werden die Aktivität Ihres Besuchs (zum Beispiel, welche Schaltfläche Sie verwendet haben), Ihr Land und Ihre Sprache, eine ungefähre Position, eine Analyse-Kennung des Browsers, die Kampagnenparameter, wenn Sie über eine Anzeige kommen, und, wenn Sie den Simulator nutzen, die Telefonnummer, die Sie eingeben. Ihre IP-Adresse wird beim Öffnen der Seite an einen Geolokalisierungsdienst gesendet und verbleibt in den Serverprotokollen."
+      }
+    ],
+    "faqSimAnswer": "Nein. Der Modus mit Telefonnummer ist ein Simulator zu Unterhaltungszwecken: Er sucht die Nummer nicht und fragt weder ein Netz noch einen Mobilfunkanbieter ab, und das Ergebnis hängt nicht von der Nummer ab, die Sie eingeben. Er zeigt nur einen zufälligen Punkt in der Nähe der ungefähren Position Ihrer Verbindung (oder in der Nähe von Mexiko-Stadt, falls die Position nicht ermittelt werden kann).",
+    "privacyLink": "Weitere Details in der Datenschutzerklärung."
+  },
+  "sim": {
+    "formNotice": "Simulation zu Unterhaltungszwecken: Es werden keine echten Telefone geortet, und das Ergebnis hängt nicht von der Nummer ab, die Sie eingeben. Die Nummer wird in unseren Aufzeichnungen gespeichert: Geben Sie keine Nummern anderer Personen ein. Die Karte zeigt eine illustrative Position.",
+    "spinnerNotice": "Simulation zu Unterhaltungszwecken",
+    "mapBadge": "Simulation · illustrative Position",
+    "modalNote": "Dies ist eine Simulation zu Unterhaltungszwecken: Es wird kein echtes Telefon geortet. Die Zahlung ermöglicht es, die Karte dieser Simulation in diesem Browser weiter zu sehen; wenn Sie die Seite neu laden oder schließen, geht die Karte verloren, und bei einer weiteren Suche kann eine weitere Zahlung verlangt werden.",
+    "modalNoteSafe": "Die angezeigte Position ist eine ungefähre Angabe. Die Zahlung ermöglicht es, die Karte dieser Suche in diesem Browser weiter zu sehen; wenn Sie die Seite neu laden oder schließen, geht die Karte verloren, und bei einer weiteren Suche kann eine weitere Zahlung verlangt werden."
+  },
+  "footer": {
+    "privacy": "Datenschutzerklärung",
+    "languages": "Sprachen"
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "updated": "Zuletzt aktualisiert: 13. Oktober 2026",
+    "operatorLead": "Verantwortlicher:",
+    "contactLead": "Kontakt:",
+    "sections": [
+      {
+        "title": "Wer wir sind",
+        "paragraphs": [
+          "geoservices.space ist eine Website, die auf einer Karte die ungefähre Position des Geräts der Person anzeigt, die sie besucht, und die einen Simulator zu Unterhaltungszwecken enthält. Diese Datenschutzerklärung erläutert, welche Daten verarbeitet werden, wenn Sie die Website nutzen. Die Kontaktdaten der für die Website verantwortlichen Person finden Sie am Ende dieser Seite."
+        ]
+      },
+      {
+        "title": "Welche Daten wir erheben",
+        "paragraphs": [
+          "Wir erheben diese Daten, damit die Website funktioniert, um ihre Nutzung zu messen und um Werbekampagnen zu messen:"
+        ],
+        "items": [
+          "Aktivität des Besuchs: Ereignisse wie das Öffnen, Neuladen oder Schließen der Seite, die Suche nach einer Nummer im Simulator, das Ansehen oder Vergrößern der Karte, das Öffnen des Zahlungsfensters, das Anklicken der Kaufschaltfläche oder der Abbruch der Zahlung, zusammen mit der Suchart, die Sie verwendet haben (Browser, IP oder Simulator), Datum und Uhrzeit (und Ihrer Zeitzone), Ihrer Sprache und Ihrem Land.",
+          "Ungefähre Position: Beim Öffnen der Seite senden Ihr Browser und unser Server Ihre IP-Adresse an einen Geolokalisierungsdienst, um Ihr Land und eine ungefähre Position zu schätzen, auch wenn Sie keine Suche wählen. Wenn Sie die Suche über Browser wählen und die Erlaubnis erteilen, werden die Positionskoordinaten Ihres Geräts verwendet. In beiden Fällen verwenden die Karte und unsere Aufzeichnungen eine Position mit einer zufälligen Abweichung von wenigen Kilometern.",
+          "Telefonnummer: Wenn Sie den Simulator nutzen, wird die Nummer, die Sie eingeben, zusammen mit der Aktivität des Besuchs gespeichert und, solange Ihr Browser diese Nummer aufbewahrt, auch zusammen mit der Aktivität Ihrer nachfolgenden Besuche. Geben Sie deshalb keine Nummern anderer Personen ein.",
+          "Analyse- und Werbekennungen: die Client-Kennung von Google Analytics und, wenn Sie über eine Anzeige kommen, die Kampagnenparameter (UTM, gclid oder fbclid).",
+          "Zahlungen: Stripe erhebt die Zahlungsdaten direkt (auch Ihre E-Mail-Adresse, die wir im Stripe-Dashboard sehen), und wir sehen und speichern die vollständige Nummer Ihrer Zahlungskarte nicht. Wir speichern den Betrag und die Währung des Kaufs und verknüpfen die Analyse-Kennung des Browsers mit der Zahlung. Der Betrag, die Währung und eine Kennung der Transaktion werden außerdem sowohl von Ihrem Browser als auch vom Dienst, der die Benachrichtigungen von Stripe empfängt, an Google gesendet, um Conversions zu messen.",
+          "IP-Adresse: Unser Server erfasst sie in seinen Zugriffsprotokollen, wie es bei jeder Website der Fall ist, und verwendet sie beim Öffnen der Seite, um Ihr Land zu schätzen; dieses Ergebnis wird zusammen mit Ihrer IP in einem technischen Protokoll des Servers vermerkt."
+        ]
+      },
+      {
+        "title": "Wofür wir sie verwenden",
+        "paragraphs": [
+          "Um die Karte anzuzeigen, Ihre Sprache und den Preis je nach Ihrem Land auszuwählen, Zahlungen zu verarbeiten, den Dienst zu messen und zu verbessern und die Wirksamkeit von Werbekampagnen zu messen."
+        ]
+      },
+      {
+        "title": "Mit wem wir sie teilen",
+        "paragraphs": [
+          "Um den Dienst bereitzustellen, nutzen wir Anbieter, die einen Teil dieser Daten erhalten und sie außerhalb Ihres Landes verarbeiten können (zum Beispiel in den USA). Die Dienste, mit denen sich Ihr Browser verbindet, erhalten ebenfalls Ihre IP-Adresse und technische Daten Ihres Browsers:"
+        ],
+        "items": [
+          "Google (Tag Manager, Analytics und Ads): Messung der Nutzung und der Kampagnen, einschließlich des Betrags und der Währung der Käufe. Google erhält außerdem eigenständig technische Daten Ihres Browsers und die Adresse der Seiten, die Sie besuchen.",
+          "Stripe: Verarbeitung der Zahlungen.",
+          "OpenStreetMap: Laden der Karten und, wenn Sie die Suche über Browser nutzen, Empfang Ihrer genauen Koordinaten, um das Land zu bestimmen (Nominatim-Dienst).",
+          "GeoJS: erhält Ihre IP-Adresse beim Öffnen der Seite, von Ihrem Browser und von unserem Server, um eine ungefähre Position zu berechnen.",
+          "Hosting-Anbieter: DigitalOcean, wo die Website läuft und das Aktivitätsprotokoll gespeichert wird; Hugging Face, wo der Dienst läuft, der die Zahlungssitzungen erstellt, und wo der Dienst läuft, der die Benachrichtigungen von Stripe empfängt und jeden Kauf an Google Analytics sendet; und Opalstack, wo sich die frühere Datenbank befand, die Aktivitätsprotokolle aus der Zeit vor September 2026 aufbewahren kann.",
+          "OpenAI: Wenn die Person, die die Website verwaltet, ihren internen Analyseassistenten verwendet, werden die Ergebnisse ihrer Abfragen zum Aktivitätsprotokoll, die Telefonnummern und Kennungen enthalten können, mit diesem Dienst verarbeitet."
+        ]
+      },
+      {
+        "title": "Cookies und lokaler Speicher",
+        "paragraphs": [
+          "Wir verwenden ein eigenes Cookie, um uns Ihre Sprache ein Jahr lang zu merken. Google Analytics und Google Ads erstellen eigene Cookies, sobald Sie die Seite öffnen, ohne vorherigen Hinweis zur Einwilligung, um die Nutzung und die Kampagnen zu messen. Sie können sie in den Einstellungen Ihres Browsers blockieren oder löschen.",
+          "Ihr Browser speichert außerdem in seinem lokalen Speicher Daten, damit die Seite funktioniert und um ihre Nutzung zu messen, wie Ihre Sprache, die Nummern, die Sie im Simulator verwendet haben (mit der Position, die ihnen zugewiesen wurde), die angezeigte Position, die Kampagnenparameter und den Status einer laufenden Zahlung. Sie können sie in den Einstellungen Ihres Browsers löschen."
+        ]
+      },
+      {
+        "title": "Aufbewahrung",
+        "paragraphs": [
+          "Wir löschen die Aktivitätsprotokolle nicht automatisch: Wir bewahren sie auf, solange sie für die beschriebenen Zwecke weiterhin nützlich sind. Wir speichern Sicherungskopien der Datenbank; die täglichen werden mit der Zeit erneuert, und einige historische Archive werden ohne Ablaufdatum aufbewahrt."
+        ]
+      },
+      {
+        "title": "Ihre Rechte",
+        "paragraphs": [
+          "Sie können Auskunft über Ihre Daten, deren Berichtigung oder Löschung verlangen oder der Verarbeitung Ihrer Daten widersprechen, indem Sie an den unten angegebenen Kontakt schreiben. Um Ihre Aufzeichnungen zu finden, benötigen wir die Telefonnummer, die Sie im Simulator verwendet haben, oder die Analyse-Kennung Ihres Browsers (das Cookie _ga von Google Analytics), weil wir darin weder Ihren Namen noch Ihre E-Mail-Adresse speichern. Die Löschung gilt für die aktive Datenbank; die Sicherungskopien werden mit der Zeit erneuert, und die historischen Archive werden nur auf ausdrückliche Anfrage geändert. Wenn Sie sich in der Europäischen Union befinden, können Sie außerdem eine Beschwerde bei Ihrer Datenschutzbehörde einreichen."
+        ]
+      },
+      {
+        "title": "Änderungen",
+        "paragraphs": [
+          "Wir werden diese Seite aktualisieren, wenn sich die Verarbeitung der Daten ändert."
+        ]
+      }
+    ]
   }
 }

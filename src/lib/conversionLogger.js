@@ -10,11 +10,18 @@ import { log, error } from './logger.js';
 const API_URL = import.meta.env.VITE_TRACK_URL || '/track/api/map-interactions';
 
 // Destino LEGACY: el Space de HuggingFace, que escribe en MariaDB (Opalstack).
-// Se mantiene en paralelo un tiempo para poder reconciliar ambos lados antes
-// de dar de baja el Space. Poner VITE_LEGACY_TRACK_URL vacio apaga el solape
-// sin tocar esta linea.
-const LEGACY_API_URL = import.meta.env.VITE_LEGACY_TRACK_URL
-  ?? 'https://moibe-fastapi-mariadb-geospaces.hf.space/api/map-interactions';
+//
+// APAGADO por defecto (2026-10-13). Durante la migracion se escribia en paralelo
+// para poder reconciliar ambos lados, pero ese Space ya no se usa, su base de
+// Opalstack rechaza credenciales (responde 503) y ni siquiera guardaba lo que
+// recibia — solo lo recibia: cada evento, con el numero escrito en el simulador
+// y el identificador de analitica, salia hacia un tercero para nada. Quitarlo
+// tambien deja la politica de privacidad diciendo la verdad sin salvedades.
+//
+// Para volver a encenderlo (por ejemplo si se recupera Opalstack y se quiere
+// seguir alimentando esa base), definir VITE_LEGACY_TRACK_URL con la URL del
+// Space ANTES de compilar: es una variable de build, no de runtime.
+const LEGACY_API_URL = import.meta.env.VITE_LEGACY_TRACK_URL || '';
 
 /**
  * Formatea una fecha en una zona horaria dada como string legible tipo ISO.
@@ -117,10 +124,9 @@ export async function logConversion({
   log(JSON.stringify(payload, null, 2));
   log('═══════════════════════════════════════════════');
 
-  // Se escribe a los DOS destinos en paralelo mientras dura la migración.
+  // El destino local y, solo si se configuró, el legacy (ver LEGACY_API_URL).
   // Van con Promise.allSettled y no con await encadenado a propósito: si el
-  // legacy está caído (hoy lo está, la BD de Opalstack rechaza credenciales),
-  // no debe retrasar ni tumbar la escritura local.
+  // legacy está caído no debe retrasar ni tumbar la escritura local.
   const cuerpo = JSON.stringify(payload);
   const destinos = [['local', API_URL]];
 

@@ -57,10 +57,18 @@
 </script>
 
 {#if isVisible && currentMessageIndex < messages.length}
-  <div class="spinner-overlay">
+  <!-- role="status": los mensajes que van cambiando se anuncian a los lectores de
+       pantalla; antes la animación era muda para ellos. -->
+  <div class="spinner-overlay" role="status">
     <div class="spinner-container">
       <div class="spinner"></div>
       <p class="message">{messages[currentMessageIndex]}</p>
+      {#if !isSafeMode}
+        <!-- Los mensajes de arriba son parte de la ficción del simulador (no se
+             consulta ninguna antena ni operador): el aviso está a la vista todo
+             el tiempo que dura la animación. -->
+        <p class="sim-notice">{$_('sim.spinnerNotice')}</p>
+      {/if}
     </div>
   </div>
 {/if}
@@ -111,5 +119,19 @@
     margin: 0;
     text-align: center;
     letter-spacing: 0.5px;
+  }
+
+  /* Más cerca del mensaje que del círculo: el .spinner-container deja 2rem de
+     separación entre elementos, y el aviso va pegado al mensaje. */
+  .sim-notice {
+    margin: -1.2rem 0 0;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
   }
 </style>

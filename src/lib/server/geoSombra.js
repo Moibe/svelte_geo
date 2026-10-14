@@ -72,10 +72,14 @@ export async function observarPaisPorIP(ip) {
     const iso = datos.country_code?.toUpperCase()
     const lada = iso ? countryCodeMap[iso] : null
 
-    console.log(
-      `GEO_SHADOW ip=${ip} iso=${iso || 'nulo'} lada=${lada || 'sin_mapeo'} ` +
-        `lat=${datos.latitude} lng=${datos.longitude}`
-    )
+    // Solo el país. Antes se anotaban también la latitud y la longitud que
+    // devuelve geojs, y eso era un dato de más: la comparación de estos días es
+    // de país y lada, y las coordenadas llegaban al log SIN la variación
+    // aleatoria que sí se les aplica en el mapa y en la tabla de actividad,
+    // junto a la IP completa. La política de privacidad dice que los registros
+    // usan una posición aproximada; con esto el log del servidor ya no la
+    // contradice.
+    console.log(`GEO_SHADOW ip=${ip} iso=${iso || 'nulo'} lada=${lada || 'sin_mapeo'}`)
   } catch (err) {
     // Un timeout o un fallo de red acá no puede romper la página: solo se anota.
     console.log(`GEO_SHADOW ip=${ip} resultado=excepcion detalle=${String(err?.message || err)}`)

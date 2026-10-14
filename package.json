@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node build",
+    "test": "node --test",
     "prepare": "svelte-kit sync || echo ''",
     "fetch-prices": "node scripts/fetch-stripe-prices.js",
     "fetch-product-details": "node scripts/fetch-product-details.js",
@@ -25,6 +26,7 @@
     "vite": "^8.0.7"
   },
   "dependencies": {
+    "@fontsource/roboto": "^5.3.0",
     "better-sqlite3": "^13.0.3",
     "dotenv": "^16.3.1",
     "drizzle-orm": "^0.45.2",

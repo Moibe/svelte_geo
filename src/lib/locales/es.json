@@ -11,7 +11,10 @@
     "searchByBrowser": "Búsqueda por Navegador",
     "searchByIP": "Búsqueda por IP",
     "safeModeTitle": "geoservices.space",
-    "safeModeSubtitle": "Ubica tu dispositivo en un mapa usando IP y gps"
+    "safeModeSubtitle": "Ubica tu dispositivo en un mapa usando IP y gps",
+    "payNotice": "Verás el mapa unos segundos; para seguir viéndolo se pide un pago único. El importe se confirma en la pantalla de pago antes de pagar.",
+    "errorBrowser": "No se pudo obtener tu ubicación con el navegador. Comprueba que le diste permiso o prueba con la búsqueda por IP.",
+    "errorIP": "No se pudo detectar tu ubicación por IP. Inténtalo de nuevo en unos segundos."
   },
   "spinner": {
     "generatingGPS": "Generando ubicación GPS ...",
@@ -34,8 +37,11 @@
   "map": {
     "deviceFound": "Dispositivo Encontrado",
     "device": "Dispositivo Encontrado",
-    "antenna": "Antena Celular Cercana",
-    "currentPosition": "Posición actual"
+    "antenna": "Antena (ilustrativa)",
+    "currentPosition": "Posición actual",
+    "devicePopup": "Tu dispositivo (ubicación aproximada)",
+    "devicePopupSim": "Ubicación ilustrativa (simulación)",
+    "antennaPopup": "Antena ilustrativa {n}"
   },
   "modal": {
     "loading": "Cargando...",
@@ -44,9 +50,144 @@
     "buyButton": "Comprar",
     "processing": "Procesando...",
     "securePayment": "Pago Seguro con Stripe ®",
-    "priceLoadError": "No pudimos cargar el precio para tu país. Recarga la página e inténtalo de nuevo."
+    "priceLoadError": "No pudimos cargar el precio para tu país. Recarga la página e inténtalo de nuevo.",
+    "checkoutError": "No se pudo iniciar el pago. Inténtalo de nuevo en unos segundos."
   },
   "purchase": {
-    "coordsLost": "Tu pago se procesó correctamente. No pudimos recuperar la búsqueda anterior desde este navegador; vuelve a ingresar el número para ver el mapa."
+    "coordsLost": "Tu pago se procesó correctamente. No pudimos recuperar tu búsqueda en este navegador. Si la repites, es posible que se vuelva a pedir el pago; conserva tu comprobante de Stripe."
+  },
+  "seo": {
+    "home": {
+      "title": "Ubicación aproximada de tu dispositivo | geoservices.space",
+      "titleSim": "Simulador de teléfono (entretenimiento) | geoservices.space",
+      "description": "Mira en un mapa la ubicación aproximada de tu dispositivo con tu navegador o tu IP. Sin localizar a nadie más. Pago único para seguir viendo el mapa.",
+      "descriptionFree": "Mira en un mapa la ubicación aproximada de tu dispositivo con tu navegador o tu IP. Sin localizar a nadie más.",
+      "descriptionSim": "Simulador de entretenimiento: escribe un número y ve un punto ilustrativo en un mapa. No localiza teléfonos reales. Pago único para seguir viendo el mapa.",
+      "descriptionSimFree": "Simulador de entretenimiento: escribe un número y ve un punto ilustrativo en un mapa. No localiza teléfonos reales.",
+      "h1Sim": "Simulador de localización de teléfono (solo entretenimiento)"
+    },
+    "privacy": {
+      "title": "Política de privacidad | geoservices.space",
+      "description": "Qué datos recoge geoservices.space, para qué se usan, con quién se comparten y cómo pedir que se eliminen."
+    }
+  },
+  "info": {
+    "howTitle": "Cómo funciona",
+    "how": [
+      "Búsqueda por navegador: tu navegador te pide permiso y usa la ubicación que le da tu dispositivo (GPS, Wi-Fi o red móvil, según el equipo) para ubicarte. Las coordenadas se envían a OpenStreetMap (Nominatim) para saber en qué país estás.",
+      "Búsqueda por IP: se obtiene una ubicación aproximada a partir de tu dirección IP, que se envía a un servicio de geolocalización (GeoJS), sin pedir permisos.",
+      "En ambos casos el mapa muestra un punto aproximado, porque se añade una variación aleatoria de unos pocos kilómetros. Los marcadores de antenas son ilustrativos y no representan torres reales.",
+      "Para seguir viendo el mapa se pide un pago único que procesa Stripe. No crea una cuenta ni guarda tu acceso: otra búsqueda, o recargar la página, puede pedir otro pago. El precio puede variar según tu país y se confirma en la pantalla de pago antes de pagar."
+    ],
+    "howSim": [
+      "Escribes un número de teléfono. El simulador no lo busca ni lo consulta en ninguna red u operador.",
+      "Ves una animación de unos 15 segundos y después un mapa con un punto ilustrativo, elegido al azar cerca de la ubicación aproximada de tu conexión.",
+      "Para seguir viendo el mapa se pide un pago único que procesa Stripe. No crea una cuenta ni guarda tu acceso: otra búsqueda, o recargar la página, puede pedir otro pago. El precio puede variar según tu país y se confirma en la pantalla de pago antes de pagar."
+    ],
+    "faqTitle": "Preguntas frecuentes",
+    "faq": [
+      {
+        "q": "¿Qué tan precisa es la ubicación?",
+        "a": "Con la IP suele acertar el país y, a veces, la ciudad; puede fallar con una VPN, un proxy o datos móviles. Con la ubicación del navegador es más cercana. En ambos casos el mapa añade una variación aleatoria de unos pocos kilómetros, así que es una ubicación aproximada y no una dirección exacta."
+      },
+      {
+        "q": "¿Puedo localizar el teléfono de otra persona?",
+        "a": "No. Este sitio no puede localizar teléfonos ajenos ni consulta ninguna red u operador. Solo muestra una ubicación aproximada de tu propio dispositivo."
+      },
+      {
+        "q": "¿Por qué me pide permiso de ubicación?",
+        "a": "Solo si eliges la búsqueda por navegador, para poder usar la ubicación de tu dispositivo. Puedes rechazarlo y usar la búsqueda por IP, que no pide permisos."
+      },
+      {
+        "q": "¿Qué datos se guardan?",
+        "a": "Se registra la actividad de tu visita (por ejemplo, qué botón usaste), tu país e idioma, una ubicación aproximada, un identificador de analítica del navegador, los parámetros de campaña si llegas desde un anuncio y, si usas el simulador, el número de teléfono que escribes. Tu dirección IP se envía a un servicio de geolocalización al abrir la página y queda en los registros del servidor."
+      }
+    ],
+    "faqSimAnswer": "No. El modo con número de teléfono es un simulador de entretenimiento: no busca el número ni consulta ninguna red u operador, y el resultado no depende del número que escribas. Solo muestra un punto al azar cerca de la ubicación aproximada de tu conexión (o de Ciudad de México si no se puede detectar).",
+    "privacyLink": "Más detalles en la política de privacidad."
+  },
+  "sim": {
+    "formNotice": "Simulación de entretenimiento: no localiza teléfonos reales y el resultado no depende del número que escribas. El número se guarda en nuestros registros: no escribas números de otras personas. El mapa muestra una ubicación ilustrativa.",
+    "spinnerNotice": "Simulación de entretenimiento",
+    "mapBadge": "Simulación · ubicación ilustrativa",
+    "modalNote": "Es una simulación de entretenimiento: no se localiza ningún teléfono real. El pago permite seguir viendo, en este navegador, el mapa de esta simulación; si recargas o cierras la página lo pierdes, y otra búsqueda puede pedir otro pago.",
+    "modalNoteSafe": "La ubicación mostrada es aproximada. El pago permite seguir viendo, en este navegador, el mapa de esta búsqueda; si recargas o cierras la página lo pierdes, y otra búsqueda puede pedir otro pago."
+  },
+  "footer": {
+    "privacy": "Política de privacidad",
+    "languages": "Idiomas"
+  },
+  "privacy": {
+    "title": "Política de privacidad",
+    "updated": "Última actualización: 13 de octubre de 2026",
+    "operatorLead": "Responsable:",
+    "contactLead": "Contacto:",
+    "sections": [
+      {
+        "title": "Quiénes somos",
+        "paragraphs": [
+          "geoservices.space es un sitio web que muestra en un mapa la ubicación aproximada del dispositivo de quien lo visita y que incluye un simulador de entretenimiento. Esta política explica qué datos se tratan cuando lo usas. Los datos de contacto de quien responde por el sitio están al final de esta página."
+        ]
+      },
+      {
+        "title": "Qué datos recogemos",
+        "paragraphs": [
+          "Recogemos estos datos para que el sitio funcione, para medir su uso y para medir campañas publicitarias:"
+        ],
+        "items": [
+          "Actividad de la visita: eventos como abrir, recargar o cerrar la página, buscar un número en el simulador, ver o ampliar el mapa, abrir la ventana de pago, pulsar el botón de compra o abandonar el pago, junto con el tipo de búsqueda que usaste (navegador, IP o simulador), su fecha y hora (y tu zona horaria), tu idioma y tu país.",
+          "Ubicación aproximada: al abrir la página, tu navegador y nuestro servidor envían tu dirección IP a un servicio de geolocalización para estimar tu país y una ubicación aproximada, aunque no elijas ninguna búsqueda. Si eliges la búsqueda por navegador y das permiso, se usan las coordenadas de ubicación de tu dispositivo. En ambos casos el mapa y nuestros registros usan una posición con una variación aleatoria de unos pocos kilómetros.",
+          "Número de teléfono: si usas el simulador, el número que escribes se guarda junto con la actividad de la visita y, mientras tu navegador lo conserve, también junto con la de tus visitas siguientes. Por eso, no escribas números de otras personas.",
+          "Identificadores de analítica y publicidad: el identificador de cliente de Google Analytics y, si llegas desde un anuncio, los parámetros de campaña (UTM, gclid o fbclid).",
+          "Pagos: Stripe recoge los datos de pago directamente (también tu correo electrónico, que vemos en el panel de Stripe), y nosotros no vemos ni guardamos el número completo de tu tarjeta. Guardamos el importe y la moneda de la compra, y asociamos el identificador de analítica del navegador al pago. El importe, la moneda y un identificador de la transacción también se envían a Google para medir conversiones, tanto desde tu navegador como desde el servicio que recibe los avisos de Stripe.",
+          "Dirección IP: nuestro servidor la registra en sus registros de acceso, como ocurre en cualquier sitio web, y al abrir la página la usa para estimar tu país; ese resultado queda anotado junto con tu IP en un registro técnico del servidor."
+        ]
+      },
+      {
+        "title": "Para qué los usamos",
+        "paragraphs": [
+          "Para mostrar el mapa, elegir tu idioma y el precio según tu país, procesar los pagos, medir y mejorar el servicio y medir la eficacia de las campañas publicitarias."
+        ]
+      },
+      {
+        "title": "Con quién los compartimos",
+        "paragraphs": [
+          "Para prestar el servicio usamos proveedores que reciben parte de estos datos y pueden tratarlos fuera de tu país (por ejemplo, en Estados Unidos). Los servicios a los que se conecta tu navegador también reciben tu dirección IP y datos técnicos de tu navegador:"
+        ],
+        "items": [
+          "Google (Tag Manager, Analytics y Ads): medición del uso y de las campañas, incluidos el importe y la moneda de las compras. Google también recibe por su cuenta datos técnicos de tu navegador y la dirección de las páginas que visitas.",
+          "Stripe: procesamiento de los pagos.",
+          "OpenStreetMap: carga de los mapas y, si usas la búsqueda por navegador, recibe tus coordenadas exactas para determinar el país (servicio Nominatim).",
+          "GeoJS: recibe tu dirección IP al abrir la página, desde tu navegador y desde nuestro servidor, para calcular una ubicación aproximada.",
+          "Proveedores de alojamiento: DigitalOcean, donde se ejecuta el sitio y se guarda el registro de actividad; Hugging Face, donde se ejecuta el servicio que crea las sesiones de pago y el que recibe los avisos de Stripe y envía cada compra a Google Analytics; y Opalstack, donde estuvo la base de datos anterior, que puede conservar registros de actividad previos a septiembre de 2026.",
+          "OpenAI: si quien administra el sitio usa su asistente interno de análisis, los resultados de sus consultas sobre el registro de actividad, que pueden incluir números de teléfono e identificadores, se procesan con ese servicio."
+        ]
+      },
+      {
+        "title": "Cookies y almacenamiento local",
+        "paragraphs": [
+          "Usamos una cookie propia para recordar tu idioma durante un año. Google Analytics y Google Ads crean sus propias cookies en cuanto abres la página, sin un aviso previo de consentimiento, para medir el uso y las campañas. Puedes bloquearlas o borrarlas desde la configuración de tu navegador.",
+          "Tu navegador también guarda en su almacenamiento local datos para que la página funcione y para medir su uso, como tu idioma, los números que usaste en el simulador (con la ubicación que se les asignó), la ubicación mostrada, los parámetros de campaña y el estado de un pago en curso. Puedes borrarlos desde la configuración de tu navegador."
+        ]
+      },
+      {
+        "title": "Conservación",
+        "paragraphs": [
+          "No borramos los registros de actividad de forma automática: los conservamos mientras sigan siendo útiles para los fines descritos. Guardamos copias de respaldo de la base de datos; las diarias se renuevan con el tiempo y algunos archivos históricos se conservan sin fecha de caducidad."
+        ]
+      },
+      {
+        "title": "Tus derechos",
+        "paragraphs": [
+          "Puedes pedir acceso, rectificación, eliminación u oposición al tratamiento de tus datos escribiendo al contacto indicado abajo. Para localizar tus registros necesitamos el número de teléfono que usaste en el simulador o el identificador de analítica de tu navegador (la cookie _ga de Google Analytics), porque no guardamos tu nombre ni tu correo en ellos. La eliminación se aplica a la base de datos activa; las copias de respaldo se renuevan con el tiempo y los archivos históricos solo se modifican a petición expresa. Si estás en la Unión Europea, también puedes presentar una reclamación ante tu autoridad de protección de datos."
+        ]
+      },
+      {
+        "title": "Cambios",
+        "paragraphs": [
+          "Actualizaremos esta página cuando cambie el tratamiento de los datos."
+        ]
+      }
+    ]
   }
 }

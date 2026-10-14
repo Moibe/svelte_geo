@@ -4,7 +4,7 @@
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
   import { getPMCConfig, onPMCChange, getStripeModeConfig, onStripeModeChange, getPriceTestConfig, onPriceTestChange } from './flags.js';
   import { logConversion } from './conversionLogger.js';
-  import { toMajorUnits } from './currency.js';
+  import { toMajorUnits, formatearImporte } from './currency.js';
   import { log, warn, error } from './logger.js';
   
   export let isVisible = false;
@@ -19,7 +19,10 @@
   export let mapLat = 19.4326;
   export let mapLng = -99.1332;
   export let priceLevel = 200;
-  
+  // true = modo simulador: la nota del cobro aclara que no se localizó ningún
+  // teléfono real. Ver sim.modalNote.
+  export let simulation = false;
+
   let isLoading = false;
   let errorMessage = '';
   let productDetails = null;
@@ -214,6 +217,21 @@
     return currencyMap[code] || { code: 'USD', symbol: '$' };
   }
 
+  // Lo que se muestra es lo que Stripe va a cobrar: el importe y la moneda del
+  // PRECIO, no el `formatted` del catálogo (que divide entre 100 a ciegas y en
+  // 16 precios mostraba una cifra 100 veces menor a la cobrada) ni la moneda del
+  // país del visitante (cuando no hay precio para su país se cobra el de México,
+  // y "$200 BRL" decía una moneda que no era la cobrada). Ver formatearImporte.
+  // Si el precio no trae importe se cae al texto de siempre.
+  function etiquetaPrecio(price) {
+    const mostrado = formatearImporte(price?.unit_amount, price?.currency);
+    if (mostrado) return mostrado;
+
+    const respaldo = price?.formatted ?? '';
+    const codigo = getCurrency(countryCode).code;
+    return respaldo.endsWith(codigo) ? respaldo : `${respaldo} ${codigo}`.trim();
+  }
+
   // Cargar detalles del producto cuando se muestra el modal, cambia el pa\u00eds o cambia el nivel de precio
   $: if (isVisible && countryCode) {
     productDetails = null;
@@ -232,13 +250,13 @@
         const testPriceId = import.meta.env.VITE_STRIPE_TEST_PRICE_ID;
         if (testPriceId) {
           log('🧪 SANDBOX MODE - Precio por país cargado, overridiendo priceId con test:', testPriceId, '(original:', productDetails.priceId + ')');
-          productDetails = { ...productDetails, priceId: testPriceId };
+          productDetails = { ...productDetails, priceId: testPriceId, precioDePrueba: true };
         } else {
           log('🧪 SANDBOX MODE - Precio por país cargado (sin test price override)');
         }
       } else if (priceTestOverride) {
         log('🧪 PROD TEST PRICE aplicado:', priceTestOverride, '(reemplaza:', productDetails.priceId + ')');
-        productDetails = { ...productDetails, priceId: priceTestOverride };
+        productDetails = { ...productDetails, priceId: priceTestOverride, precioDePrueba: true };
       } else {
         log('🏭 PRODUCTION MODE - Precio por país cargado');
       }
@@ -272,9 +290,19 @@
       // toMajorUnits. Antes esto producía NaN, que localStorage serializaba
       // como null y llegaba así a Google Ads: conversiones sin valor.
       const stripePrice = productDetails.price || {};
-      const purchaseValue = toMajorUnits(stripePrice.unit_amount, stripePrice.currency);
+      // Con un price_id de prueba (flag price-testing) lo que se cobra NO es este
+      // precio del catálogo, así que reportarlo como valor de la conversión le
+      // mentiría a Google Ads: sin valor (null) es lo honesto.
+      const purchaseValue = productDetails.precioDePrueba
+        ? null
+        : toMajorUnits(stripePrice.unit_amount, stripePrice.currency);
       if (purchaseValue === null) {
-        warn('⚠️ unit_amount no utilizable; la conversión se reportará sin valor:', stripePrice);
+        warn(
+          productDetails.precioDePrueba
+            ? '🧪 Precio de prueba activo: la conversión se reportará sin valor'
+            : '⚠️ unit_amount no utilizable; la conversión se reportará sin valor:',
+          stripePrice
+        );
       }
 
       const purchaseData = {
@@ -332,8 +360,12 @@
           isProductionMode: isProductionMode // Pasar modo de Stripe
         }
       );
-    } catch (error) {
-      errorMessage = error.message || 'Error al procesar el pago. Intenta de nuevo.';
+    } catch (err) {
+      // El detalle técnico (el error del backend, "Failed to fetch"…) va al log y
+      // no a la pantalla: llegaba en español, o en crudo, a una interfaz en
+      // cualquiera de los seis idiomas.
+      error('Error al crear la sesión de pago:', err);
+      errorMessage = $_('modal.checkoutError');
       isLoading = false;
     }
   }
@@ -357,7 +389,11 @@
           <div class="content">
             <h2>{$_('modal.title')}</h2>
           </div>
-          <div class="price">{productDetails.price.formatted}{productDetails.price.formatted.endsWith(getCurrency(countryCode).code) ? '' : ' ' + getCurrency(countryCode).code}</div>
+          <!-- Con un price_id de prueba el importe del catálogo NO es el que se va a
+               cobrar: no se muestra una cifra falsa (Stripe enseña la real). -->
+          {#if !productDetails.precioDePrueba}
+            <div class="price">{etiquetaPrecio(productDetails.price)}</div>
+          {/if}
           <button 
             class="payment-button"
             on:click={handlePayment}
@@ -375,9 +411,11 @@
         {/if}
         
         {#if errorMessage}
-          <div class="error-message">{errorMessage}</div>
+          <div class="error-message" role="alert">{errorMessage}</div>
         {/if}
-        
+
+        <p class="sim-note">{simulation ? $_('sim.modalNote') : $_('sim.modalNoteSafe')}</p>
+
         <p class="stripe-text">{$_('modal.securePayment')}</p>
       </div>
     </div>
@@ -502,12 +540,19 @@
     width: 100%;
   }
 
+  .sim-note {
+    margin: 0.25rem 0 0;
+    width: 100%;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #555;
+    text-align: center;
+  }
+
+  /* En el flujo normal, ya no pegado al fondo con position: absolute: con la
+     nota de arriba el modal crece, y un texto absoluto se encimaría con ella. */
   .stripe-text {
-    position: absolute;
-    bottom: 1rem;
-    left: 0;
-    right: 0;
-    margin: 0;
+    margin: 0.4rem 0 0.25rem;
     font-size: 0.75rem;
     color: #888;
     text-align: center;

@@ -1,8 +1,11 @@
 <script>
   import { _ } from 'svelte-i18n';
-  
+
   export let value = '';
   export let onSubmit = () => {};
+  // ids de los avisos que describen el campo (ver aria-describedby): la página
+  // los pone aquí para que un lector de pantalla los lea al llegar al campo.
+  export let describedby = '';
 
   function handleInput(e) {
     let input = e.target.value;
@@ -19,14 +22,18 @@
   }
 </script>
 
-<input 
-  type="text" 
+<!-- aria-label: el campo solo tenía el placeholder como nombre, y un placeholder
+     no es un nombre accesible fiable. -->
+<input
+  type="text"
   inputmode="numeric"
   class="phone-input"
   on:input={handleInput}
   on:keydown={handleKeydown}
   bind:value
   placeholder={$_('search.phonePlaceholder')}
+  aria-label={$_('search.phoneNumber')}
+  aria-describedby={describedby || undefined}
 />
 
 <style>

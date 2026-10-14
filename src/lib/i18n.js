@@ -1,6 +1,6 @@
 import { addMessages, init, locale } from 'svelte-i18n';
 import { browser } from '$app/environment';
-import { COOKIE_IDIOMA, IDIOMA_POR_DEFECTO, esRTL, normalizarIdioma } from './idiomas.js';
+import { COOKIE_IDIOMA, IDIOMA_POR_DEFECTO, esRTL, idiomaDeRuta, normalizarIdioma } from './idiomas.js';
 
 // Importar traducciones
 import en from './locales/en.json';
@@ -123,20 +123,15 @@ export function getLanguageFromBrowser() {
 }
 
 /**
- * Obtiene el idioma de la URL path (/es, /en o /pt)
- * @returns {string|null} Código de idioma ('es', 'en' o 'pt') o null si no hay path específico
+ * Obtiene el idioma de la URL path (/es, /en, /pt, /fr, /de o /ar).
+ * @returns {string|null} Código de idioma, o null si la URL no declara ninguno
  */
 export function getLanguageFromPath() {
   if (!browser) return null;
 
-  const path = window.location.pathname;
-  if (path.startsWith('/es')) return 'es';
-  if (path.startsWith('/en')) return 'en';
-  if (path.startsWith('/pt')) return 'pt';
-  if (path.startsWith('/fr')) return 'fr';
-  if (path.startsWith('/de')) return 'de';
-  if (path.startsWith('/ar')) return 'ar';
-  return null;
+  // Se compara el primer segmento COMPLETO (idiomaDeRuta) y no con startsWith:
+  // /estado empieza con "es" y /endpoint con "en", y ninguno es un idioma.
+  return idiomaDeRuta(window.location.pathname);
 }
 
 /**
@@ -215,11 +210,34 @@ export function aplicarIdiomaAlDocumento(lang) {
   document.documentElement.dir = esRTL(lang) ? 'rtl' : 'ltr';
 }
 
+/**
+ * ¿El selector de idioma está a mitad de un cambio?
+ *
+ * El selector pone el idioma nuevo Y navega a la URL de ese idioma. Entre una cosa
+ * y la otra la URL sigue siendo la vieja, y el efecto del layout que hace mandar a
+ * la URL (+layout.svelte) veía "URL en español, idioma en inglés" y lo revertía a
+ * español hasta que la navegación terminaba: tres cambios de <html lang> en vez de
+ * uno. `navigating` de SvelteKit no sirve aquí, porque todavía no está encendido
+ * en ese instante.
+ */
+export const cambioDeIdioma = { enCurso: false };
+
 export function setLanguageFromCountry(countryCode) {
   // Solo tiene sentido en el navegador: en el servidor el idioma lo fija
   // +layout.svelte por request, y llamar locale.set() desde acá escribiría en
   // un store de MÓDULO compartido entre todas las requests concurrentes.
   if (!browser) return;
+
+  // Una URL con idioma (/es, /pt…) YA lo decidió, y aquí no se toca.
+  //
+  // Esto antes iba al final de la cadena, y es lo que rompía el SEO
+  // multilingüe: Googlebot ejecuta JavaScript, llega con una IP de EE. UU. y sin
+  // cookie, así que la detección por país devolvía 'en' y pisaba el HTML que el
+  // servidor ya había entregado en español. El buscador veía /es en español en
+  // el HTML y lo indexaba en inglés después de renderizar, justo lo contrario de
+  // lo que prometen el canonical y el hreflang. El idioma del layout lo fija la
+  // URL (ver +layout.svelte); la detección solo opera cuando la URL no dice nada.
+  if (getLanguageFromPath()) return;
 
   // Se resuelve UN idioma y después se aplica una sola vez, en vez de repetir
   // locale.set en cada rama: así el <html lang> nunca queda desfasado.
@@ -230,9 +248,7 @@ export function setLanguageFromCountry(countryCode) {
     (countryCode ? getLanguageFromCountry(countryCode) : null) ||
     // Prioridad 3: el idioma del navegador
     getLanguageFromBrowser() ||
-    // Prioridad 4: el path (campaña de marketing)
-    getLanguageFromPath() ||
-    // Prioridad 5: inglés
+    // Prioridad 4: inglés
     IDIOMA_POR_DEFECTO;
 
   locale.set(idioma);
@@ -247,14 +263,15 @@ function initializeLanguage() {
   // Devolver algo fijo acá evita reventar al cargar el módulo.
   if (!browser) return IDIOMA_POR_DEFECTO;
 
-  const savedLanguage = preferenciaGuardada();
-  if (savedLanguage) {
-    return savedLanguage;
-  }
-
+  // La URL primero: ver el comentario de setLanguageFromCountry.
   const pathLanguage = getLanguageFromPath();
   if (pathLanguage) {
     return pathLanguage;
+  }
+
+  const savedLanguage = preferenciaGuardada();
+  if (savedLanguage) {
+    return savedLanguage;
   }
 
   const browserLanguage = getLanguageFromBrowser();

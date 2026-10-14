@@ -7,6 +7,10 @@
   import LoadingSpinner from '$lib/LoadingSpinner.svelte';
   import Modal from '$lib/Modal.svelte';
   import LanguageSelector from '$lib/LanguageSelector.svelte';
+  import Seo from '$lib/Seo.svelte';
+  import InfoSection from '$lib/InfoSection.svelte';
+  import SiteFooter from '$lib/SiteFooter.svelte';
+  import { rutaEnIdioma } from '$lib/idiomas.js';
   import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from '$lib/geoLocation.js';
   import { getGAClientId } from '$lib/stripe.js';
   import { logConversion } from '$lib/conversionLogger.js';
@@ -23,6 +27,15 @@
   // El pago se completó pero no sobrevivieron las coordenadas del redirect:
   // hay que avisarle al cliente y pedirle que repita la búsqueda.
   let purchaseCoordsLost = false;
+  // Clave de traducción del aviso de una búsqueda que falló (permiso de ubicación
+  // negado, GeoJS sin respuesta…), o '' si no hay. Se muestra en la propia página
+  // y no con un alert() del navegador; la clave y no el texto, para que siga el
+  // idioma si el visitante lo cambia con el aviso a la vista.
+  let errorBusqueda = '';
+  // true una vez que la página se destruyó (navegación del lado del cliente), y el
+  // temporizador que abre el modal de cobro. Ver terminarBusqueda.
+  let destruida = false;
+  let temporizadorModal = null;
   let showModal = false;
   let mapCoords = { lat: 19.4326, lng: -99.1332 }; // Default CDMX
   let lastUsedPhoneNumber = '';
@@ -74,7 +87,16 @@
   
   // Tiempo de espera actual basado en el modo (Safe Mode usa waitSafe, Normal Mode usa waitProd)
   $: currentWaitTime = (safeMode ? waitSafe : waitProd) * 1000;
-  
+
+  // El modo con número de teléfono (safeMode apagado) es un SIMULADOR de
+  // entretenimiento: no consulta ninguna red ni operador, solo muestra un punto
+  // al azar cerca de la ubicación aproximada del propio visitante. Todo lo que
+  // lo dice (título, descripción, avisos, mapa y cobro) cuelga de esta bandera,
+  // y es la del modo y no la de searchMethod a propósito: al volver de Stripe
+  // searchMethod vuelve a 'none' pero el mapa restaurado sigue siendo el del
+  // simulador.
+  $: modoTelefono = safeMode === false;
+
 
 
   // Función para generar posición random
@@ -516,6 +538,13 @@
   });
 
   onDestroy(() => {
+    // Detener lo que una búsqueda en curso dejó programado (ver terminarBusqueda).
+    destruida = true;
+    if (temporizadorModal) {
+      clearTimeout(temporizadorModal);
+      temporizadorModal = null;
+    }
+
     // Limpiar event listeners de cierre de página
     if (typeof window !== 'undefined' && handleVisibilityChange) {
       window.removeEventListener('beforeunload', handleVisibilityChange);
@@ -829,20 +858,38 @@
 
     // Mostrar spinner
     showSpinner = true;
-    
+
+    await terminarBusqueda();
+  }
+
+  // El final COMÚN de las tres búsquedas (teléfono, navegador, IP): esperar a que
+  // la animación muestre todos sus mensajes, enseñar el mapa y, pasado el tiempo
+  // configurado, abrir el modal de cobro.
+  //
+  // Se comprueba `destruida` después de cada espera y el temporizador del modal se
+  // guarda para cancelarlo en onDestroy. Antes daba igual, porque la página no
+  // tenía ningún enlace que la abandonara sin recargar; ahora los hay (la política
+  // de privacidad), y un temporizador vivo seguía corriendo sobre un componente ya
+  // destruido: al vencer registraba un sell_pop (y, con ese flag encendido, un
+  // `purchase` a Google) sin que hubiera ningún modal en pantalla.
+  async function terminarBusqueda() {
     // Esperar a que el spinner termine de mostrar todos los mensajes (último mensaje dura doble)
     await new Promise(resolve => setTimeout(resolve, 16500));
-    
+    if (destruida) return;
+
     // Mostrar mapa primero
     showMap = true;
-    
+
     // Ocultar spinner después (para que no haya tiempo en blanco)
     await new Promise(resolve => setTimeout(resolve, 100));
+    if (destruida) return;
     showSpinner = false;
 
     // Iniciar timer para modal (tiempo dinámico según modo)
     log('⏱️ Modal se mostrará en', currentWaitTime, 'ms');
-    setTimeout(() => {
+    temporizadorModal = setTimeout(() => {
+      if (destruida) return;
+
       if (sellEnabled) {
         showModal = true;
         handleSellPop();
@@ -921,6 +968,7 @@
 
   // Funciones para Safe Mode
   async function handleBrowserSearch() {
+    errorBusqueda = '';
     showSpinner = true;
     try {
       const result = await searchByBrowser();
@@ -930,35 +978,17 @@
       userCountryCode = result.countryCode;
       userCountryISO = result.isoCode || 'MX';
       selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
-      
-      // Esperar spinner
-      await new Promise(resolve => setTimeout(resolve, 16500));
-      
-      // Mostrar mapa primero
-      showMap = true;
-      
-      // Ocultar spinner después (para que no haya tiempo en blanco)
-      await new Promise(resolve => setTimeout(resolve, 100));
-      showSpinner = false;
-      
-      // Mostrar modal después del tiempo configurado
-      log('⏱️ Modal se mostrará en', currentWaitTime, 'ms');
-      setTimeout(() => {
-        if (sellEnabled) {
-          showModal = true;
-          handleSellPop();
-        } else {
-          log('🚫 Venta desactivada - Modal no se mostrará');
-        }
-      }, currentWaitTime);
+
+      await terminarBusqueda();
     } catch (err) {
       error('Error en búsqueda por navegador:', err);
-      alert('No se pudo acceder a la ubicación del navegador. Por favor, permite el acceso a tu ubicación.');
+      errorBusqueda = 'search.errorBrowser';
       showSpinner = false;
     }
   }
 
   async function handleIPSearch() {
+    errorBusqueda = '';
     showSpinner = true;
     try {
       const result = await searchByIP();
@@ -967,30 +997,11 @@
       userCountryCode = result.countryCode;
       userCountryISO = result.isoCode || 'MX';
       selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
-      
-      // Esperar spinner
-      await new Promise(resolve => setTimeout(resolve, 16500));
-      
-      // Mostrar mapa primero
-      showMap = true;
-      
-      // Ocultar spinner después (para que no haya tiempo en blanco)
-      await new Promise(resolve => setTimeout(resolve, 100));
-      showSpinner = false;
-      
-      // Mostrar modal después del tiempo configurado
-      log('⏱️ Modal se mostrará en', currentWaitTime, 'ms');
-      setTimeout(() => {
-        if (sellEnabled) {
-          showModal = true;
-          handleSellPop();
-        } else {
-          log('🚫 Venta desactivada - Modal no se mostrará');
-        }
-      }, currentWaitTime);
+
+      await terminarBusqueda();
     } catch (err) {
       error('Error en búsqueda por IP:', err);
-      alert('No se pudo detectar tu ubicación por IP.');
+      errorBusqueda = 'search.errorIP';
       showSpinner = false;
     }
   }
@@ -998,16 +1009,29 @@
 
 </script>
 
+<!-- La descripción que acaba en «Pago único…» solo vale si hay cobro: con el flag
+     `sell` apagado la app es gratuita y se usa la variante sin esa frase. -->
+<Seo
+  titulo={modoTelefono ? $_('seo.home.titleSim') : $_('seo.home.title')}
+  descripcion={$_(
+    modoTelefono
+      ? sellEnabled ? 'seo.home.descriptionSim' : 'seo.home.descriptionSimFree'
+      : sellEnabled ? 'seo.home.description' : 'seo.home.descriptionFree'
+  )}
+  categoriaApp={modoTelefono ? 'EntertainmentApplication' : 'UtilitiesApplication'}
+/>
+
 <main dir={$locale === 'ar' ? 'rtl' : 'ltr'}>
   <LoadingSpinner isVisible={showSpinner} countryCode={selectedCountry} isSafeMode={safeMode === true} />
-  <Modal 
-    isVisible={showModal} 
+  <Modal
+    isVisible={showModal}
     onClose={closeModal}
     countryCode={userCountryCode}
     countryISO={userCountryISO}
     mapLat={mapCoords.lat}
     mapLng={mapCoords.lng}
     priceLevel={priceLevel}
+    simulation={modoTelefono}
   />
   <div class="language-selector-wrapper">
     <LanguageSelector on:change={handleLanguageChange} />
@@ -1015,6 +1039,9 @@
   <div class="container">
     {#if purchaseCoordsLost}
       <div class="purchase-notice" role="status">{$_('purchase.coordsLost')}</div>
+    {/if}
+    {#if errorBusqueda}
+      <div class="search-error" role="alert">{$_(errorBusqueda)}</div>
     {/if}
     {#if !showMap && !showSpinner}
       {#if safeMode === null}
@@ -1024,21 +1051,33 @@
           <p>{$_('modal.loading')}</p>
         </div>
       {:else if safeMode === false}
-        <!-- Modo Normal: Dropdown + Phone + Buscar -->
+        <!-- Modo Normal: Dropdown + Phone + Buscar. Es el simulador de
+             entretenimiento: el título y el aviso lo dicen a la vista, no solo
+             en el HTML que lee un buscador. -->
+        <h1 class="sim-title">{$_('seo.home.h1Sim')}</h1>
         <div class="input-wrapper" dir="ltr">
           <CountrySelect bind:value={selectedCountry} on:change={handleLadaChange} />
-          <PhoneInput 
+          <PhoneInput
             bind:value={phoneNumber}
             onSubmit={() => phoneNumber.length >= 7 && handleOkClick()}
+            describedby={sellEnabled ? 'aviso-simulacion aviso-cobro' : 'aviso-simulacion'}
           />
-          <button 
-            class="ok-button" 
+          <button
+            class="ok-button"
             on:click={handleOkClick}
             disabled={phoneNumber.length < 7}
+            aria-describedby={sellEnabled ? 'aviso-simulacion aviso-cobro' : 'aviso-simulacion'}
           >
             {$_('search.okButton')}
           </button>
         </div>
+        <!-- Los dos avisos van después del campo en el DOM: se asocian a él y al
+             botón con aria-describedby para que un lector de pantalla los lea ANTES
+             de que se escriba un número (que además se guarda). -->
+        <p class="sim-notice" id="aviso-simulacion">{$_('sim.formNotice')}</p>
+        {#if sellEnabled}
+          <p class="pay-notice" id="aviso-cobro">{$_('search.payNotice')}</p>
+        {/if}
       {:else}
         <!-- Safe Mode: Botones de búsqueda -->
         <div class="safe-mode-container">
@@ -1046,32 +1085,55 @@
           <p class="safe-mode-subtitle">{$_('search.safeModeSubtitle')}</p>
           
           <div class="safe-mode-buttons">
-            <button 
-              class="safe-button browser-button" 
+            <button
+              class="safe-button browser-button"
               on:click={handleBrowserSearch}
+              aria-describedby={sellEnabled ? 'aviso-cobro' : undefined}
             >
               🌐 {$_('search.searchByBrowser')}
             </button>
-            <button 
-              class="safe-button ip-button" 
+            <button
+              class="safe-button ip-button"
               on:click={handleIPSearch}
+              aria-describedby={sellEnabled ? 'aviso-cobro' : undefined}
             >
               📡 {$_('search.searchByIP')}
             </button>
           </div>
+          {#if sellEnabled}
+            <!-- Va después de los botones en el DOM, así que se asocia a ellos con
+                 aria-describedby: quien navega con lector de pantalla lo oye al
+                 llegar al botón, ANTES de activarlo. -->
+            <p class="pay-notice" id="aviso-cobro">{$_('search.payNotice')}</p>
+          {/if}
         </div>
       {/if}
     {/if}
+    {#if showMap || showSpinner}
+      <!-- Al buscar se va el <h1> de la pantalla inicial y la página seguiría sin
+           encabezado de primer nivel (el InfoSection de abajo empieza en <h2>). Solo
+           para lectores de pantalla: a la vista ya hay un mapa o una animación. -->
+      <h1 class="solo-lectores">{modoTelefono ? $_('seo.home.h1Sim') : $_('search.safeModeTitle')}</h1>
+    {/if}
     {#if showMap}
       <div class="map-wrapper">
-        <Map lat={mapCoords.lat} lng={mapCoords.lng} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} mapWaitEnabled={mapWaitEnabled} mapWaitTime={mapWaitTime} on:mapWaited={handleMapWaited} on:mapZoom={handleMapZoom} />
+        <Map lat={mapCoords.lat} lng={mapCoords.lng} simulation={modoTelefono} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} mapWaitEnabled={mapWaitEnabled} mapWaitTime={mapWaitTime} on:mapWaited={handleMapWaited} on:mapZoom={handleMapZoom} />
       </div>
     {/if}
   </div>
 </main>
 
+<InfoSection
+  simulacion={modoTelefono}
+  conCobro={sellEnabled}
+  conPrivacidad={data.conPrivacidad}
+  rutaPrivacidad={rutaEnIdioma('/privacy', $locale)}
+/>
+<SiteFooter conPrivacidad={data.conPrivacidad} />
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  /* Roboto ya no se pide a Google Fonts: se sirve desde el sitio y se importa
+     en +layout.svelte (@fontsource/roboto). Ver el comentario ahí. */
 
   :global(html),
   :global(body) {
@@ -1123,6 +1185,72 @@
     color: white;
     margin: 0 0 1rem 0;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Texto solo para lectores de pantalla (el <h1> que se va al buscar). */
+  .solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .sim-title {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: white;
+    text-align: center;
+    margin: 0 0 1.5rem 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .sim-notice {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    margin: 1.25rem auto 0;
+    max-width: 32rem;
+  }
+
+  /* El aviso del cobro: a la vista ANTES de la primera acción, no solo en el
+     modal que aparece al final. Más discreto que el de la simulación. */
+  .pay-notice {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.78);
+    text-align: center;
+    margin: 0.9rem auto 0;
+    max-width: 32rem;
+  }
+
+  .safe-mode-buttons + .pay-notice {
+    margin-top: 1.75rem;
+  }
+
+  /* Una búsqueda que falló. Sustituye al alert() nativo: mismo recuadro que el
+     aviso de compra, en rojo. */
+  .search-error {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #ffffff;
+    background: rgba(178, 42, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+    margin: 0 auto 1.5rem;
+    max-width: 32rem;
+    text-align: center;
   }
 
   .purchase-notice {

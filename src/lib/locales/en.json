@@ -11,7 +11,10 @@
     "searchByBrowser": "Search by Browser",
     "searchByIP": "Search by IP",
     "safeModeTitle": "geoservices.space",
-    "safeModeSubtitle": "Locate your device on a map using IP and GPS"
+    "safeModeSubtitle": "Locate your device on a map using IP and GPS",
+    "payNotice": "You will see the map for a few seconds; to keep viewing it, you will be asked for a one-time payment. The amount is confirmed on the payment screen before you pay.",
+    "errorBrowser": "We could not get your location using your browser. Check that you gave it permission, or try Search by IP.",
+    "errorIP": "We could not detect your location by IP. Try again in a few seconds."
   },
   "spinner": {
     "generatingGPS": "Generating GPS location ...",
@@ -34,8 +37,11 @@
   "map": {
     "deviceFound": "Device Found",
     "device": "Device Found",
-    "antenna": "Nearby Cell Tower",
-    "currentPosition": "Current position"
+    "antenna": "Cell tower (illustrative)",
+    "currentPosition": "Current position",
+    "devicePopup": "Your device (approximate location)",
+    "devicePopupSim": "Illustrative location (simulation)",
+    "antennaPopup": "Illustrative cell tower {n}"
   },
   "modal": {
     "loading": "Loading...",
@@ -44,9 +50,144 @@
     "buyButton": "Buy",
     "processing": "Processing...",
     "securePayment": "Secure Payment with Stripe ®",
-    "priceLoadError": "We could not load the price for your country. Please reload the page and try again."
+    "priceLoadError": "We could not load the price for your country. Please reload the page and try again.",
+    "checkoutError": "We could not start the payment. Please try again in a few seconds."
   },
   "purchase": {
-    "coordsLost": "Your payment went through. We could not recover your previous search from this browser; enter the number again to see the map."
+    "coordsLost": "Your payment was processed successfully. We could not recover your search in this browser. If you repeat it, you may be asked to pay again; keep your Stripe receipt."
+  },
+  "seo": {
+    "home": {
+      "title": "Approximate location of your device | geoservices.space",
+      "titleSim": "Phone simulator (entertainment) | geoservices.space",
+      "description": "See your device’s approximate location on a map using your browser or your IP. It does not locate anyone else. One-time payment to keep viewing the map.",
+      "descriptionFree": "See your device’s approximate location on a map using your browser or your IP. It does not locate anyone else.",
+      "descriptionSim": "Entertainment simulator: enter a number and see an illustrative point on a map. It does not locate real phones. One-time payment to keep viewing the map.",
+      "descriptionSimFree": "Entertainment simulator: enter a number and see an illustrative point on a map. It does not locate real phones.",
+      "h1Sim": "Phone location simulator (entertainment only)"
+    },
+    "privacy": {
+      "title": "Privacy policy | geoservices.space",
+      "description": "What data geoservices.space collects, what it is used for, who it is shared with, and how to ask for it to be deleted."
+    }
+  },
+  "info": {
+    "howTitle": "How it works",
+    "how": [
+      "Search by Browser: your browser asks you for permission and uses the location your device gives it (GPS, Wi-Fi or mobile network, depending on the device) to locate you. The coordinates are sent to OpenStreetMap (Nominatim) to determine which country you are in.",
+      "Search by IP: an approximate location is obtained from your IP address, which is sent to a geolocation service (GeoJS), without asking for permissions.",
+      "In both cases the map shows an approximate point, because a random variation of a few kilometers is added. The cell tower markers are illustrative and do not represent real towers.",
+      "To keep viewing the map, you are asked for a one-time payment that Stripe processes. The payment does not create an account or save your access: another search, or reloading the page, may ask for another payment. The price may vary depending on your country and is confirmed on the payment screen before you pay."
+    ],
+    "howSim": [
+      "You enter a phone number. The simulator does not search for it or look it up on any network or carrier.",
+      "You see an animation lasting about 15 seconds and then a map with an illustrative point, chosen at random near the approximate location of your connection.",
+      "To keep viewing the map, you are asked for a one-time payment that Stripe processes. The payment does not create an account or save your access: another search, or reloading the page, may ask for another payment. The price may vary depending on your country and is confirmed on the payment screen before you pay."
+    ],
+    "faqTitle": "Frequently asked questions",
+    "faq": [
+      {
+        "q": "How accurate is the location?",
+        "a": "With the IP address, it usually gets the country right and sometimes the city; it can fail with a VPN, a proxy or mobile data. With the browser’s location the result is closer to your real position. In both cases the map adds a random variation of a few kilometers, so it is an approximate location and not an exact address."
+      },
+      {
+        "q": "Can I locate another person’s phone?",
+        "a": "No. This site cannot locate other people’s phones and does not query any network or carrier. It only shows an approximate location of your own device."
+      },
+      {
+        "q": "Why does it ask me for location permission?",
+        "a": "Only if you choose Search by Browser, so that it can use your device’s location. You can decline and use Search by IP, which does not ask for permissions."
+      },
+      {
+        "q": "What data is stored?",
+        "a": "We record your visit activity (for example, which button you used), your country and language, an approximate location, a browser analytics identifier, the campaign parameters if you arrive from an ad and, if you use the simulator, the phone number you enter. Your IP address is sent to a geolocation service when the page opens and remains in the server logs."
+      }
+    ],
+    "faqSimAnswer": "No. The phone number mode is an entertainment simulator: it does not search for the number or query any network or carrier, and the result does not depend on the number you enter. It only shows a random point near the approximate location of your connection (or near Mexico City if it cannot be detected).",
+    "privacyLink": "More details in the privacy policy."
+  },
+  "sim": {
+    "formNotice": "Entertainment simulation: it does not locate real phones, and the result does not depend on the number you enter. The number is stored in our records: do not enter other people’s numbers. The map shows an illustrative location.",
+    "spinnerNotice": "Entertainment simulation",
+    "mapBadge": "Simulation · illustrative location",
+    "modalNote": "This is an entertainment simulation: no real phone is being located. The payment lets you keep viewing the map of this simulation in this browser; if you reload or close the page, you lose the map, and another search may ask for another payment.",
+    "modalNoteSafe": "The location shown is approximate. The payment lets you keep viewing the map of this search in this browser; if you reload or close the page, you lose the map, and another search may ask for another payment."
+  },
+  "footer": {
+    "privacy": "Privacy policy",
+    "languages": "Languages"
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "updated": "Last updated: October 13, 2026",
+    "operatorLead": "Responsible party:",
+    "contactLead": "Contact:",
+    "sections": [
+      {
+        "title": "Who we are",
+        "paragraphs": [
+          "geoservices.space is a website that shows the approximate location of the visitor’s device on a map and includes an entertainment simulator. This policy explains what data is processed when you use it. The contact details of whoever is responsible for the site are at the bottom of this page."
+        ]
+      },
+      {
+        "title": "What data we collect",
+        "paragraphs": [
+          "We collect this data to make the site work, to measure its use and to measure advertising campaigns:"
+        ],
+        "items": [
+          "Visit activity: events such as opening, reloading or closing the page, searching for a number in the simulator, viewing or zooming in on the map, opening the payment window, pressing the Buy button or abandoning the payment, together with the type of search you used (browser, IP or simulator), their date and time (and your time zone), your language and your country.",
+          "Approximate location: when the page opens, your browser and our server send your IP address to a geolocation service to estimate your country and an approximate location, even if you do not choose any search. If you choose Search by Browser and give permission, your device’s location coordinates are used. In both cases the map and our records use a position with a random variation of a few kilometers.",
+          "Phone number: if you use the simulator, the number you enter is stored together with the visit activity and, for as long as your browser keeps it, also together with that of your subsequent visits. For this reason, do not enter other people’s numbers.",
+          "Analytics and advertising identifiers: the Google Analytics client identifier and, if you arrive from an ad, the campaign parameters (UTM, gclid or fbclid).",
+          "Payments: Stripe collects the payment details directly (also your email address, which we see in the Stripe dashboard), and we do not see or store your full card number. We store the amount and currency of the purchase, and we associate the browser analytics identifier with the payment. The amount, the currency and a transaction identifier are also sent to Google to measure conversions, both from your browser and from the service that receives Stripe notifications.",
+          "IP address: our server records it in its access logs, as happens on any website, and, when the page opens, uses it to estimate your country; that result is recorded together with your IP in a technical server log."
+        ]
+      },
+      {
+        "title": "What we use the data for",
+        "paragraphs": [
+          "To show the map, to choose your language and the price based on your country, to process payments, to measure and improve the service, and to measure the effectiveness of advertising campaigns."
+        ]
+      },
+      {
+        "title": "Who we share the data with",
+        "paragraphs": [
+          "To provide the service we use providers that receive part of this data and may process it outside your country (for example, in the United States). The services your browser connects to also receive your IP address and technical data from your browser:"
+        ],
+        "items": [
+          "Google (Tag Manager, Analytics and Ads): measurement of usage and campaigns, including the amount and currency of purchases. Google also receives, on its own, technical data from your browser and the addresses of the pages you visit.",
+          "Stripe: payment processing.",
+          "OpenStreetMap: loads the maps and, if you use Search by Browser, receives your exact coordinates to determine the country (Nominatim service).",
+          "GeoJS: receives your IP address when the page opens, from your browser and from our server, to calculate an approximate location.",
+          "Hosting providers: DigitalOcean, where the site runs and the activity log is stored; Hugging Face, where the service that creates the payment sessions runs, as well as the one that receives Stripe notifications and sends each purchase to Google Analytics; and Opalstack, where the previous database was hosted, which may keep activity logs from before September 2026.",
+          "OpenAI: if whoever administers the site uses its internal analysis assistant, the results of its queries on the activity log, which may include phone numbers and identifiers, are processed by that service."
+        ]
+      },
+      {
+        "title": "Cookies and local storage",
+        "paragraphs": [
+          "We use our own cookie to remember your language for one year. Google Analytics and Google Ads create their own cookies as soon as you open the page, without a prior consent notice, to measure usage and campaigns. You can block or delete them from your browser settings.",
+          "Your browser also stores data in its local storage to make the page work and to measure its use, such as your language, the numbers you used in the simulator (with the location assigned to them), the location shown, the campaign parameters and the status of a payment in progress. You can delete this data from your browser settings."
+        ]
+      },
+      {
+        "title": "Data retention",
+        "paragraphs": [
+          "We do not delete the activity logs automatically: we keep them for as long as they remain useful for the purposes described. We store backup copies of the database; the daily ones are replaced over time and some historical files are kept with no expiration date."
+        ]
+      },
+      {
+        "title": "Your rights",
+        "paragraphs": [
+          "You can ask to access, rectify or delete your data, or object to its processing, by writing to the contact listed below. To find your records we need the phone number you used in the simulator or your browser’s analytics identifier (the Google Analytics _ga cookie), because we do not store your name or your email in them. Deletion applies to the active database; backup copies are replaced over time, and historical files are only modified upon express request. If you are in the European Union, you can also file a complaint with your data protection authority."
+        ]
+      },
+      {
+        "title": "Changes",
+        "paragraphs": [
+          "We will update this page when the processing of the data changes."
+        ]
+      }
+    ]
   }
 }

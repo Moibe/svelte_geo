@@ -1,5 +1,6 @@
 import { obtenerFlags } from '$lib/server/flags.js'
 import { observarPaisPorIP } from '$lib/server/geoSombra.js'
+import { contactoPublico } from '$lib/server/sitio.js'
 
 /**
  * Datos que el servidor le pasa a la pagina para renderizar la PRIMERA
@@ -31,5 +32,9 @@ export function load({ locals, getClientAddress }) {
     idioma: locals.idioma,
     usuario: locals.usuario,
     flags: obtenerFlags(),
+    // Solo si hay contacto configurado el sitio enlaza su política de privacidad
+    // (ver contactoPublico). Se manda un booleano y NO el correo: el correo sale
+    // únicamente en la propia política, no en el HTML de cada página.
+    conPrivacidad: Boolean(contactoPublico()),
   }
 }

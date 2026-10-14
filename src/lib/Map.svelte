@@ -14,6 +14,10 @@
 
   export let lat = 19.4326;
   export let lng = -99.1332;
+  // true = modo simulador (el de número de teléfono): la ubicación es ilustrativa
+  // y no sale de ninguna búsqueda del número, y las etiquetas del mapa lo dicen.
+  // Las antenas lo son siempre: se reparten al azar alrededor del punto.
+  export let simulation = false;
   export let mapInteractionEnabled = false; // Si true, emite evento al interactuar
   export let mapWaitEnabled = false;         // Si true, emite evento al pasar X segundos
   export let mapWaitTime = 30;               // Segundos a esperar (desde Firestore)
@@ -167,17 +171,24 @@
       maxZoom: 19,
     }).addTo(map);
 
+    // Los popups reciben una FUNCIÓN y no una cadena: Leaflet la evalúa al abrirlos,
+    // así que siguen el idioma del momento. Con una cadena armada aquí, una sola vez,
+    // se quedaban en el idioma en que se creó el mapa aunque la leyenda (que sí es
+    // reactiva) cambiara.
+
     // Agregar marcador principal (dispositivo móvil)
     const phoneIcon = createPhoneIcon();
-    L.marker(coords, { icon: phoneIcon }).addTo(map).bindPopup('📱 Tu dispositivo móvil');
-    
+    L.marker(coords, { icon: phoneIcon })
+      .addTo(map)
+      .bindPopup(() => `📱 ${simulation ? $_('map.devicePopupSim') : $_('map.devicePopup')}`);
+
     // Generar y agregar antenas de colores
     const randomPoints = generateRandomPoints(lat, lng);
     randomPoints.forEach((point, index) => {
       const antennaIcon = createAntennaIcon(point.color);
       L.marker([point.lat, point.lng], { icon: antennaIcon })
         .addTo(map)
-        .bindPopup(`📡 Torre de antena ${index + 1}`);
+        .bindPopup(() => `📡 ${$_('map.antennaPopup', { values: { n: index + 1 } })}`);
     });
 
     // Detectar cualquier interacción con el mapa (solo se dispara una vez)
@@ -231,7 +242,7 @@
 <div class="map-container" bind:this={mapContainer}>
   <!-- Leyenda dentro del mapa -->
   <div class="map-legend">
-    <div class="legend-title">{$_('map.deviceFound')}</div>
+    <div class="legend-title">{simulation ? $_('sim.mapBadge') : $_('map.deviceFound')}</div>
     <div class="legend-item">
       <div class="legend-icon">
         <!-- Ícono del dispositivo móvil -->
@@ -274,7 +285,7 @@
           "></div>
         </div>
       </div>
-      <span class="legend-text">{$_('map.device')}</span>
+      <span class="legend-text">{simulation ? $_('map.devicePopupSim') : $_('map.devicePopup')}</span>
     </div>
     
     <div class="legend-item">
@@ -331,8 +342,11 @@
   </div>
 </div>
 
+<!-- Antes aquí decía "Posición actual ...." con cuatro puntos que parpadeaban, y eso
+     sugiere un seguimiento en vivo que no existe: es UNA lectura, desplazada a
+     propósito hasta unos kilómetros, y el mapa nunca se actualiza. Ahora dice lo que es. -->
 <div class="location-text">
-  {$_('map.currentPosition')} <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+  {simulation ? $_('sim.spinnerNotice') : $_('map.devicePopup')}
 </div>
 
 <style>
@@ -407,34 +421,5 @@
     margin-bottom: 16px;
     font-size: 14px;
     font-weight: 500;
-  }
-
-  .dot {
-    animation: blink 1.4s infinite;
-    opacity: 0;
-  }
-
-  .dot:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-
-  .dot:nth-child(3) {
-    animation-delay: 0.4s;
-  }
-
-  .dot:nth-child(4) {
-    animation-delay: 0.6s;
-  }
-
-  @keyframes blink {
-    0%, 20% {
-      opacity: 0;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
   }
 </style>

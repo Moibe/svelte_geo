@@ -5,9 +5,20 @@
   // cualquier página; si no, $_ queda sin diccionario y la UI sale en blanco.
   import '$lib/i18n.js'
 
+  // Roboto servida desde el propio sitio. Antes se pedía con un @import de
+  // Google Fonts dentro del CSS de la página, que (a) bloqueaba el render
+  // (Lighthouse estimaba 1.8 s de ahorro), (b) mandaba la IP de cada visitante a
+  // Google solo para bajar una tipografía, y (c) no estaba declarado en ningún
+  // aviso de privacidad. Solo el subconjunto latino y los dos pesos que se usan
+  // (400 y 700): cubre español, inglés, portugués, francés y alemán.
+  import '@fontsource/roboto/latin-400.css'
+  import '@fontsource/roboto/latin-700.css'
+
   import { locale } from 'svelte-i18n'
   import { browser } from '$app/environment'
-  import { aplicarIdiomaAlDocumento } from '$lib/i18n.js'
+  import { navigating, page } from '$app/state'
+  import { aplicarIdiomaAlDocumento, cambioDeIdioma } from '$lib/i18n.js'
+  import { idiomaDeRuta } from '$lib/idiomas.js'
   import { sembrarFlags } from '$lib/flags.js'
 
   let { children, data } = $props()
@@ -37,9 +48,32 @@
     locale.set(data.idioma)
   }
 
-  // En el navegador, mantener el <html lang> y la dirección en sintonía. El
-  // servidor ya los mandó bien vía transformPageChunk; esto cubre los cambios
-  // posteriores (detección por país, o que el usuario elija otro idioma).
+  // En el navegador, el idioma de la URL manda también DESPUÉS de la primera
+  // carga: navegar con atrás/adelante entre /es y /en, o elegir otro idioma en el
+  // selector (que navega a la URL de ese idioma), tiene que cambiar el idioma
+  // mostrado. Sin esto el cuerpo del script de arriba, que solo corre una vez,
+  // dejaría la página en el idioma anterior.
+  //
+  // En la raíz (/) la URL no dice nada y no se toca: ahí deciden la cookie, el
+  // navegador y la detección por país.
+  //
+  // Mientras el selector de idioma está a mitad de un cambio page.url todavía es la
+  // anterior: pone el idioma nuevo y navega a su URL en el mismo instante, y sin
+  // esta guarda este efecto veía "URL en español, idioma en inglés" y lo revertía a
+  // español hasta que la navegación terminaba (tres cambios de <html lang> en vez
+  // de uno). Se mira también `navigating` para los demás casos (atrás/adelante).
+  $effect(() => {
+    if (cambioDeIdioma.enCurso || navigating.to) return
+
+    const deLaUrl = idiomaDeRuta(page.url.pathname)
+
+    if (browser && deLaUrl && deLaUrl !== $locale) {
+      locale.set(deLaUrl)
+    }
+  })
+
+  // Mantener el <html lang> y la dirección en sintonía. El servidor ya los mandó
+  // bien vía transformPageChunk; esto cubre los cambios posteriores.
   $effect(() => {
     if (browser && $locale) {
       aplicarIdiomaAlDocumento($locale)
