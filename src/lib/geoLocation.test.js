@@ -29,7 +29,7 @@ test('todo país de la tabla produce un código que el catálogo de precios enti
     const r = ubicacionDeArranque(iso)
 
     assert.equal(r.conocido, true, iso)
-    assert.match(r.countryCode, /^\+\d{1,3}$/, iso)
+    assert.match(r.countryCode, /^\+\d{1,4}$/, iso)
   }
 })
 
@@ -42,7 +42,8 @@ test('todo código del catálogo de precios es alcanzable desde un país de la t
   // Códigos con precio propio en el catálogo pero SIN un país en countryCodeMap que lleve a ellos: esos
   // visitantes caen al precio de México. Se agregan países a la tabla para vaciar esta lista; si aparece
   // un código nuevo aquí, es un precio que nadie puede obtener.
-  const CONOCIDOS = ['+1242', '+1246', '+1441', '+1767', '+1868', '+1876', '+220', '+230', '+231', '+232', '+238', '+248', '+252', '+265', '+266', '+268', '+290', '+297', '+350', '+374', '+423', '+500', '+599', '+676', '+685', '+995']
+  // Jamaica: su precio propio (+1876) existe solo en el nivel 100; JM sigue en '+1' (ver countryCodeMap).
+  const CONOCIDOS = ['+1876']
 
   assert.deepEqual([...sinPais].sort(), [...CONOCIDOS].sort())
 })
