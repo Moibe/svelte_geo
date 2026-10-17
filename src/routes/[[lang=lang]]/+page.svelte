@@ -11,17 +11,19 @@
   import InfoSection from '$lib/InfoSection.svelte';
   import SiteFooter from '$lib/SiteFooter.svelte';
   import { rutaEnIdioma } from '$lib/idiomas.js';
-  import { detectCountry, getLocationCache, saveLocationCache, searchByBrowser, searchByIP } from '$lib/geoLocation.js';
+  import { getLocationCache, saveLocationCache, searchByBrowser, searchByIP, ubicacionDeArranque } from '$lib/geoLocation.js';
   import { getGAClientId } from '$lib/stripe.js';
   import { logConversion } from '$lib/conversionLogger.js';
+  import { borrarCoordenadasDelPago, guardar, leer, leerCoordenadasDelPago, purgarCoordenadasVencidas, quitar } from '$lib/almacenamiento.js';
+  import { consumirRecargaPorConsentimiento, cuandoHayAnalitica, hayRecargaPorConsentimiento } from '$lib/consentimiento-navegador.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from '$lib/i18n.js';
   import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange, getPriceLevelConfig, onPriceLevelChange } from '$lib/flags.js';
   import { verboseStore, log, warn, error } from '$lib/logger.js';
 
   let phoneNumber = '';
   let selectedCountry = '+1'; // País del teléfono que busca
-  let userCountryCode = '+52'; // País real del usuario (para precio Stripe)
-  let userCountryISO = 'MX'; // Código ISO del país del usuario (MX, US, BR, etc.)
+  let userCountryCode = '+52'; // País del visitante por su IP (precio de Stripe y registros)
+  let userCountryISO = 'MX'; // Código ISO del país del visitante (MX, US, BR, etc.)
   let showMap = false;
   let showSpinner = false;
   // El pago se completó pero no sobrevivieron las coordenadas del redirect:
@@ -37,7 +39,16 @@
   let destruida = false;
   let temporizadorModal = null;
   let showModal = false;
-  let mapCoords = { lat: 19.4326, lng: -99.1332 }; // Default CDMX
+  // Punto de partida del mapa (CDMX) hasta que haya una ubicación del visitante. `ubicacionConocida` dice si
+  // `mapCoords` ya es una ubicación REAL (la de una búsqueda, la del mapa pagado): mientras no lo sea, no se
+  // registra como «ubicación mostrada» en los eventos (todos los visitantes aparecerían en la CDMX).
+  let mapCoords = { lat: 19.4326, lng: -99.1332 };
+  let ubicacionConocida = false;
+  const ubicacionMostrada = () => (ubicacionConocida ? mapCoords : null);
+  function fijarUbicacion(coords) {
+    mapCoords = coords;
+    ubicacionConocida = true;
+  }
   let lastUsedPhoneNumber = '';
   // Datos que resolvió el servidor: los flags de Firestore ya leídos.
   //
@@ -47,6 +58,14 @@
   // coincidirían. Los listeners de Firestore del onMount siguen puestos, así
   // que cambiar un flag desde la consola sigue llegando al instante.
   export let data;
+
+  // El país del visitante lo resolvió el SERVIDOR por la IP de la petición (base local de DB-IP): decide
+  // el precio, el idioma inicial y los registros. Ya no se consulta a GeoJS al cargar la página. Se fija
+  // aquí (y no en onMount) para que el HTML del servidor y la hidratación coincidan.
+  const arranque = ubicacionDeArranque(data.pais);
+  userCountryCode = arranque.countryCode;
+  userCountryISO = arranque.isoCode;
+  selectedCountry = arranque.countryCode; // El desplegable de lada inicia con el país del visitante
 
   let safeMode = data.flags.safeMode; // Estado de Safe Mode (resuelto en el servidor)
   let unsubscribe = null; // Función para detener listener de Firestore
@@ -112,6 +131,14 @@
   }
 
   onMount(async () => {
+    // ¿Esta carga es la recarga que hizo el aviso de cookies al retirarse un permiso? Si sí, no es una
+    // recarga de la persona y no se anota como page_refresh (lo mismo con el page_close de antes).
+    const vinoDeConsentimiento = consumirRecargaPorConsentimiento();
+
+    // Las coordenadas del mapa que se pagó caducan a las 24 h (ver $lib/almacenamiento.js): las que ya
+    // vencieron, o las de antes de que llevaran fecha, se borran en cualquier carga.
+    purgarCoordenadasVencidas();
+
     // Cargar configuración de Verbose PRIMERO (antes que otros logs)
     try {
       const verboseEnabled = await getVerboseConfig();
@@ -256,26 +283,23 @@
       priceLevel = 200;
     }
 
-    // Detectar país y ubicación REAL del usuario
-    const locationData = await detectCountry();
-    ipDetectionResult = locationData; // Guardar para logging de conversiones
-    userCountryCode = locationData.countryCode; // Para precio Stripe
-    userCountryISO = locationData.isoCode || 'MX'; // Código ISO del país
-    selectedCountry = locationData.countryCode; // Para dropdown (inicia con país del usuario)
-    mapCoords = { lat: locationData.lat, lng: locationData.lng };
-    
-    // Establecer idioma automáticamente según el país
-    setLanguageFromCountry(locationData.countryCode);
-    
-    log('🌍 Ubicación del usuario detectada:');
+    // El país ya lo resolvió el servidor (ver `arranque` arriba): no se le pregunta a nadie más. Sin
+    // coordenadas: la base local es de países, y la ubicación en el mapa solo se pide cuando la
+    // persona hace una búsqueda.
+    ipDetectionResult = arranque.conocido
+      ? { countryCode: arranque.countryCode, isoCode: arranque.isoCode, lat: null, lng: null }
+      : null; // Guardar para logging de conversiones
+
+    // Establecer idioma automáticamente según el país (sin país conocido, el del navegador)
+    setLanguageFromCountry(arranque.conocido ? arranque.countryCode : null);
+
+    log('🌍 País del visitante (por la IP, resuelto en el servidor):', arranque.conocido ? arranque.isoCode : 'desconocido (se usa México)');
     log('   📞 Código telefónico:', userCountryCode);
-    if (locationData.isoCode) {
-      log('   🏴 Código ISO país:', locationData.isoCode);
-    }
-    log('   🌐 Idioma establecido:', getLanguageFromCountry(locationData.countryCode) === 'es' ? 'Español' : 'English');
+    log('   🌐 Idioma establecido:', getLanguageFromCountry(arranque.countryCode) === 'es' ? 'Español' : 'English');
     
-    // Recuperar el último teléfono usado
-    const lastPhone = localStorage.getItem('last_phone_number');
+    // Recuperar el último teléfono usado (solo existe si hubo permiso de analítica al
+    // guardarlo: ver $lib/almacenamiento.js)
+    const lastPhone = leer('last_phone_number');
     lastUsedPhoneNumber = lastPhone || '';
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -290,6 +314,17 @@
     gclid       = urlParams.get('gclid');
     fbclid      = urlParams.get('fbclid');
 
+    // Lo que se sabe AL LLEGAR. La visita de llegada (ad_visit u organic_visit) puede quedar en espera
+    // del permiso (ver más abajo) y, cuando llegue, la persona puede haber cambiado de idioma o hecho
+    // una búsqueda: la fila tiene que describir la llegada, no el momento de aceptar.
+    const llegada = {
+      idioma: $locale,
+      ubicacion: ubicacionMostrada(),
+      ipDetection: ipDetectionResult,
+      countryISO: userCountryISO,
+      countryCode: userCountryCode,
+    };
+
     const hasUtm = utmSource || utmMedium || utmCampaign || utmTerm || utmContent || gclid || fbclid;
     if (hasUtm) {
       log('┌─────────────────────────────────────────');
@@ -303,28 +338,38 @@
       if (fbclid)      log('│   🟦 fbclid       :', fbclid);
       log('└─────────────────────────────────────────');
 
-      // Registrar visita desde anuncio en MariaDB
-      logConversion({
-        type: 'ad_visit',
-        gaClientId: getGAClientId(),
-        phone: '',
-        language: $locale,
-        ipDetection: ipDetectionResult,
-        gpsDetection: null,
-        searchMethod: 'none',
-        locationShown: mapCoords,
-        countryISO: userCountryISO,
-        countryCode: userCountryCode,
-        utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
-      });
-      log('📣 ad_visit registrado en MariaDB');
+      // Registrar visita desde anuncio en MariaDB. Con el aviso de cookies en pantalla
+      // (UE, Reino Unido, Suiza) esto ocurriría antes de poder contestar: cuandoHayAnalitica
+      // lo deja en espera y lo registra si la persona acepta durante esta visita. NO se cancela al
+      // salir de la portada: el propio aviso enlaza a la política de privacidad, y quien la lee
+      // antes de aceptar no debería perder la visita (ni la campaña que lo trajo). La clave evita
+      // que cada regreso a la portada deje otra espera y salgan todas juntas al aceptar.
+      const campana = { utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid };
+      cuandoHayAnalitica(() => {
+        logConversion({
+          type: 'ad_visit',
+          gaClientId: getGAClientId(),
+          phone: '',
+          language: llegada.idioma,
+          ipDetection: llegada.ipDetection,
+          gpsDetection: null,
+          searchMethod: 'none',
+          locationShown: llegada.ubicacion,
+          countryISO: llegada.countryISO,
+          countryCode: llegada.countryCode,
+          ...campana,
+        });
+        log('📣 ad_visit registrado en MariaDB');
+      }, 'llegada');
     } else if (urlParams.get('payment') === 'cancelled') {
       log('🚫 Retorno de Stripe sin comprar (flake_out vía cancel_url)');
+      // Cancelar el pago: las coordenadas del mapa ya no hacen falta y no se quedan en el dispositivo.
+      borrarCoordenadasDelPago();
       // flake_out se registra abajo con pending_checkout
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.get('payment') === 'success') {
       // purchase se registra más abajo — no registrar organic_visit
-    } else if (localStorage.getItem('pending_checkout')) {
+    } else if (leer('pending_checkout')) {
       // flake_out se registra abajo — no registrar organic_visit
     } else {
       // Solo registrar organic_visit si es una visita genuina nueva (no refresh, no retorno de Stripe)
@@ -332,38 +377,41 @@
         || performance?.navigation?.type === 1;
       if (!isReload) {
         log('📡 Sin parámetros de campaña (tráfico directo u orgánico)');
-        logConversion({
-          type: 'organic_visit',
-          gaClientId: getGAClientId(),
-          phone: '',
-          language: $locale,
-          ipDetection: ipDetectionResult,
-          gpsDetection: null,
-          searchMethod: 'none',
-          locationShown: mapCoords,
-          countryISO: userCountryISO,
-          countryCode: userCountryCode,
-          utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
-        });
-        log('🌿 organic_visit registrado en MariaDB');
+        // En espera hasta que haya permiso de analítica (ver ad_visit, arriba).
+        cuandoHayAnalitica(() => {
+          logConversion({
+            type: 'organic_visit',
+            gaClientId: getGAClientId(),
+            phone: '',
+            language: llegada.idioma,
+            ipDetection: llegada.ipDetection,
+            gpsDetection: null,
+            searchMethod: 'none',
+            locationShown: llegada.ubicacion,
+            countryISO: llegada.countryISO,
+            countryCode: llegada.countryCode,
+            utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
+          });
+          log('🌿 organic_visit registrado en MariaDB');
+        }, 'llegada');
       }
     }
 
     // Detectar retorno de Stripe sin comprar (flake_out)
-    const pendingCheckout = localStorage.getItem('pending_checkout');
+    const pendingCheckout = leer('pending_checkout');
     if (pendingCheckout && urlParams.get('payment') !== 'success') {
-      localStorage.removeItem('pending_checkout');
-      localStorage.removeItem('purchase_data');
+      quitar('pending_checkout');
+      quitar('purchase_data');
       log('🚫 Retorno de Stripe sin comprar (flake_out)');
       logConversion({
         type: 'flake_out',
         gaClientId: getGAClientId(),
-        phone: localStorage.getItem('last_phone_number') || '',
+        phone: leer('last_phone_number') || '',
         language: $locale,
         ipDetection: ipDetectionResult,
         gpsDetection: null,
         searchMethod: 'none',
-        locationShown: mapCoords,
+        locationShown: ubicacionMostrada(),
         countryISO: userCountryISO,
         countryCode: userCountryCode,
         utmSource: null, utmMedium: null, utmCampaign: null, utmTerm: null, utmContent: null, gclid: null, fbclid: null,
@@ -383,18 +431,20 @@
       // de Stripe; esto es la red de seguridad mientras tanto.
 
       // 1. Coordenadas: recuperarlas si sobrevivieron.
-      let restoredCoords = null;
-      try {
-        const savedCoords = localStorage.getItem('map_coords');
-        if (savedCoords) restoredCoords = JSON.parse(savedCoords);
-      } catch (e) {
-        error('Error al restaurar coordenadas:', e);
-      }
+      // Solo si siguen vigentes (24 h desde que se pulsó «Comprar»). NO se borran al restaurarlas:
+      // volver a abrir este enlace (atrás, una recarga) tiene que seguir mostrando el mapa pagado;
+      // caducan solas, o las borra cancelar el pago.
+      const restoredCoords = leerCoordenadasDelPago();
 
       if (restoredCoords) {
-        mapCoords = restoredCoords;
+        fijarUbicacion(restoredCoords);
         showMap = true;
         log('✅ Pago exitoso - Mapa restaurado');
+
+        // Si la persona retira un permiso con este mapa en pantalla, el aviso recarga la página (la única
+        // forma de quitar a Google de memoria). Esa recarga tiene que volver a ESTE mapa, que se pagó:
+        // el estado del mapa vive solo en la página, y la URL ya no llevará ?payment=success.
+        if (window.__consent) window.__consent.urlAlRecargar = `${window.location.pathname}?payment=success`;
       } else {
         // No mostramos el mapa en la ubicación por defecto: enseñarle CDMX a
         // quien pagó por localizar otro número es peor que pedirle que repita
@@ -405,8 +455,9 @@
 
       // 2. Registrar la compra SIEMPRE, haya o no coordenadas.
       {
-        // Enviar evento de conversión a Google Analytics/Ads
-        const purchaseData = localStorage.getItem('purchase_data');
+        // Enviar evento de conversión a Google Analytics/Ads. purchase_data solo existe si hubo
+        // permiso (de analítica o de publicidad) al guardarlo: ver $lib/almacenamiento.js.
+        const purchaseData = leer('purchase_data');
         if (purchaseData) {
             try {
               const data = JSON.parse(purchaseData);
@@ -437,17 +488,17 @@
               }
               
               // Registrar compra real en MariaDB
-              const conversionCtxRaw = localStorage.getItem('conversion_context');
+              const conversionCtxRaw = leer('conversion_context');
               const ctx = conversionCtxRaw ? JSON.parse(conversionCtxRaw) : {};
               logConversion({
                 type: 'purchase',
                 gaClientId: getGAClientId(),
-                phone: ctx.phone || localStorage.getItem('last_phone_number') || '',
+                phone: ctx.phone || leer('last_phone_number') || '',
                 language: ctx.language || 'es',
                 ipDetection: ctx.ipDetection || null,
                 gpsDetection: ctx.gpsDetection || null,
                 searchMethod: ctx.searchMethod || 'none',
-                locationShown: ctx.locationShown || mapCoords,
+                locationShown: ctx.locationShown || ubicacionMostrada(),
                 countryISO: data.country_iso || ctx.countryISO || 'MX',
                 countryCode: data.country_code || ctx.countryCode || '+52',
                 utmSource: ctx.utmSource || null,
@@ -463,9 +514,9 @@
               log('✅ Compra real registrada en MariaDB');
 
               // Limpiar datos de compra (ya enviados)
-              localStorage.removeItem('purchase_data');
-              localStorage.removeItem('pending_checkout');
-              localStorage.removeItem('conversion_context');
+              quitar('purchase_data');
+              quitar('pending_checkout');
+              quitar('conversion_context');
             } catch (e) {
               error('Error al procesar datos de compra:', e);
             }
@@ -482,7 +533,7 @@
     // Detectar si fue un refresh de la página
     if (typeof performance !== 'undefined' && performance.getEntriesByType) {
       const navEntries = performance.getEntriesByType('navigation');
-      if (navEntries.length > 0 && navEntries[0].type === 'reload') {
+      if (navEntries.length > 0 && navEntries[0].type === 'reload' && !vinoDeConsentimiento) {
         log('🔄 Page reload detectado (page_refresh)');
         logConversion({
           type: 'page_refresh',
@@ -492,7 +543,7 @@
           ipDetection: ipDetectionResult,
           gpsDetection: null,
           searchMethod: 'none',
-          locationShown: mapCoords,
+          locationShown: ubicacionMostrada(),
           countryISO: userCountryISO,
           countryCode: userCountryCode,
           utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -503,7 +554,10 @@
     let pageCloseLogged = false;
     handleVisibilityChange = (event) => {
       // Ignorar si es navegación a Stripe (el usuario va a pagar, no es un cierre real)
-      if (localStorage.getItem('pending_checkout')) return;
+      if (leer('pending_checkout')) return;
+
+      // Ignorar la recarga que hace el aviso de cookies al retirarse un permiso: no es un cierre.
+      if (hayRecargaPorConsentimiento()) return;
 
       // beforeunload y pagehide pueden dispararse los dos en el mismo cierre.
       if (pageCloseLogged) return;
@@ -521,7 +575,7 @@
         ipDetection: ipDetectionResult,
         gpsDetection: gpsDetectionResult,
         searchMethod,
-        locationShown: mapCoords,
+        locationShown: ubicacionMostrada(),
         countryISO: userCountryISO,
         countryCode: userCountryCode,
         utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -538,6 +592,9 @@
   });
 
   onDestroy(() => {
+    // La recarga hacia el mapa pagado (ver urlAlRecargar) solo vale mientras este mapa siga en pantalla.
+    if (typeof window !== 'undefined' && window.__consent) window.__consent.urlAlRecargar = null;
+
     // Detener lo que una búsqueda en curso dejó programado (ver terminarBusqueda).
     destruida = true;
     if (temporizadorModal) {
@@ -585,16 +642,19 @@
   });
 
   function handleSellPop() {
-    // Siempre guardar contexto para logConversion si el usuario termina comprando
-    localStorage.setItem('conversion_context', JSON.stringify({
+    // Guardar contexto para logConversion si el usuario termina comprando (con permiso de
+    // analítica va al dispositivo; sin él, solo a la memoria de la página: $lib/almacenamiento.js)
+    guardar('conversion_context', JSON.stringify({
       phone: phoneNumber,
       language: $locale,
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: userCountryCode,
+      // Los identificadores de clic de anuncios (gclid, fbclid) son de publicidad: $lib/almacenamiento.js
+      // no los deja en el dispositivo sin ese permiso (en memoria sí, por si llega después).
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     }));
 
@@ -608,7 +668,7 @@
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -695,7 +755,7 @@
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -742,7 +802,7 @@
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -794,7 +854,7 @@
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -835,31 +895,58 @@
     }
   }
 
+  // Punto de partida del simulador: la ubicación aproximada del visitante por su IP, que SÍ trae
+  // coordenadas (GeoJS; la base local del servidor es solo de países). Se pide en la primera búsqueda
+  // con teléfono —una acción suya— y no al cargar la página. Si falla, el punto de partida del mapa.
+  let ubicacionBase = null;
+  async function obtenerUbicacionBase() {
+    if (ubicacionBase) return ubicacionBase;
+
+    try {
+      const porIp = await searchByIP();
+      ipDetectionResult = porIp;
+      ubicacionBase = { lat: porIp.lat, lng: porIp.lng };
+    } catch (err) {
+      warn('No se pudo ubicar por IP el punto de partida del simulador; se usa el predeterminado:', err);
+      ubicacionBase = { lat: mapCoords.lat, lng: mapCoords.lng };
+    }
+
+    return ubicacionBase;
+  }
+
   async function handleOkClick() {
     searchMethod = 'phone';
     handlePhoneSearch();
-    // Verificar si existe ubicación en cache para este número
-    let cached = getLocationCache(phoneNumber, selectedCountry);
-    
-    if (cached) {
-      // Si existe en cache, usar esa ubicación (mismo número)
-      mapCoords = cached;
-    } else {
-      // Si no existe en cache, es un número nuevo: generar nueva posición random
-      // basada en la ubicación GPS obtenida al inicio
-      const newLocation = randomizeLocation(mapCoords.lat, mapCoords.lng);
-      mapCoords = newLocation;
-      saveLocationCache(phoneNumber, selectedCountry, newLocation.lat, newLocation.lng);
-    }
-    
-    // Guardar el número actual como último usado
-    localStorage.setItem('last_phone_number', phoneNumber);
-    lastUsedPhoneNumber = phoneNumber;
 
-    // Mostrar spinner
+    // Mostrar spinner (antes de la espera de la ubicación, para que el botón responda al instante)
     showSpinner = true;
 
-    await terminarBusqueda();
+    // Verificar si existe ubicación en cache para este número
+    let cached = getLocationCache(phoneNumber, selectedCountry);
+    const numero = phoneNumber;
+    const ladaDelNumero = selectedCountry;
+
+    // La ubicación se resuelve MIENTRAS corre la animación del spinner (de 16,5 s) y no antes: el mapa
+    // solo hace falta al final, y esperar a GeoJS por delante dejaba la pantalla en blanco entre una cosa y otra.
+    const ubicacionLista = (async () => {
+      if (cached) {
+        // Si existe en cache, usar esa ubicación (mismo número)
+        fijarUbicacion(cached);
+      } else {
+        // Si no existe en cache, es un número nuevo: generar nueva posición random
+        // basada en la ubicación del visitante por su IP
+        const base = await obtenerUbicacionBase();
+        const newLocation = randomizeLocation(base.lat, base.lng);
+        fijarUbicacion(newLocation);
+        saveLocationCache(numero, ladaDelNumero, newLocation.lat, newLocation.lng);
+      }
+    })();
+
+    // Guardar el número actual como último usado (solo en el dispositivo con permiso de analítica)
+    guardar('last_phone_number', phoneNumber);
+    lastUsedPhoneNumber = phoneNumber;
+
+    await terminarBusqueda(ubicacionLista);
   }
 
   // El final COMÚN de las tres búsquedas (teléfono, navegador, IP): esperar a que
@@ -872,9 +959,11 @@
   // de privacidad), y un temporizador vivo seguía corriendo sobre un componente ya
   // destruido: al vencer registraba un sell_pop (y, con ese flag encendido, un
   // `purchase` a Google) sin que hubiera ningún modal en pantalla.
-  async function terminarBusqueda() {
+  async function terminarBusqueda(ubicacionLista = Promise.resolve()) {
     // Esperar a que el spinner termine de mostrar todos los mensajes (último mensaje dura doble)
     await new Promise(resolve => setTimeout(resolve, 16500));
+    // ...y a que la ubicación del mapa esté lista (solo la búsqueda con teléfono la espera; GeoJS tiene tope de 4 s)
+    await ubicacionLista;
     if (destruida) return;
 
     // Mostrar mapa primero
@@ -917,7 +1006,7 @@
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: userCountryCode,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -933,7 +1022,7 @@
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: selectedCountry,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -951,7 +1040,7 @@
       ipDetection: ipDetectionResult,
       gpsDetection: gpsDetectionResult,
       searchMethod,
-      locationShown: mapCoords,
+      locationShown: ubicacionMostrada(),
       countryISO: userCountryISO,
       countryCode: selectedCountry,
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
@@ -974,9 +1063,10 @@
       const result = await searchByBrowser();
       gpsDetectionResult = result; // Guardar para logging
       searchMethod = 'browser';
-      mapCoords = { lat: result.lat, lng: result.lng };
-      userCountryCode = result.countryCode;
-      userCountryISO = result.isoCode || 'MX';
+      fijarUbicacion({ lat: result.lat, lng: result.lng });
+      // El país del visitante (precio y registros) sigue siendo el de su IP, no el que salga de la búsqueda:
+      // el GPS de un equipo con VPN dice dónde está el equipo, y el precio no puede depender de eso. El
+      // resultado de la búsqueda queda en gpsDetectionResult, que también va a los registros.
       selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
 
       await terminarBusqueda();
@@ -993,9 +1083,11 @@
     try {
       const result = await searchByIP();
       searchMethod = 'ip';
-      mapCoords = { lat: result.lat, lng: result.lng };
-      userCountryCode = result.countryCode;
-      userCountryISO = result.isoCode || 'MX';
+      ipDetectionResult = result; // Ahora sí con coordenadas: es lo que la persona pidió ver
+      ubicacionBase = { lat: result.lat, lng: result.lng };
+      fijarUbicacion({ lat: result.lat, lng: result.lng });
+      // El país del visitante (precio y registros) ya es el de su IP desde que se cargó la página: lo
+      // resolvió el servidor con la misma IP. Aquí solo se actualiza el desplegable de lada.
       selectedCountry = result.countryCode; // Para mostrar carriers correctos en spinner
 
       await terminarBusqueda();
@@ -1157,7 +1249,8 @@
     position: fixed;
     top: 1rem;
     right: 1rem;
-    z-index: 1500;
+    /* Por ENCIMA del aviso de cookies (1900) y por debajo de la ventana de pago (2000): quien llega en un idioma que no es el suyo tiene que poder cambiarlo sin contestar el aviso. */
+    z-index: 1950;
   }
   
   .container {

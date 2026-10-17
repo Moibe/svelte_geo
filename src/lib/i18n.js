@@ -185,7 +185,9 @@ export function guardarPreferencia(lang) {
   if (!browser) return;
 
   const unAnio = 60 * 60 * 24 * 365;
-  document.cookie = `${COOKIE_IDIOMA}=${encodeURIComponent(lang)}; path=/; max-age=${unAnio}; SameSite=Lax`;
+  // Secure solo en https: en http local (pruebas) el navegador descartaría la cookie.
+  const seguro = location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${COOKIE_IDIOMA}=${encodeURIComponent(lang)}; path=/; max-age=${unAnio}; SameSite=Lax${seguro}`;
 
   try {
     localStorage.setItem(COOKIE_IDIOMA, lang);

@@ -1,4 +1,5 @@
 import { log, warn, error } from './logger.js';
+import { analiticaOk } from './consentimiento-navegador.js';
 
 // Configuración de Stripe - Backend en Hugging Face Spaces
 const STRIPE_BACKEND_DEV = 'https://moibe-stripe-kraken-dev.hf.space/creaLinkSesion/';
@@ -11,6 +12,10 @@ const STRIPE_BACKEND_PROD = 'https://moibe-stripe-kraken-prod.hf.space/creaLinkS
  * @returns {string|null} GA Client ID si está disponible
  */
 export function getGAClientId() {
+  // Sin permiso de analítica no hay cookie _ga (se borra y no se crea), pero tampoco se lee: este
+  // identificador va a Hugging Face y al registro propio, que sin permiso no reciben nada de analítica.
+  if (!analiticaOk()) return null;
+
   // 1. Desde la cookie _ga (más confiable — funciona con GTM y gtag directo)
   try {
     const gaCookie = document.cookie
@@ -29,9 +34,15 @@ export function getGAClientId() {
   }
 
   // 2. Desde localStorage (si fue guardado manualmente en otro flujo)
-  const storedGAClientId = localStorage.getItem('ga_client_id');
-  if (storedGAClientId) {
-    return storedGAClientId;
+  // Con el almacenamiento bloqueado (Chrome y Edge con «bloquear todas las cookies y datos de sitios»)
+  // acceder a localStorage LANZA: sin este try/catch el pago y el registro de la visita se caían.
+  try {
+    const storedGAClientId = localStorage.getItem('ga_client_id');
+    if (storedGAClientId) {
+      return storedGAClientId;
+    }
+  } catch (e) {
+    warn('No se pudo leer ga_client_id del almacenamiento:', e);
   }
 
   return null;

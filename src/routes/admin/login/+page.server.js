@@ -6,11 +6,15 @@ import {
   ponerCookieDeSesion,
   verificarPassword,
 } from '$lib/server/auth.js'
+import { rutaInterna } from '$lib/rutaInterna.js'
 
-/** Si ya hay sesion, no tiene sentido mostrar el formulario. */
+/**
+ * Si ya hay sesion, no tiene sentido mostrar el formulario. El destino viene de la query, asi que
+ * se valida igual que en la accion: /admin/login?volver=https://otro-sitio no puede sacar de aqui.
+ */
 export function load({ locals, url }) {
   if (locals.usuario) {
-    redirect(303, url.searchParams.get('volver') ?? '/admin')
+    redirect(303, rutaInterna(url.searchParams.get('volver')))
   }
 }
 
@@ -42,9 +46,6 @@ export const actions = {
     // El destino viene de la query, asi que se valida que sea una ruta interna:
     // sin esto, /admin/login?volver=https://otro-sitio seria un redirect
     // abierto, util para phishing con un dominio que el usuario reconoce.
-    const volver = url.searchParams.get('volver')
-    const destino = volver && volver.startsWith('/') && !volver.startsWith('//') ? volver : '/admin'
-
-    redirect(303, destino)
+    redirect(303, rutaInterna(url.searchParams.get('volver')))
   },
 }

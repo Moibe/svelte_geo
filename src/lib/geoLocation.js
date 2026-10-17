@@ -1,4 +1,5 @@
 import { log, warn, error } from './logger.js';
+import { guardar, leer, quitar } from './almacenamiento.js';
 
 // Mapeo de código de país ISO (2 letras) a código telefónico
 export const countryCodeMap = {
@@ -173,42 +174,60 @@ function randomizeLocation(lat, lng) {
   };
 }
 
-// Guardar ubicación randomizada en localStorage
+// La ubicación asignada a cada número del simulador se recuerda para que el mismo número dé
+// siempre el mismo punto. Va por $lib/almacenamiento.js: en la UE, el Reino Unido y Suiza solo
+// se guarda en el dispositivo con el permiso de analítica; sin él se recuerda mientras la
+// página siga abierta, y fuera de esa región funciona como el localStorage de siempre.
+
+// Guardar ubicación randomizada
 export function saveLocationCache(phoneNumber, countryCode, lat, lng) {
   const key = `geo_cache_${countryCode}_${phoneNumber}`;
-  localStorage.setItem(key, JSON.stringify({ lat, lng }));
+  guardar(key, JSON.stringify({ lat, lng }));
 }
 
-// Recuperar ubicación randomizada del localStorage
+// Recuperar ubicación randomizada
 export function getLocationCache(phoneNumber, countryCode) {
   const key = `geo_cache_${countryCode}_${phoneNumber}`;
-  const cached = localStorage.getItem(key);
-  return cached ? JSON.parse(cached) : null;
+  const cached = leer(key);
+
+  try {
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    // Un valor dañado se trata como si no hubiera nada guardado.
+    return null;
+  }
 }
 
 // Limpiar cache de ubicación
 export function clearLocationCache(phoneNumber, countryCode) {
   const key = `geo_cache_${countryCode}_${phoneNumber}`;
-  localStorage.removeItem(key);
+  quitar(key);
 }
 
-// Detectar país y ubicación por IP (para detección inicial sin pedir GPS)
-// Esta función se usa en onMount solo para establecer país/idioma/ubicación inicial
-export async function detectCountry() {
-  try {
-    // Usar IP geolocation (rápido, sin permisos, sin warnings)
-    return await detectByIP();
-  } catch (err) {
-    log('IP geolocation falló, usando valores por defecto (México)');
-    // Randomizar CDMX por defecto
-    const randomized = randomizeLocation(19.4326, -99.1332);
-    return {
-      countryCode: '+52',
-      isoCode: 'MX',
-      lat: randomized.lat,
-      lng: randomized.lng,
-    };
+/**
+ * El país «de arranque» del visitante (el que decide el precio, el idioma inicial y los registros),
+ * a partir del que el SERVIDOR ya resolvió por la IP de la petición con su base local (ver
+ * $lib/server/pais.js y +layout.server.js).
+ *
+ * Sustituye a la consulta a GeoJS que el navegador hacía al CARGAR cada página: esa llamada mandaba
+ * la IP de cada visitante a un tercero antes de que pudiera contestar el aviso de cookies, fallaba en
+ * silencio con bloqueadores de rastreo o VPN del navegador (y entonces cobraba como mexicano), y
+ * aquí es el mismo dato que ya tiene el servidor, sin red de por medio.
+ *
+ * Sin país conocido (IP privada, sin base, país que la tabla de códigos no cubre) se cae a México, el
+ * mercado principal y el respaldo de siempre del catálogo de precios. `conocido` dice cuál fue el caso.
+ *
+ * @param {string|null|undefined} iso código ISO de dos letras que resolvió el servidor, o null
+ * @returns {{ countryCode: string, isoCode: string, conocido: boolean }}
+ */
+export function ubicacionDeArranque(iso) {
+  const codigo = typeof iso === 'string' ? iso.trim().toUpperCase() : '';
+
+  if (codigo && Object.prototype.hasOwnProperty.call(countryCodeMap, codigo)) {
+    return { countryCode: countryCodeMap[codigo], isoCode: codigo, conocido: true };
   }
+
+  return { countryCode: '+52', isoCode: 'MX', conocido: false };
 }
 
 /**
@@ -281,10 +300,15 @@ function detectByGPS() {
   });
 }
 
-// Detectar por IP
+// Detectar por IP (con GeoJS, que SÍ da coordenadas: la base local del servidor es solo de países).
+// Solo se llama cuando la persona lo pide con una acción suya —el botón «Búsqueda por IP», o la
+// búsqueda del simulador, que necesita un punto de partida—; ya NO al cargar la página (para el
+// país, ver ubicacionDeArranque).
 async function detectByIP() {
   log('🌐 Intentando detectar por IP...');
-  const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
+  // Con tiempo máximo: una conexión que se cuelga dejaba el spinner del simulador para siempre. Si vence,
+  // la búsqueda sigue como cuando GeoJS falla (el llamador usa su punto de partida predeterminado).
+  const response = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined });
   const data = await response.json();
   log('📡 Respuesta de geojs.io:', data);
   

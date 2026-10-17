@@ -100,7 +100,7 @@
       },
       {
         "q": "Quelles données sont enregistrées ?",
-        "a": "Nous enregistrons l’activité de votre visite (par exemple, le bouton que vous avez utilisé), votre pays et votre langue, une position approximative, un identifiant analytique du navigateur, les paramètres de campagne si vous arrivez depuis une annonce et, si vous utilisez le simulateur, le numéro de téléphone que vous entrez. Votre adresse IP est envoyée à un service de géolocalisation à l’ouverture de la page et reste dans les journaux du serveur."
+        "a": "Nous enregistrons l’activité de votre visite (par exemple, le bouton que vous avez utilisé), votre pays et votre langue, une position approximative lorsque vous effectuez une recherche, un identifiant analytique du navigateur, les paramètres de campagne si vous arrivez depuis une annonce et, si vous utilisez le simulateur, le numéro de téléphone que vous entrez. Votre adresse IP reste dans les journaux d’accès du serveur, qui l’utilise pour estimer votre pays ; elle n’est envoyée à un service de géolocalisation (GeoJS) que si vous choisissez la recherche par IP ou utilisez le simulateur. Dans l’Espace économique européen, au Royaume-Uni et en Suisse, la mesure n’est activée que si vous l’acceptez dans le bandeau de cookies."
       }
     ],
     "faqSimAnswer": "Non. Le mode avec numéro de téléphone est un simulateur de divertissement : il ne recherche pas le numéro et ne consulte aucun réseau ni opérateur, et le résultat ne dépend pas du numéro que vous entrez. Il affiche seulement un point choisi au hasard près de la position approximative de votre connexion (ou de la ville de Mexico si la détection est impossible).",
@@ -117,9 +117,35 @@
     "privacy": "Politique de confidentialité",
     "languages": "Langues"
   },
+  "consent": {
+    "title": "Votre vie privée et les cookies",
+    "intro": "Nous utilisons des cookies et des technologies similaires pour mesurer l’utilisation du site et l’efficacité de nos annonces, mais seulement si vous nous y autorisez. Avec votre autorisation, Google reçoit des données sur votre visite pour mesurer l’utilisation du site et, si vous acceptez la publicité, pour personnaliser les annonces.",
+    "googleInfo": "Comment Google utilise vos données",
+    "policy": "Politique de confidentialité",
+    "acceptAll": "Tout accepter",
+    "rejectAll": "Tout refuser",
+    "configure": "Paramétrer",
+    "save": "Enregistrer mon choix",
+    "close": "Fermer",
+    "legend": "Catégories de cookies",
+    "reopen": "Préférences de cookies",
+    "necessary": {
+      "title": "Nécessaires",
+      "always": "Toujours actifs",
+      "text": "Ils mémorisent votre langue et votre choix concernant les cookies, ainsi que la position de la carte pendant que vous payez. Ils sont indispensables au fonctionnement du site et ne peuvent pas être désactivés."
+    },
+    "analytics": {
+      "title": "Analytique",
+      "text": "Google Analytics et le journal d’activité du site : quelles pages et quels boutons sont utilisés, avec votre pays, votre langue, votre fuseau horaire et une position approximative, l’identifiant de Google Analytics, ainsi que les numéros que vous entrez dans le simulateur. Tous deux servent à mesurer l’utilisation et à améliorer le site, et permettent de mémoriser vos dernières recherches sur votre appareil."
+    },
+    "advertising": {
+      "title": "Publicité",
+      "text": "Google Ads mesure si vous avez accédé au site depuis une annonce et si vous avez fini par acheter, afin d’évaluer nos campagnes. Google peut utiliser ces données pour personnaliser les annonces et créer ses propres cookies."
+    }
+  },
   "privacy": {
     "title": "Politique de confidentialité",
-    "updated": "Dernière mise à jour : 13 octobre 2026",
+    "updated": "Dernière mise à jour : 17 octobre 2026",
     "operatorLead": "Responsable :",
     "contactLead": "Contact :",
     "sections": [
@@ -135,12 +161,12 @@
           "Nous collectons ces données pour que le site fonctionne, pour mesurer son utilisation et pour mesurer les campagnes publicitaires :"
         ],
         "items": [
-          "Activité de la visite : événements tels que l’ouverture, le rechargement ou la fermeture de la page, la recherche d’un numéro dans le simulateur, l’affichage ou l’agrandissement de la carte, l’ouverture de la fenêtre de paiement, le clic sur le bouton d’achat ou l’abandon du paiement, avec le type de recherche que vous avez utilisé (navigateur, IP ou simulateur), la date et l’heure (et votre fuseau horaire), votre langue et votre pays.",
-          "Position approximative : à l’ouverture de la page, votre navigateur et notre serveur envoient votre adresse IP à un service de géolocalisation pour estimer votre pays et une position approximative, même si vous ne choisissez aucune recherche. Si vous choisissez la recherche par navigateur et donnez votre autorisation, les coordonnées de la position de votre appareil sont utilisées. Dans les deux cas, la carte et nos journaux utilisent une position avec une variation aléatoire de quelques kilomètres.",
+          "Activité de la visite : événements tels que l’ouverture, le rechargement ou la fermeture de la page, la recherche d’un numéro dans le simulateur, l’affichage ou l’agrandissement de la carte, l’ouverture de la fenêtre de paiement, le clic sur le bouton d’achat ou l’abandon du paiement, avec le type de recherche que vous avez utilisé (navigateur, IP ou simulateur), la date et l’heure (et votre fuseau horaire), votre langue et votre pays. Dans l’Espace économique européen, au Royaume-Uni et en Suisse, cette activité n’est enregistrée que si vous l’autorisez dans le bandeau de cookies.",
+          "Position approximative : uniquement lorsque vous effectuez une recherche. Si vous choisissez la recherche par IP (ou utilisez le simulateur, qui a besoin d’un point de départ), votre navigateur envoie votre adresse IP à un service de géolocalisation pour estimer une position approximative. Si vous choisissez la recherche par navigateur et donnez votre autorisation, les coordonnées de la position de votre appareil sont utilisées. Dans tous les cas, la carte et nos journaux utilisent une position avec une variation aléatoire de quelques kilomètres.",
           "Numéro de téléphone : si vous utilisez le simulateur, le numéro que vous entrez est enregistré avec l’activité de la visite et, tant que votre navigateur le conserve, aussi avec celle de vos visites suivantes. Pour cette raison, n’entrez pas de numéros d’autres personnes.",
-          "Identifiants analytiques et publicitaires : l’identifiant client de Google Analytics et, si vous arrivez depuis une annonce, les paramètres de campagne (UTM, gclid ou fbclid).",
+          "Identifiants analytiques et publicitaires : l’identifiant client de Google Analytics et, si vous arrivez depuis une annonce, les paramètres de campagne (UTM, gclid ou fbclid). Dans l’Espace économique européen, au Royaume-Uni et en Suisse, ces identifiants ne sont utilisés que si vous les autorisez dans le bandeau de cookies, et les identifiants de clic (gclid, fbclid) ne sont utilisés qu’avec votre autorisation pour la publicité.",
           "Paiements : Stripe collecte directement les données de paiement (ainsi que votre adresse e-mail, que nous voyons dans le tableau de bord de Stripe), et nous ne voyons ni ne conservons le numéro complet de votre carte bancaire. Nous enregistrons le montant et la devise de l’achat, et nous associons l’identifiant analytique du navigateur au paiement. Le montant, la devise et un identifiant de la transaction sont également envoyés à Google pour mesurer les conversions, aussi bien depuis votre navigateur que depuis le service qui reçoit les notifications de Stripe.",
-          "Adresse IP : notre serveur l’enregistre dans ses journaux d’accès, comme sur n’importe quel site web, et, à l’ouverture de la page, l’utilise pour estimer votre pays ; ce résultat est consigné avec votre IP dans un journal technique du serveur."
+          "Adresse IP : notre serveur l’enregistre dans ses journaux d’accès, comme sur n’importe quel site web. De plus, à l’ouverture de la page, il l’utilise pour estimer votre pays à l’aide d’une base de données locale, sans l’envoyer à aucun tiers ; ce pays détermine le prix qui vous est affiché et, si vous n’avez pas choisi une autre langue, la langue initiale. L’application n’inscrit pas votre IP dans ses propres journaux techniques."
         ]
       },
       {
@@ -155,10 +181,10 @@
           "Pour fournir le service, nous faisons appel à des prestataires qui reçoivent une partie de ces données et peuvent les traiter en dehors de votre pays (par exemple, aux États-Unis). Les services auxquels se connecte votre navigateur reçoivent aussi votre adresse IP et des données techniques de votre navigateur :"
         ],
         "items": [
-          "Google (Tag Manager, Analytics et Ads) : mesure de l’utilisation et des campagnes, y compris le montant et la devise des achats. Google reçoit aussi, de son côté, des données techniques de votre navigateur et l’adresse des pages que vous visitez.",
+          "Google (Tag Manager, Analytics et Ads) : mesure de l’utilisation et des campagnes, y compris le montant et la devise des achats, et personnalisation des annonces si vous acceptez la publicité. Google reçoit aussi, de son côté, des données techniques de votre navigateur et l’adresse des pages que vous visitez. Dans l’Espace économique européen, au Royaume-Uni et en Suisse, Google n’est chargé qu’avec votre autorisation. Vous pouvez voir comment Google utilise les données sur business.safety.google/privacy.",
           "Stripe : traitement des paiements.",
           "OpenStreetMap : chargement des cartes ; si vous utilisez la recherche par navigateur, il reçoit vos coordonnées exactes pour déterminer le pays (service Nominatim).",
-          "GeoJS : reçoit votre adresse IP à l’ouverture de la page, depuis votre navigateur et depuis notre serveur, pour calculer une position approximative.",
+          "GeoJS : reçoit votre adresse IP, depuis votre navigateur, uniquement lorsque vous choisissez la recherche par IP (ou utilisez le simulateur), pour calculer une position approximative. Notre serveur, en revanche, ne la lui envoie pas : il estime votre pays à l’aide de la base de données « IP to Country Lite » de DB-IP (db-ip.com, licence Creative Commons Attribution 4.0), qu’il consulte en local et qui ne reçoit aucune de vos données.",
           "Prestataires d’hébergement : DigitalOcean, où le site s’exécute et où le journal d’activité est stocké ; Hugging Face, où s’exécutent le service qui crée les sessions de paiement et celui qui reçoit les notifications de Stripe et envoie chaque achat à Google Analytics ; et Opalstack, où se trouvait l’ancienne base de données, qui peut conserver des journaux d’activité antérieurs à septembre 2026.",
           "OpenAI : si la personne qui administre le site utilise son assistant d’analyse interne, les résultats de ses requêtes sur le journal d’activité, qui peuvent inclure des numéros de téléphone et des identifiants, sont traités via ce service."
         ]
@@ -166,8 +192,10 @@
       {
         "title": "Cookies et stockage local",
         "paragraphs": [
-          "Nous utilisons notre propre cookie pour mémoriser votre langue pendant un an. Google Analytics et Google Ads créent leurs propres cookies dès que vous ouvrez la page, sans demande de consentement préalable, pour mesurer l’utilisation et les campagnes. Vous pouvez les bloquer ou les supprimer depuis les paramètres de votre navigateur.",
-          "Votre navigateur enregistre aussi dans son stockage local des données pour que la page fonctionne et pour mesurer son utilisation, comme votre langue, les numéros que vous avez utilisés dans le simulateur (avec la position qui leur a été attribuée), la position affichée, les paramètres de campagne et l’état d’un paiement en cours. Vous pouvez les supprimer depuis les paramètres de votre navigateur."
+          "Nous utilisons deux cookies propres au site, qui ne dépendent pas de votre consentement car ils sont nécessaires : l’un mémorise votre langue pendant un an (seulement si vous la choisissez) et l’autre, appelé cookie_consent, mémorise votre choix concernant les cookies pendant 180 jours et ne contient aucun identifiant personnel.",
+          "Le site détecte, d’après votre adresse IP ou le fuseau horaire de votre navigateur, si vous êtes dans l’Espace économique européen (l’Union européenne ainsi que l’Islande, le Liechtenstein et la Norvège), au Royaume-Uni ou en Suisse. Si c’est le cas, il vous affiche un bandeau de cookies et ne charge ni Google Tag Manager, ni Google Analytics, ni Google Ads, et n’enregistre aucune donnée de mesure sur votre appareil, tant que vous ne l’avez pas autorisé. Vous pouvez tout accepter, tout refuser ou choisir par catégorie (analytique et publicité), et modifier votre choix quand vous le souhaitez avec le lien « Préférences de cookies » situé en bas de chaque page. Si vous retirez une autorisation, nous supprimons les cookies de Google de cette catégorie et, si nécessaire, nous rechargeons la page.",
+          "En dehors de ces régions, Google Analytics et Google Ads créent leurs propres cookies dès que vous ouvrez la page, sans demande de consentement préalable, pour mesurer l’utilisation et les campagnes. Vous pouvez les bloquer ou les supprimer depuis les paramètres de votre navigateur.",
+          "Votre navigateur enregistre aussi dans son stockage local des données pour que la page fonctionne et pour mesurer son utilisation. Dans ces régions, les données de mesure (comme les numéros que vous avez utilisés dans le simulateur avec la position qui leur a été attribuée, les paramètres de campagne et l’état d’un paiement en cours) ne sont enregistrées que si vous les autorisez ; la position de la carte que vous allez payer est toujours enregistrée, pendant 24 heures au maximum, afin de vous la restituer lorsque vous revenez de Stripe. Vous pouvez les supprimer depuis les paramètres de votre navigateur."
         ]
       },
       {

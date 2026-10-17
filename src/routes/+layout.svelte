@@ -14,14 +14,33 @@
   import '@fontsource/roboto/latin-400.css'
   import '@fontsource/roboto/latin-700.css'
 
+  import { onMount } from 'svelte'
   import { locale } from 'svelte-i18n'
   import { browser } from '$app/environment'
   import { navigating, page } from '$app/state'
+  import CookieBanner from '$lib/CookieBanner.svelte'
+  import { crearEstadoDeConsentimiento } from '$lib/consent.svelte.js'
   import { aplicarIdiomaAlDocumento, cambioDeIdioma } from '$lib/i18n.js'
   import { idiomaDeRuta } from '$lib/idiomas.js'
   import { sembrarFlags } from '$lib/flags.js'
 
   let { children, data } = $props()
+
+  // El estado del aviso de cookies: UNA instancia por documento, compartida por contexto
+  // con el pie (que tiene el enlace para reabrirlo). Arranca con lo que el servidor ya
+  // resolvió para ESTA request, para que lo pintado en el servidor y lo que hidrata el
+  // navegador coincidan; al montar se alinea con lo que decidió el script de arranque, que
+  // además conoce la zona horaria del navegador. `data.consentimiento` es null en el panel,
+  // que no lleva aviso.
+  const consentimientoDelServidor = () => data?.consentimiento
+  const consentimiento = crearEstadoDeConsentimiento(consentimientoDelServidor())
+
+  onMount(() => {
+    consentimiento.conciliar()
+
+    // Si la elección cambia fuera de este aviso (otra pestaña, la cookie que venció), el aviso se entera.
+    return consentimiento.escucharCambios()
+  })
 
   // Los flags que el servidor ya resolvió para esta request se pasan al módulo
   // del cliente antes de que nadie los pida. Sin esto, la primera lectura
@@ -80,5 +99,10 @@
     }
   })
 </script>
+
+<!-- Primero en el DOM: el teclado y los lectores de pantalla lo encuentran antes que la página. -->
+{#if data?.consentimiento}
+  <CookieBanner conPrivacidad={Boolean(data?.conPrivacidad)} />
+{/if}
 
 {@render children()}

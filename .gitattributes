@@ -1,0 +1,4 @@
+# Los scripts de shell corren en Linux (el droplet): con saltos de linea CRLF fallan con
+# "/usr/bin/env: bash\r: No such file or directory".
+# Este repo vive en Windows con core.autocrlf=true, que los convertiria al hacer checkout.
+*.sh text eol=lf

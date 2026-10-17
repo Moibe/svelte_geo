@@ -42,6 +42,27 @@ export function normalizarPorcentajes(pathname) {
   })
 }
 
+/**
+ * A dónde redirigir un path para que exista una sola URL por página, o null si no hay que
+ * redirigir (ya está en su forma normal, o la redirección no sería segura).
+ *
+ * NO se redirige un path que empieza por «//» (ni «/\»): escrito en la cabecera Location, el
+ * navegador lo lee como una URL de OTRO sitio (`//evil.com/es` → https://evil.com/es), o sea
+ * una redirección abierta con el dominio de esta página. Sin redirigir, esos paths siguen su
+ * curso normal y dan 404.
+ *
+ * @param {string} pathname
+ * @returns {string|null}
+ */
+export function redireccionDeNormalizacion(pathname) {
+  const normalizado = normalizarPorcentajes(pathname)
+
+  if (normalizado === pathname) return null
+  if (/^[/\\]{2}/.test(normalizado)) return null
+
+  return normalizado
+}
+
 /** Sin barra final, salvo la raíz: /es/ y /es son la misma página. */
 export function normalizarRuta(pathname) {
   const ruta = String(pathname || '/')

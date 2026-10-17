@@ -1,87 +1,29 @@
 import { countryCodeMap } from '$lib/geoLocation.js'
 
 /**
- * Detección de país por IP en el SERVIDOR, en MODO SOMBRA.
+ * OBSOLETO: ya nadie lo importa. El modo sombra terminó cuando la portada pasó a usar el país que
+ * resuelve el servidor (ver `ubicacionDeArranque` en $lib/geoLocation.js y +layout.server.js); esta
+ * línea de log, una por visita en registros de pm2 que no rotan, ya no hace falta. Se puede borrar el archivo.
  *
- * ---
+ * Anota en el log del servidor el país con el que se resolvió cada página, en MODO
+ * SOMBRA: el servidor lo calcula pero la página NO lo usa para elegir idioma, mapa ni
+ * precio (eso sigue saliendo del navegador). Sirve para ver, unos días, la distribución
+ * de países que ve el servidor antes de confiarle más decisiones.
  *
- * QUÉ SIGNIFICA "MODO SOMBRA" Y POR QUÉ
+ * Antes esto consultaba a GeoJS desde el servidor por cada visita y anotaba la IP
+ * COMPLETA junto al resultado. Ahora el país sale de la base local de DB-IP (ver
+ * ./pais.js, que ya hace falta para el aviso de cookies), así que:
  *
- * Esto calcula el país pero NO lo usa para nada: solo lo escribe al log con
- * prefijo GEO_SHADOW, para poder compararlo unos días contra la distribución
- * que ya se conoce (pesada en MX) antes de darle la fuente de verdad.
+ *   - la IP de la persona deja de salir del servidor hacia un tercero para esto, y
+ *   - el log guarda solo el PAÍS, no la IP. Una línea por visita, que los registros de
+ *     pm2 no rotan: con la IP completa era un padrón de visitantes creciendo sin tope.
  *
- * El motivo no es prudencia genérica. Esta clase de falla devuelve HTTP 200 y
- * no escribe nada en ningún lado:
+ * La IP y el país no se guardan juntos en ningún lado.
  *
- *   https://get.geojs.io/v1/ip/geo.json  SIN parámetro de IP geolocaliza a
- *   QUIEN LLAMA. Movido tal cual al servidor, eso es el datacenter: todos los
- *   visitantes saldrían de Nueva York, con la lada equivocada, el mapa
- *   centrado ahí y el price_id de otro mercado. Y contaminaría la misma tabla
- *   de conversiones con la que uno lo detectaría.
- *
- * Por eso acá se usa SIEMPRE la forma explícita con la IP del visitante.
- *
- * REQUISITO NO NEGOCIABLE: event.getClientAddress() solo devuelve la IP real
- * si adapter-node sabe de dónde leerla. Detrás de nginx hace falta
- * ADDRESS_HEADER=x-forwarded-for y XFF_DEPTH=1 en el entorno del proceso. Sin
- * eso devuelve la IP del proxy (127.0.0.1) y geojs respondería cualquier cosa.
- * El log lo delata: si la IP que aparece es local, la configuración falta.
+ * @param {string|null|undefined} iso país ISO de dos letras, o null si no se pudo saber
  */
+export function observarPais(iso) {
+  const lada = iso ? countryCodeMap[iso] : null
 
-/** IPs que nunca van a geolocalizar a nada útil. */
-function esLocal(ip) {
-  return (
-    !ip ||
-    ip === '127.0.0.1' ||
-    ip === '::1' ||
-    ip.startsWith('10.') ||
-    ip.startsWith('192.168.') ||
-    ip.startsWith('172.16.')
-  )
-}
-
-/**
- * Consulta geojs por la IP del visitante y deja el resultado en el log.
- * No lanza nunca: es observación, no puede afectar la respuesta.
- *
- * @param {string} ip - la IP del visitante (event.getClientAddress())
- */
-export async function observarPaisPorIP(ip) {
-  if (esLocal(ip)) {
-    console.log(
-      `GEO_SHADOW ip=${ip || 'nula'} resultado=omitido ` +
-        `motivo=ip_local_o_ausente (revisar ADDRESS_HEADER/XFF_DEPTH si esto sale en produccion)`
-    )
-    return
-  }
-
-  try {
-    // Forma EXPLÍCITA: la IP va en la URL. La variante sin IP geolocalizaría
-    // al droplet, no al visitante.
-    const respuesta = await fetch(`https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`, {
-      signal: AbortSignal.timeout(3000),
-    })
-
-    if (!respuesta.ok) {
-      console.log(`GEO_SHADOW ip=${ip} resultado=error http=${respuesta.status}`)
-      return
-    }
-
-    const datos = await respuesta.json()
-    const iso = datos.country_code?.toUpperCase()
-    const lada = iso ? countryCodeMap[iso] : null
-
-    // Solo el país. Antes se anotaban también la latitud y la longitud que
-    // devuelve geojs, y eso era un dato de más: la comparación de estos días es
-    // de país y lada, y las coordenadas llegaban al log SIN la variación
-    // aleatoria que sí se les aplica en el mapa y en la tabla de actividad,
-    // junto a la IP completa. La política de privacidad dice que los registros
-    // usan una posición aproximada; con esto el log del servidor ya no la
-    // contradice.
-    console.log(`GEO_SHADOW ip=${ip} iso=${iso || 'nulo'} lada=${lada || 'sin_mapeo'}`)
-  } catch (err) {
-    // Un timeout o un fallo de red acá no puede romper la página: solo se anota.
-    console.log(`GEO_SHADOW ip=${ip} resultado=excepcion detalle=${String(err?.message || err)}`)
-  }
+  console.log(`GEO_SHADOW iso=${iso || 'nulo'} lada=${lada || 'sin_mapeo'}`)
 }

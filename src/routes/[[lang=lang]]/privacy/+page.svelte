@@ -84,7 +84,8 @@
     position: fixed;
     top: 1rem;
     right: 1rem;
-    z-index: 1500;
+    /* Por ENCIMA del aviso de cookies (1900) y por debajo de la ventana de pago (2000): quien llega en un idioma que no es el suyo tiene que poder cambiarlo sin contestar el aviso. */
+    z-index: 1950;
   }
 
   /* El selector es fijo y el artículo es una tarjeta BLANCA que pasa por debajo al

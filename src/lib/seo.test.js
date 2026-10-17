@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { IDIOMAS } from './idiomas.js'
-import { alternativas, canonica, jsonSeguroParaHtml, normalizarPorcentajes, normalizarRuta } from './seo.js'
+import { alternativas, canonica, jsonSeguroParaHtml, normalizarPorcentajes, normalizarRuta, redireccionDeNormalizacion } from './seo.js'
 
 const ORIGEN = 'https://geoservices.space'
 
@@ -67,6 +67,19 @@ test('normalizarPorcentajes reduce %XX de caracteres no reservados a una sola fo
   assert.equal(normalizarPorcentajes('/%61pi/flags'), '/api/flags')
   assert.equal(normalizarPorcentajes('/es/%70rivacy'), '/es/privacy')
   assert.equal(normalizarPorcentajes('/%2D%2e%5F%7E'), '/-._~')
+})
+
+test('redireccionDeNormalizacion nunca devuelve un destino que el navegador lea como OTRO sitio', () => {
+  // Normal: se redirige a la forma normal.
+  assert.equal(redireccionDeNormalizacion('/%65s'), '/es')
+  assert.equal(redireccionDeNormalizacion('/es/%70rivacy'), '/es/privacy')
+  // Ya normal: no hay nada que redirigir.
+  assert.equal(redireccionDeNormalizacion('/es'), null)
+  assert.equal(redireccionDeNormalizacion('/'), null)
+  // «//evil.com/%65s» redirigiría a //evil.com/es = https://evil.com/es (redirección abierta).
+  assert.equal(redireccionDeNormalizacion('//evil.com/%65s'), null)
+  assert.equal(redireccionDeNormalizacion('///evil.com/%65s'), null)
+  assert.equal(redireccionDeNormalizacion('/\\evil.com/%65s'), null)
 })
 
 test('normalizarPorcentajes no toca lo que no es un carácter no reservado', () => {

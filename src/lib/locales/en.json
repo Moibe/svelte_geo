@@ -100,7 +100,7 @@
       },
       {
         "q": "What data is stored?",
-        "a": "We record your visit activity (for example, which button you used), your country and language, an approximate location, a browser analytics identifier, the campaign parameters if you arrive from an ad and, if you use the simulator, the phone number you enter. Your IP address is sent to a geolocation service when the page opens and remains in the server logs."
+        "a": "We record your visit activity (for example, which button you used), your country and language, an approximate location when you perform a search, a browser analytics identifier, the campaign parameters if you arrive from an ad and, if you use the simulator, the phone number you enter. Your IP address remains in the server’s access logs, and the server uses it to estimate your country; it is only sent to a geolocation service (GeoJS) if you choose Search by IP or use the simulator. In the European Economic Area, the United Kingdom and Switzerland, measurement is only activated if you accept it in the cookie notice."
       }
     ],
     "faqSimAnswer": "No. The phone number mode is an entertainment simulator: it does not search for the number or query any network or carrier, and the result does not depend on the number you enter. It only shows a random point near the approximate location of your connection (or near Mexico City if it cannot be detected).",
@@ -117,9 +117,35 @@
     "privacy": "Privacy policy",
     "languages": "Languages"
   },
+  "consent": {
+    "title": "Your privacy and cookies",
+    "intro": "We use cookies and similar technologies to measure how the site is used and how well our ads work, but only if you allow it. With your permission, Google receives data about your visit to measure site usage and, if you accept advertising, to personalize ads.",
+    "policy": "Privacy policy",
+    "acceptAll": "Accept all",
+    "rejectAll": "Reject all",
+    "configure": "Customize",
+    "save": "Save my choices",
+    "close": "Close",
+    "legend": "Cookie categories",
+    "reopen": "Cookie preferences",
+    "necessary": {
+      "title": "Necessary",
+      "always": "Always on",
+      "text": "They remember your language and your cookie choice, and the position of the map while you are paying. They are essential for the site to work and cannot be turned off."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "text": "Google Analytics and the site’s activity log: which pages and buttons are used, along with your country, your language, your time zone and an approximate location, the Google Analytics identifier and the numbers you type in the simulator. They are used to measure usage and improve the site, and let your device remember your recent searches."
+    },
+    "advertising": {
+      "title": "Advertising",
+      "text": "Google Ads: they measure whether you arrived from an ad and whether you ended up buying, to evaluate our campaigns. Google may use that data to personalize ads and create its own cookies."
+    },
+    "googleInfo": "How Google uses your data"
+  },
   "privacy": {
     "title": "Privacy policy",
-    "updated": "Last updated: October 13, 2026",
+    "updated": "Last updated: October 17, 2026",
     "operatorLead": "Responsible party:",
     "contactLead": "Contact:",
     "sections": [
@@ -135,12 +161,12 @@
           "We collect this data to make the site work, to measure its use and to measure advertising campaigns:"
         ],
         "items": [
-          "Visit activity: events such as opening, reloading or closing the page, searching for a number in the simulator, viewing or zooming in on the map, opening the payment window, pressing the Buy button or abandoning the payment, together with the type of search you used (browser, IP or simulator), their date and time (and your time zone), your language and your country.",
-          "Approximate location: when the page opens, your browser and our server send your IP address to a geolocation service to estimate your country and an approximate location, even if you do not choose any search. If you choose Search by Browser and give permission, your device’s location coordinates are used. In both cases the map and our records use a position with a random variation of a few kilometers.",
+          "Visit activity: events such as opening, reloading or closing the page, searching for a number in the simulator, viewing or zooming in on the map, opening the payment window, pressing the Buy button or abandoning the payment, together with the type of search you used (browser, IP or simulator), their date and time (and your time zone), your language and your country. In the European Economic Area, the United Kingdom and Switzerland, it is only recorded if you allow it in the cookie notice.",
+          "Approximate location: only when you perform a search. If you choose Search by IP (or use the simulator, which needs a starting point), your browser sends your IP address to a geolocation service to estimate an approximate location. If you choose Search by Browser and give permission, your device’s location coordinates are used. In all cases the map and our records use a position with a random variation of a few kilometers.",
           "Phone number: if you use the simulator, the number you enter is stored together with the visit activity and, for as long as your browser keeps it, also together with that of your subsequent visits. For this reason, do not enter other people’s numbers.",
-          "Analytics and advertising identifiers: the Google Analytics client identifier and, if you arrive from an ad, the campaign parameters (UTM, gclid or fbclid).",
+          "Analytics and advertising identifiers: the Google Analytics client identifier and, if you arrive from an ad, the campaign parameters (UTM, gclid or fbclid). In the European Economic Area, the United Kingdom and Switzerland, they are only used if you allow them in the cookie notice, and the click identifiers (gclid, fbclid) only with the advertising permission.",
           "Payments: Stripe collects the payment details directly (also your email address, which we see in the Stripe dashboard), and we do not see or store your full card number. We store the amount and currency of the purchase, and we associate the browser analytics identifier with the payment. The amount, the currency and a transaction identifier are also sent to Google to measure conversions, both from your browser and from the service that receives Stripe notifications.",
-          "IP address: our server records it in its access logs, as happens on any website, and, when the page opens, uses it to estimate your country; that result is recorded together with your IP in a technical server log."
+          "IP address: our server records it in its access logs, as happens on any website. In addition, when the page opens, the server uses it to estimate your country with a local database, without sending it to any third party; that country decides the price shown to you and, if you have not chosen another one, the initial language. The application does not record your IP in its own technical logs."
         ]
       },
       {
@@ -155,10 +181,10 @@
           "To provide the service we use providers that receive part of this data and may process it outside your country (for example, in the United States). The services your browser connects to also receive your IP address and technical data from your browser:"
         ],
         "items": [
-          "Google (Tag Manager, Analytics and Ads): measurement of usage and campaigns, including the amount and currency of purchases. Google also receives, on its own, technical data from your browser and the addresses of the pages you visit.",
+          "Google (Tag Manager, Analytics and Ads): measurement of usage and campaigns, including the amount and currency of purchases, and ad personalization if you accept advertising. Google also receives, on its own, technical data from your browser and the addresses of the pages you visit. In the European Economic Area, the United Kingdom and Switzerland, it is only loaded with your permission. You can see how Google uses the data at business.safety.google/privacy.",
           "Stripe: payment processing.",
           "OpenStreetMap: loads the maps and, if you use Search by Browser, receives your exact coordinates to determine the country (Nominatim service).",
-          "GeoJS: receives your IP address when the page opens, from your browser and from our server, to calculate an approximate location.",
+          "GeoJS: receives your IP address, from your browser, only when you choose Search by IP (or use the simulator), to calculate an approximate location. Our server, by contrast, does not send it: it estimates your country with the “IP to Country Lite” database from DB-IP (db-ip.com, Creative Commons Attribution 4.0 license), which it queries locally and which does not receive any of your data.",
           "Hosting providers: DigitalOcean, where the site runs and the activity log is stored; Hugging Face, where the service that creates the payment sessions runs, as well as the one that receives Stripe notifications and sends each purchase to Google Analytics; and Opalstack, where the previous database was hosted, which may keep activity logs from before September 2026.",
           "OpenAI: if whoever administers the site uses its internal analysis assistant, the results of its queries on the activity log, which may include phone numbers and identifiers, are processed by that service."
         ]
@@ -166,8 +192,10 @@
       {
         "title": "Cookies and local storage",
         "paragraphs": [
-          "We use our own cookie to remember your language for one year. Google Analytics and Google Ads create their own cookies as soon as you open the page, without a prior consent notice, to measure usage and campaigns. You can block or delete them from your browser settings.",
-          "Your browser also stores data in its local storage to make the page work and to measure its use, such as your language, the numbers you used in the simulator (with the location assigned to them), the location shown, the campaign parameters and the status of a payment in progress. You can delete this data from your browser settings."
+          "We use two cookies of our own that do not depend on your consent because they are necessary: one that remembers your language for one year (only if you choose a language) and another, called cookie_consent, that remembers your cookie choice for 180 days and contains no personal identifier.",
+          "The site detects, from your IP address or from your browser’s time zone, whether you are in the European Economic Area (the European Union plus Iceland, Liechtenstein and Norway), the United Kingdom or Switzerland. If so, it shows you a cookie notice and does not load Google Tag Manager, Google Analytics or Google Ads, nor store measurement data on your device, until you allow it. You can accept all, reject all or choose by category (analytics and advertising), and change your choice whenever you want using the “Cookie preferences” link at the bottom of every page. If you withdraw a permission, we delete the Google cookies for that category and, if necessary, reload the page.",
+          "Outside those regions, Google Analytics and Google Ads create their own cookies as soon as you open the page, without a prior consent notice, to measure usage and campaigns. You can block or delete them from your browser settings.",
+          "Your browser also stores data in its local storage to make the page work and to measure its use. In those regions, the measurement data (such as the numbers you used in the simulator with the location assigned to them, the campaign parameters and the status of a payment in progress) is stored only if you allow it; the position of the map you are going to pay for is always stored, for up to 24 hours, to give it back to you when you return from Stripe. You can delete this data from your browser settings."
         ]
       },
       {

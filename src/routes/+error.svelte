@@ -2,6 +2,7 @@
   import { page } from '$app/state'
   import { locale } from 'svelte-i18n'
   import { rutaEnIdioma } from '$lib/idiomas.js'
+  import SiteFooter from '$lib/SiteFooter.svelte'
 </script>
 
 <!-- Antes las páginas de error (404, o /privacy sin contacto configurado) salían
@@ -13,11 +14,17 @@
   <meta name="robots" content="noindex" />
 </svelte:head>
 
-<main>
-  <h1>{page.status}</h1>
-  <p>{page.error?.message}</p>
-  <a href={rutaEnIdioma('/', $locale)}>geoservices.space</a>
-</main>
+<!-- Con el pie: es donde está «Preferencias de cookies» (retirar un permiso tiene que poder hacerse
+     desde cualquier página, también desde una de error) y la atribución a DB-IP. -->
+<div class="pagina">
+  <main>
+    <h1>{page.status}</h1>
+    <p>{page.error?.message}</p>
+    <a href={rutaEnIdioma('/', $locale)}>geoservices.space</a>
+  </main>
+
+  <SiteFooter rutaIdiomas="/" />
+</div>
 
 <style>
   :global(html),
@@ -26,8 +33,16 @@
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   }
 
-  main {
+  .pagina {
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    background: linear-gradient(135deg, #0052cc 0%, #004999 50%, #003366 100%);
+  }
+
+  main {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -36,8 +51,6 @@
     padding: 2rem 1rem;
     box-sizing: border-box;
     text-align: center;
-    color: #fff;
-    background: linear-gradient(135deg, #0052cc 0%, #004999 50%, #003366 100%);
   }
 
   h1 {

@@ -3,6 +3,7 @@
  * Guarda en la API de Geospaces y también imprime en consola.
  */
 import { log, error } from './logger.js';
+import { analiticaOk, publicidadOk } from './consentimiento-navegador.js';
 
 // Destino PRINCIPAL: la API de tracking del droplet, servida en el mismo
 // origen por el bloque `location /track/` de nginx. Ser mismo-origen quita el
@@ -41,6 +42,15 @@ function formatInTimezone(date, timeZone) {
 
 /**
  * Registra una conversión: guarda en la API y en consola.
+ *
+ * Este registro ES analítica: guarda la actividad de la visita, el país, el número que se
+ * escribió en el simulador y los parámetros de campaña. En la UE, el Reino Unido y Suiza solo
+ * se escribe con el permiso de analítica de quien visita; sin él no se manda NADA (ni a
+ * la API ni a la consola) y la función devuelve null. Los identificadores de clic de
+ * anuncios (gclid, fbclid) son publicidad: sin ese permiso el evento se registra SIN ellos.
+ * Fuera de la región regulada los permisos siempre están dados y esto se comporta como
+ * siempre. Ver consentimiento-navegador.js.
+ *
  * @param {Object} params
  * @param {string} params.type           - Tipo de conversión: 'map_interaction', 'map_wait', 'purchase', etc.
  * @param {string} params.gaClientId     - GA Client ID del usuario
@@ -61,6 +71,7 @@ function formatInTimezone(date, timeZone) {
  * @param {string} params.fbclid         - Meta Ads click ID
  * @param {number} params.purchaseValue  - Valor de la compra (solo para type='purchase')
  * @param {string} params.purchaseCurrency - Moneda de la compra (solo para type='purchase')
+ * @returns {Promise<Object|null>} el payload enviado, o null si no había permiso de analítica
  */
 export async function logConversion({
   type,
@@ -83,6 +94,14 @@ export async function logConversion({
   purchaseValue = null,
   purchaseCurrency = null,
 }) {
+  if (!analiticaOk()) return null;
+
+  // Los identificadores de clic de anuncios son de publicidad, no de analítica.
+  if (!publicidadOk()) {
+    gclid = null;
+    fbclid = null;
+  }
+
   const now = new Date();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 

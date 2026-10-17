@@ -4,6 +4,7 @@
   import { crearSesionPago, getProductDetailsByCountry, getGAClientId } from './stripe.js';
   import { getPMCConfig, onPMCChange, getStripeModeConfig, onStripeModeChange, getPriceTestConfig, onPriceTestChange } from './flags.js';
   import { logConversion } from './conversionLogger.js';
+  import { guardar, guardarCoordenadasDelPago, leer } from './almacenamiento.js';
   import { toMajorUnits, formatearImporte } from './currency.js';
   import { log, warn, error } from './logger.js';
   
@@ -233,7 +234,7 @@
   }
 
   // Cargar detalles del producto cuando se muestra el modal, cambia el pa\u00eds o cambia el nivel de precio
-  $: if (isVisible && countryCode) {
+  $: if (isVisible && countryCode && priceLevel) {
     productDetails = null;
     errorMessage = '';
     loadProductDetails();
@@ -280,8 +281,10 @@
         throw new Error('No se pudieron cargar los detalles del producto.');
       }
 
-      // Guardar coordenadas del mapa en localStorage antes de ir a Stripe
-      localStorage.setItem('map_coords', JSON.stringify({ lat: mapLat, lng: mapLng }));
+      // Guardar coordenadas del mapa antes de ir a Stripe. Esta NO pide permiso en la UE, el Reino
+      // Unido y Suiza: es lo que hace falta para devolverle a quien paga el mapa que pagó, o sea el
+      // servicio mismo. Por eso lleva fecha y CADUCA a las 24 h (ver $lib/almacenamiento.js).
+      guardarCoordenadasDelPago(mapLat, mapLng);
 
       // Guardar datos de la compra para el evento de conversión
       // El monto y la moneda se toman del objeto price de Stripe, que es lo que
@@ -315,12 +318,14 @@
         timestamp: Date.now()
       };
       purchaseData.isProduction = isProductionMode;
-      localStorage.setItem('purchase_data', JSON.stringify(purchaseData));
-      localStorage.setItem('pending_checkout', 'true');
+      // Estos dos solo sirven para medir (informar la conversión, registrar el abandono):
+      // con el permiso de la persona van al dispositivo; sin él, no (ver $lib/almacenamiento.js).
+      guardar('purchase_data', JSON.stringify(purchaseData));
+      guardar('pending_checkout', 'true');
       log('💾 Datos de compra guardados para conversión:', purchaseData);
 
       // Registrar clic en botón de compra en MariaDB
-      const ctxRaw = localStorage.getItem('conversion_context');
+      const ctxRaw = leer('conversion_context');
       const ctx = ctxRaw ? JSON.parse(ctxRaw) : {};
       logConversion({
         type: 'buy_click',

@@ -78,10 +78,13 @@ no hace falta recompilar. El deploy ya hace `set -a && . ./.env` antes del
 
 Los textos afirman hechos. Estos son los que más fácil se vuelven falsos:
 
-- **A quién se manda qué**: GeoJS recibe la IP al abrir la página (navegador y,
-  en modo sombra, servidor); OpenStreetMap/Nominatim recibe las coordenadas
+- **A quién se manda qué**: GeoJS recibe la IP **solo desde el navegador y solo cuando la
+  persona elige «Búsqueda por IP» o usa el simulador** (ya no al abrir la página: el
+  servidor estima el país con la base local de DB-IP y no se la manda a nadie, ver
+  `COOKIES.md`); OpenStreetMap/Nominatim recibe las coordenadas
   exactas si se usa el GPS; Google (GTM, GA4, Ads) recibe el importe y la moneda
-  de las compras, desde el navegador y desde el servicio de avisos de Stripe;
+  de las compras, desde el navegador y desde el servicio de avisos de Stripe, y en
+  el EEE, el Reino Unido y Suiza **solo se carga con el permiso de quien visita**;
   Hugging Face crea las sesiones de pago y recibe esos avisos; Opalstack guarda
   la base anterior (hoy inaccesible); OpenAI recibe resultados de consultas del
   asistente interno de `geospace_nucleo`. El envío paralelo de eventos al Space
@@ -91,7 +94,10 @@ Los textos afirman hechos. Estos son los que más fácil se vuelven falsos:
 - **Qué se guarda**: los campos de `src/lib/conversionLogger.js` y el esquema de
   `fastapi-mariadb-geospaces/schema_sqlite.sql`. El número del simulador se guarda
   en el servidor y en el navegador (`last_phone_number`, `geo_cache_*`,
-  `conversion_context`).
+  `conversion_context`); en el EEE, el Reino Unido y Suiza solo con permiso de
+  analítica (`src/lib/almacenamiento.js`). Cada dato nuevo que se guarde en el
+  dispositivo o se mande a un tercero tiene que pasar por ahí o por
+  `analiticaOk()` / `publicidadOk()`, y la política cambiar con él.
 - **La variación aleatoria** de unos 5 km por eje (`randomizeLocation` en
   `src/lib/geoLocation.js`) y que los marcadores de antenas son ilustrativos.
 - **Qué compra el pago**: no existe un estado «pagado»; tras Stripe solo se
@@ -139,11 +145,10 @@ idiomas. Si se cambia un texto, vale la pena repetir ese ciclo.
 
 ## Lo que NO está resuelto
 
-- **Consentimiento de cookies**: Google Tag Manager se carga siempre, sin banner
-  ni Consent Mode. Con tráfico del Espacio Económico Europeo o del Reino Unido (y
-  ahora hay `/de` y `/fr` indexables) Google Ads exige consentimiento previo. La
-  política lo dice con todas sus letras («sin un aviso previo de consentimiento»),
-  porque es lo que hoy ocurre; cuando haya banner, ese texto cambia.
+- **Consentimiento de cookies**: **resuelto para el EEE, el Reino Unido y Suiza** con
+  el aviso de cookies y Consent Mode v2 (`COOKIES.md`). Queda lo que ese archivo
+  lista en «Lo que este trabajo NO resuelve» (GeoJS al pulsar «Búsqueda por IP», los ajustes
+  de la interfaz de Tag Manager, el webhook de Stripe, revisión legal).
 - **Base legal y responsable**: la política no dice con qué base legal se tratan
   los datos y solo identifica a alguien si se define `PRIVACY_OPERATOR_NAME`.
 - **Posible doble conteo de compras en GA4** (sin comprobar en Analytics): el
