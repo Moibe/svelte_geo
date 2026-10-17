@@ -1,4 +1,5 @@
 import { eq, sql } from 'drizzle-orm'
+import { OPCIONES_DE_FLAG, opcionPermitida, siguienteOpcion } from '$lib/opcionesDeFlag.js'
 import { db } from './db/index.js'
 import { flags } from './db/schema.js'
 
@@ -94,14 +95,20 @@ export function obtenerFlags() {
   return resultado
 }
 
-/** Las filas completas, para armar el formulario del panel. */
+/**
+ * Las filas completas, para armar el formulario del panel.
+ *
+ * `opciones` es null para casi todos los flags. Cuando no es null el flag es una elección
+ * entre DOS valores (ver $lib/opcionesDeFlag.js) y el panel lo dibuja como un interruptor
+ * con una etiqueta a cada lado, en vez de un campo numérico.
+ */
 export function obtenerFilasDeFlags() {
   return db
     .select()
     .from(flags)
     .orderBy(flags.orden)
     .all()
-    .map((fila) => ({ ...fila, valor: parsear(fila) }))
+    .map((fila) => ({ ...fila, valor: parsear(fila), opciones: OPCIONES_DE_FLAG[fila.clave] ?? null }))
 }
 
 /**
@@ -126,6 +133,13 @@ export function guardarFlag(clave, valorCrudo) {
     valor = valorCrudo === null || valorCrudo === undefined ? '' : String(valorCrudo)
   }
 
+  // Un flag de dos opciones solo acepta una de las dos, aunque alguien mande el POST a mano.
+  const opciones = OPCIONES_DE_FLAG[clave]
+
+  if (opciones && !opcionPermitida(opciones, valor)) {
+    return `"${fila.etiqueta}" solo puede ser ${opciones.map((o) => o.valor).join(' o ')}`
+  }
+
   db.update(flags)
     .set({ valor: JSON.stringify(valor), actualizadoEn: sql`(datetime('now'))` })
     .where(eq(flags.clave, clave))
@@ -135,7 +149,8 @@ export function guardarFlag(clave, valorCrudo) {
 }
 
 /**
- * Invierte un flag booleano leyendo su valor ACTUAL de la base.
+ * Invierte un flag booleano —o pasa un flag de dos opciones a la otra— leyendo su valor
+ * ACTUAL de la base.
  *
  * Existe en vez de "mandá el valor invertido desde el formulario" porque ese
  * valor lo calcula el cliente al renderizar, y puede llegar viejo: si alguien
@@ -144,15 +159,18 @@ export function guardarFlag(clave, valorCrudo) {
  * interruptor se ve "pegado" sin ningún error. Decidiéndolo acá, el estado que
  * manda es el de la base y no hay nada que se pueda quedar viejo.
  *
- * @returns {{error: string}|{valor: boolean}}
+ * @returns {{error: string}|{valor: boolean|number|string}}
  */
 export function alternarFlag(clave) {
   const [fila] = db.select().from(flags).where(eq(flags.clave, clave)).all()
 
   if (!fila) return { error: `No existe el flag "${clave}"` }
-  if (fila.tipo !== 'boolean') return { error: `"${fila.etiqueta}" no es un interruptor` }
 
-  const valor = !parsear(fila)
+  const opciones = OPCIONES_DE_FLAG[clave]
+
+  if (fila.tipo !== 'boolean' && !opciones) return { error: `"${fila.etiqueta}" no es un interruptor` }
+
+  const valor = opciones ? siguienteOpcion(opciones, parsear(fila)) : !parsear(fila)
 
   db.update(flags)
     .set({ valor: JSON.stringify(valor), actualizadoEn: sql`(datetime('now'))` })

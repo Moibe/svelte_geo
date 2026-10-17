@@ -69,7 +69,7 @@
       {#each filas as fila (fila.clave)}
         <form
           method="POST"
-          action={fila.tipo === 'boolean' ? '?/alternar' : '?/guardar'}
+          action={fila.tipo === 'boolean' || fila.opciones ? '?/alternar' : '?/guardar'}
           use:enhance={enviar}
           class="fila"
           class:error={estados[fila.clave]?.error}
@@ -102,6 +102,32 @@
               >
                 <span class="perilla"></span>
               </button>
+            {:else if fila.opciones}
+              <!-- Una elección entre DOS valores (hoy: el nivel de precio, 100 o 200). Se dibuja
+                   como un interruptor con una etiqueta a cada lado y no como un campo numérico:
+                   solo existen esos dos valores, y con flechitas se podía dejar uno inválido.
+                   Igual que los demás interruptores, no manda ningún valor: el servidor pasa a
+                   la otra opción leyendo la actual (acción `alternar`). -->
+              <div class="opciones">
+                <span class="opcion" class:activa={fila.valor === fila.opciones[0].valor}>
+                  <strong>{fila.opciones[0].valor}</strong>
+                  {fila.opciones[0].etiqueta}
+                </span>
+                <button
+                  type="submit"
+                  class="switch eleccion"
+                  class:on={fila.valor === fila.opciones[1].valor}
+                  role="switch"
+                  aria-checked={fila.valor === fila.opciones[1].valor}
+                  aria-label="{fila.etiqueta}: {fila.opciones[0].valor} {fila.opciones[0].etiqueta} o {fila.opciones[1].valor} {fila.opciones[1].etiqueta}"
+                >
+                  <span class="perilla"></span>
+                </button>
+                <span class="opcion" class:activa={fila.valor === fila.opciones[1].valor}>
+                  <strong>{fila.opciones[1].valor}</strong>
+                  {fila.opciones[1].etiqueta}
+                </span>
+              </div>
             {:else if fila.tipo === 'number'}
               <input
                 class="campo"
@@ -235,6 +261,29 @@
   .switch.on {
     background: #2e7d32;
     border-color: #4caf50;
+  }
+
+  /* El interruptor de una elección entre dos valores no significa "encendido": se pinta de
+     azul, no del verde de los demás. */
+  .switch.eleccion.on {
+    background: #1565c0;
+    border-color: #64b5f6;
+  }
+
+  .opciones {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .opcion {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .opcion.activa {
+    color: #fff;
+    font-weight: 600;
   }
 
   .perilla {
