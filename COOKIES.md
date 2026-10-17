@@ -228,7 +228,7 @@ El aviso **no** aparece en `/admin` ni en `/api`.
     de la app (que el cron no carga). Sin ella, `/root/data/geoip/dbip-country-lite.mmdb`.
   - Busca primero el node de **nvm** (el de la app) y solo después el del `PATH`; un fallo del
     entorno de node (código distinto de «la base no pasa») no rechaza una descarga buena.
-- **Instalación en el droplet** (ya hecha el 2026-10-13/14; se repite solo si se reconstruye
+- **Instalación en el droplet** (ya hecha el 2026-10-17; se repite solo si se reconstruye
   el servidor):
 
   ```sh
