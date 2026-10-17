@@ -77,12 +77,12 @@
   "+224": {
     "price": {
       "currency": "gnf",
-      "unit_amount": 5050000,
+      "unit_amount": 50500,
       "formatted": "FG50500",
-      "id": "price_1T6n6lIYi36CbmfWUG7l3JLB",
+      "id": "price_1URcN1IYi36CbmfW0SSZav3q",
       "nickname": "Guinea - Map Location Full Real Time"
     },
-    "priceId": "price_1T6n6lIYi36CbmfWUG7l3JLB",
+    "priceId": "price_1URcN1IYi36CbmfW0SSZav3q",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -107,12 +107,12 @@
   "+256": {
     "price": {
       "currency": "ugx",
-      "unit_amount": 2090000,
+      "unit_amount": 20900,
       "formatted": "USh20900",
-      "id": "price_1T6xImIYi36CbmfW3rjkwL5X",
+      "id": "price_1URcMzIYi36CbmfWqhw1gRsx",
       "nickname": "Uganda - Map Location Full Real Time"
     },
-    "priceId": "price_1T6xImIYi36CbmfW3rjkwL5X",
+    "priceId": "price_1URcMzIYi36CbmfWqhw1gRsx",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -242,12 +242,12 @@
   "+82": {
     "price": {
       "currency": "krw",
-      "unit_amount": 840000,
+      "unit_amount": 8400,
       "formatted": "₩8400",
-      "id": "price_1T6n5qIYi36CbmfWx53wwOAd",
+      "id": "price_1URcN2IYi36CbmfWfQW2fW6f",
       "nickname": "Corea del Sur - Map Location Full Real Time"
     },
-    "priceId": "price_1T6n5qIYi36CbmfWx53wwOAd",
+    "priceId": "price_1URcN2IYi36CbmfWfQW2fW6f",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -392,12 +392,12 @@
   "+253": {
     "price": {
       "currency": "djf",
-      "unit_amount": 102600,
+      "unit_amount": 1026,
       "formatted": "Fdj1026",
-      "id": "price_1T6xJDIYi36CbmfWRs9vDf1B",
+      "id": "price_1URcMxIYi36CbmfWpZWq1gvb",
       "nickname": "Yibuti - Map Location Full Real Time"
     },
-    "priceId": "price_1T6xJDIYi36CbmfWRs9vDf1B",
+    "priceId": "price_1URcMxIYi36CbmfWpZWq1gvb",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -422,12 +422,12 @@
   "+595": {
     "price": {
       "currency": "pyg",
-      "unit_amount": 3700000,
+      "unit_amount": 37000,
       "formatted": "₲37000",
-      "id": "price_1T6x04IYi36CbmfWelUfLuDf",
+      "id": "price_1URcN0IYi36CbmfWH8ad0w7x",
       "nickname": "Paraguay - Map Location Full Real Time"
     },
-    "priceId": "price_1T6x04IYi36CbmfWelUfLuDf",
+    "priceId": "price_1URcN0IYi36CbmfWH8ad0w7x",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -542,12 +542,12 @@
   "+257": {
     "price": {
       "currency": "bif",
-      "unit_amount": 1700000,
+      "unit_amount": 17000,
       "formatted": "FBu17000",
-      "id": "price_1T6n4jIYi36CbmfWLnQKrNjK",
+      "id": "price_1URcN3IYi36CbmfW8GIWnvW6",
       "nickname": "Burundi - Map Location Full Real Time"
     },
-    "priceId": "price_1T6n4jIYi36CbmfWLnQKrNjK",
+    "priceId": "price_1URcN3IYi36CbmfW8GIWnvW6",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -587,12 +587,12 @@
   "+269": {
     "price": {
       "currency": "kmf",
-      "unit_amount": 240000,
+      "unit_amount": 2400,
       "formatted": "CF2400",
-      "id": "price_1T6n5kIYi36CbmfWErbEdGTU",
+      "id": "price_1URcN2IYi36CbmfWLcnNnobB",
       "nickname": "Comoras - Map Location Full Real Time"
     },
-    "priceId": "price_1T6n5kIYi36CbmfWErbEdGTU",
+    "priceId": "price_1URcN2IYi36CbmfWLcnNnobB",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -602,12 +602,12 @@
   "+689": {
     "price": {
       "currency": "xpf",
-      "unit_amount": 58900,
+      "unit_amount": 589,
       "formatted": "₣589",
-      "id": "price_1T6x0AIYi36CbmfWVaBDDUde",
+      "id": "price_1URcMzIYi36CbmfWDxDxAJX1",
       "nickname": "Polinesia Francesa - Map Location Full Real Time"
     },
-    "priceId": "price_1T6x0AIYi36CbmfWVaBDDUde",
+    "priceId": "price_1URcMzIYi36CbmfWDxDxAJX1",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -767,12 +767,12 @@
   "+261": {
     "price": {
       "currency": "mga",
-      "unit_amount": 2400000,
+      "unit_amount": 24000,
       "formatted": "Ar24000",
-      "id": "price_1T6negIYi36CbmfW88mbCcJ3",
+      "id": "price_1URcN0IYi36CbmfWF9cqW0fl",
       "nickname": "Madagascar - Map Location Full Real Time"
     },
-    "priceId": "price_1T6negIYi36CbmfW88mbCcJ3",
+    "priceId": "price_1URcN0IYi36CbmfWF9cqW0fl",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -782,12 +782,12 @@
   "+250": {
     "price": {
       "currency": "rwf",
-      "unit_amount": 800000,
+      "unit_amount": 8000,
       "formatted": "RF8000",
-      "id": "price_1T6x9oIYi36CbmfWb8usqZGt",
+      "id": "price_1URcMzIYi36CbmfWemgIRaaU",
       "nickname": "Ruanda - Map Location Full Real Time"
     },
-    "priceId": "price_1T6x9oIYi36CbmfWb8usqZGt",
+    "priceId": "price_1URcMzIYi36CbmfWemgIRaaU",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -1217,12 +1217,12 @@
   "+84": {
     "price": {
       "currency": "vnd",
-      "unit_amount": 1500000,
+      "unit_amount": 150000,
       "formatted": "₫15000",
-      "id": "price_1T6xJ3IYi36CbmfWQyVvJuBh",
+      "id": "price_1URcMyIYi36CbmfWOmlFCgLy",
       "nickname": "Vietnam - Map Location Full Real Time"
     },
-    "priceId": "price_1T6xJ3IYi36CbmfWQyVvJuBh",
+    "priceId": "price_1URcMyIYi36CbmfWOmlFCgLy",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",
@@ -1232,12 +1232,12 @@
   "+678": {
     "price": {
       "currency": "vuv",
-      "unit_amount": 68300,
+      "unit_amount": 683,
       "formatted": "VT683",
-      "id": "price_1T6xIwIYi36CbmfWyOF05iBo",
+      "id": "price_1URcMyIYi36CbmfWzsXuh62O",
       "nickname": "Vanuatu - Map Location Full Real Time"
     },
-    "priceId": "price_1T6xIwIYi36CbmfWyOF05iBo",
+    "priceId": "price_1URcMyIYi36CbmfWzsXuh62O",
     "product": {
       "description": "Acceso a Mapa Completo",
       "name": "GPS SMS Location",

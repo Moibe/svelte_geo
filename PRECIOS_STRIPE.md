@@ -1,5 +1,12 @@
 # Precios de Stripe a corregir — monedas sin subunidad
 
+> **RESUELTO el 2026-10-17.** Se revisó el catálogo real de Stripe (más amplio que la lista de abajo: 30 precios mal
+> cargados, 15 de ellos en el catálogo de la app): por cada uno se creó un precio nuevo con el monto corregido (÷100;
+> VND del nivel 100 ÷10, a 150000) y se archivó el viejo; `static/product-details*.json` apunta a los nuevos `price_id`.
+> CLP e ISK estaban bien. Quedan 15 precios corregidos en Stripe que la app no usa (XAF, XOF, JPY nivel 100 y los de
+> nivel 200 de otros países): si se agregan al catálogo, esos países dejan de caer al precio de México. Lo de abajo
+> queda como historia del problema. Pendiente de código: `scripts/fetch-product-details.js` aún divide entre 100 a ciegas.
+
 > Detectado el 2026-09-20 mientras se arreglaba el valor de conversión que
 > llegaba `null` a Google Ads. **Esto no se puede arreglar desde el código**:
 > hay que tocar el catálogo en el dashboard de Stripe.
