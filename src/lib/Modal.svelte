@@ -234,7 +234,7 @@
   }
 
   // Cargar detalles del producto cuando se muestra el modal, cambia el pa\u00eds o cambia el nivel de precio
-  $: if (isVisible && countryCode && priceLevel) {
+  $: if (isVisible && countryCode && priceLevel && countryISO !== undefined) {
     productDetails = null;
     errorMessage = '';
     loadProductDetails();
@@ -245,7 +245,7 @@
     
     try {
       // Siempre consultar precios por país (tanto en sandbox como producción)
-      productDetails = await getProductDetailsByCountry(countryCode, isProductionMode, priceLevel);
+      productDetails = await getProductDetailsByCountry(countryCode, isProductionMode, priceLevel, countryISO);
       
       if (!isProductionMode) {
         const testPriceId = import.meta.env.VITE_STRIPE_TEST_PRICE_ID;

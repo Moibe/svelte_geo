@@ -2413,5 +2413,35 @@
       "name": "GPS SMS Location",
       "id": "prod_U4wmT5U2hLGQoM"
     }
+  },
+  "KZ": {
+    "price": {
+      "currency": "kzt",
+      "unit_amount": 280000,
+      "formatted": "₸2800",
+      "id": "price_1T6ndeIYi36CbmfWOJr57Fix",
+      "nickname": "Kazajistán - Map Location Full Real Time"
+    },
+    "priceId": "price_1T6ndeIYi36CbmfWOJr57Fix",
+    "product": {
+      "description": "Acceso a Mapa Completo",
+      "name": "GPS SMS Location",
+      "id": "prod_U4wmT5U2hLGQoM"
+    }
+  },
+  "CA": {
+    "price": {
+      "currency": "cad",
+      "unit_amount": 800,
+      "formatted": "$8",
+      "id": "price_1T6n57IYi36CbmfW0zkrwcCI",
+      "nickname": "Canadá - Map Location Full Real Time"
+    },
+    "priceId": "price_1T6n57IYi36CbmfW0zkrwcCI",
+    "product": {
+      "description": "Acceso a Mapa Completo",
+      "name": "GPS SMS Location",
+      "id": "prod_U4wmT5U2hLGQoM"
+    }
   }
 }

@@ -37,7 +37,8 @@ test('todo código del catálogo de precios es alcanzable desde un país de la t
   const { readFileSync } = await import('node:fs')
   const catalogos = ['static/product-details.json', 'static/product-details-100.json'].map((f) => JSON.parse(readFileSync(f, 'utf8')))
   const alcanzables = new Set(Object.values(countryCodeMap))
-  const sinPais = new Set(catalogos.flatMap((c) => Object.keys(c)).filter((codigo) => !alcanzables.has(codigo)))
+  // Las entradas de dos letras ('KZ', 'CA') son por ISO (paises que comparten codigo telefonico): el pais tiene que existir.
+  const sinPais = new Set(catalogos.flatMap((c) => Object.keys(c)).filter((k) => (/^[A-Z]{2}$/.test(k) ? !Object.prototype.hasOwnProperty.call(countryCodeMap, k) : !alcanzables.has(k))))
 
   // Códigos con precio propio en el catálogo pero SIN un país en countryCodeMap que lleve a ellos: esos
   // visitantes caen al precio de México. Se agregan países a la tabla para vaciar esta lista; si aparece

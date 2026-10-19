@@ -31,15 +31,23 @@ const PAIS_RESPALDO = '+52'
  * el fallback silencioso a Mexico de stripe.js, que ante CUALQUIER fallo
  * cobraba MXN con price_id de produccion a un cliente de cualquier pais.
  *
+ * El catalogo se indexa por CODIGO TELEFONICO, salvo las excepciones de paises que comparten codigo con
+ * otro de otra moneda (Kazajistan comparte +7 con Rusia, Canada comparte +1 con EE. UU.): esos llevan
+ * una entrada por su ISO de dos letras ('KZ', 'CA'), que tiene prioridad sobre la del codigo.
+ *
  * @param {string} pais  - codigo telefonico, ej '+52'
  * @param {number} nivel - 100 o 200
+ * @param {string} [iso] - ISO de dos letras del pais, ej 'KZ' (opcional)
  * @returns {{detalles: object, exacto: boolean}|null}
  */
-export function resolverPrecio(pais, nivel) {
+export function resolverPrecio(pais, nivel, iso = '') {
   const catalogo = CATALOGOS[nivel] || CATALOGOS[200]
 
-  const exacto = Boolean(catalogo[pais])
-  const detalles = catalogo[pais] || catalogo[PAIS_RESPALDO]
+  const claveIso = /^[A-Z]{2}$/.test(iso) && catalogo[iso] ? iso : null
+  const clave = claveIso || (catalogo[pais] ? pais : null)
+
+  const exacto = Boolean(clave)
+  const detalles = clave ? catalogo[clave] : catalogo[PAIS_RESPALDO]
 
   if (!detalles || !detalles.priceId) return null
 

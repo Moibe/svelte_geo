@@ -218,7 +218,7 @@ export async function crearSesionPago(
  * @param {boolean} isProductionMode - true = producción, false = sandbox
  * @returns {Promise<Object>} Detalles del precio y producto
  */
-export async function getProductDetailsByCountry(countryCode, isProductionMode = true, priceLevel = 200) {
+export async function getProductDetailsByCountry(countryCode, isProductionMode = true, priceLevel = 200, countryISO = '') {
   try {
     log(`\ud83d\udd0d Buscando detalles para pa\u00eds: ${countryCode} (Modo: ${isProductionMode ? 'PRODUCTION' : 'SANDBOX'}, Nivel: $${priceLevel})`);
     
@@ -227,7 +227,7 @@ export async function getProductDetailsByCountry(countryCode, isProductionMode =
     // El catálogo ya no viaja al navegador: antes se bajaba el archivo entero
     // (25.7 KB el de $200, 48.8 KB el de $100) para usar UNA entrada. Ahora lo
     // resuelve el servidor y manda solo el precio que toca.
-    const url = `/api/precio?pais=${encodeURIComponent(countryCode)}&nivel=${priceLevel}`;
+    const url = `/api/precio?pais=${encodeURIComponent(countryCode)}&nivel=${priceLevel}&iso=${encodeURIComponent(countryISO || '')}`;
     const response = await fetch(url);
 
     if (!response.ok) {
