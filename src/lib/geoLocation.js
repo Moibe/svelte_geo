@@ -203,6 +203,14 @@ export const countryCodeMap = {
   'SB': '+677',
   'KY': '+1345',
   'AZ': '+994',
+  // Caribe Oriental (XCD), como Dominica:
+  'AG': '+1268',
+  'KN': '+1869',
+  'LC': '+1758',
+  'VC': '+1784',
+  'GD': '+1473',
+  'AI': '+1264',
+  'MS': '+1664',
   // Oceanía
   'AU': '+61',
   'NZ': '+64',
