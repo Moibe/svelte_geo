@@ -17,7 +17,7 @@ export const countryCodeMap = {
   'CU': '+53',
   'DO': '+1',
   'PR': '+1',
-  'JM': '+1',
+  'JM': '+1876',
   'HT': '+509',
   'BZ': '+501',
   // Sudamérica
@@ -172,8 +172,7 @@ export const countryCodeMap = {
   'CG': '+242',
   'GQ': '+240',
   'GA': '+241',
-  // Ídem (precio propio en el nivel 100). Jamaica (+1876) NO se agrega: sigue en '+1' (dólares), porque su
-  // precio propio solo existe en el nivel 100 y en el 200 caería al de México.
+  // Ídem (precio propio en el catálogo; los dos niveles tienen los mismos códigos).
   'BS': '+1242',
   'BB': '+1246',
   'BM': '+1441',

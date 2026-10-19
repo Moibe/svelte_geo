@@ -42,8 +42,24 @@ test('todo código del catálogo de precios es alcanzable desde un país de la t
   // Códigos con precio propio en el catálogo pero SIN un país en countryCodeMap que lleve a ellos: esos
   // visitantes caen al precio de México. Se agregan países a la tabla para vaciar esta lista; si aparece
   // un código nuevo aquí, es un precio que nadie puede obtener.
-  // Jamaica: su precio propio (+1876) existe solo en el nivel 100; JM sigue en '+1' (ver countryCodeMap).
-  const CONOCIDOS = ['+1876']
+  const CONOCIDOS = []
 
   assert.deepEqual([...sinPais].sort(), [...CONOCIDOS].sort())
+})
+
+test('los dos niveles del catálogo de precios tienen los mismos países y la misma moneda en cada uno', async () => {
+  const { readFileSync } = await import('node:fs')
+  const [n200, n100] = ['static/product-details.json', 'static/product-details-100.json'].map((f) => JSON.parse(readFileSync(f, 'utf8')))
+
+  assert.deepEqual(Object.keys(n100).sort(), Object.keys(n200).sort())
+
+  for (const codigo of Object.keys(n100)) {
+    assert.equal(n100[codigo].price.currency, n200[codigo].price.currency, `moneda de ${codigo}`)
+    // El nivel 200 es el doble del 100 (con holgura por el redondeo a cifras «bonitas» de cada moneda).
+    const razon = n200[codigo].price.unit_amount / n100[codigo].price.unit_amount
+    assert.ok(razon > 1.7 && razon < 2.5, `${codigo} ${n100[codigo].price.currency}: razón 200/100 = ${razon.toFixed(2)}`)
+    // Lo que el catálogo dice cobrar es un precio de Stripe real (los ids empiezan por price_).
+    assert.match(n100[codigo].priceId, /^price_/)
+    assert.match(n200[codigo].priceId, /^price_/)
+  }
 })
