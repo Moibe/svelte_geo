@@ -15,7 +15,7 @@ export const countryCodeMap = {
   'CR': '+506',
   'PA': '+507',
   'CU': '+53',
-  'DO': '+1',
+  'DO': '+1809',
   'PR': '+1',
   'JM': '+1876',
   'HT': '+509',
@@ -198,6 +198,11 @@ export const countryCodeMap = {
   'TO': '+676',
   'WS': '+685',
   'GE': '+995',
+  // Monedas que se sumaron al catálogo después (República Dominicana pasa a su código, +1809).
+  'CD': '+243',
+  'SB': '+677',
+  'KY': '+1345',
+  'AZ': '+994',
   // Oceanía
   'AU': '+61',
   'NZ': '+64',
