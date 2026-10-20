@@ -32,11 +32,11 @@ const FLAGS = [
    'Qué catálogo se usa: 100 (producto barato) o 200 (producto original).', 'Venta', 22],
   ['price-testing', true, 'boolean', 'Precio de prueba activo',
    'Reemplaza el precio del país por el price_id de abajo. Para probar cobros.', 'Venta', 23],
-  ['price-test', 'price_1T4rQRIYi36CbmfWMkzqBQ2e', 'texto', 'price_id de prueba',
+  ['price-test', 'price_1USRwmI0R8Mnc7bTBJklOoF8', 'texto', 'price_id de prueba',
    'Solo se usa si "Precio de prueba activo" está encendido.', 'Venta', 24],
-  ['pmc', 'pmc_1KaoJKIYi36CbmfWCbDAL0wy', 'texto', 'PMC de producción',
+  ['pmc', 'pmc_1USKlFI0R8Mnc7bTZ1pw4rjF', 'texto', 'PMC de producción',
    'Configuración de métodos de pago de Stripe, modo producción.', 'Venta', 25],
-  ['pmc-test', 'pmc_1RXpciROVpWRmEfBIWAuWceY', 'texto', 'PMC de sandbox',
+  ['pmc-test', '', 'texto', 'PMC de sandbox',
    'Configuración de métodos de pago de Stripe, modo prueba.', 'Venta', 26],
 
   ['wait-safe', 9, 'number', 'Espera en Safe Mode (s)',
@@ -44,16 +44,7 @@ const FLAGS = [
   ['wait-prod', 9, 'number', 'Espera en modo normal (s)',
    'Segundos antes de mostrar el modal de compra, en modo normal.', 'Tiempos', 31],
   ['map-wait-time', 9, 'number', 'Permanencia en mapa (s)',
-   'Segundos en el mapa antes de disparar la conversión map_wait.', 'Tiempos', 32],
-
-  ['map-interaction', false, 'boolean', 'Conversión al interactuar con el mapa',
-   'Dispara una conversión de compra cuando el usuario toca el mapa.', 'Conversiones', 40],
-  ['map-wait', false, 'boolean', 'Conversión por permanencia en mapa',
-   'Dispara una conversión cuando el usuario se queda el tiempo de arriba.', 'Conversiones', 41],
-  ['sell-pop', false, 'boolean', 'Conversión al abrir el modal',
-   'Dispara una conversión cuando aparece el modal de venta.', 'Conversiones', 42],
-  ['phone-search', false, 'boolean', 'Conversión al buscar teléfono',
-   'Dispara una conversión cuando el usuario busca un número.', 'Conversiones', 43],
+   'Segundos en el mapa antes de registrar el evento map_wait.', 'Tiempos', 32],
 
   ['verbose', true, 'boolean', 'Logs en consola',
    'Muestra los logs técnicos en la consola del navegador. Los errores se ven siempre.', 'Depuración', 50],
@@ -70,6 +61,12 @@ for (const [clave, valor, tipo, etiqueta, descripcion, grupo, orden] of FLAGS) {
   nuevos += r.changes
 }
 console.log(`[OK] flags: ${nuevos} nuevos, ${FLAGS.length - nuevos} ya existían (no se tocaron)`)
+
+// Flags que ya no existen (las cuatro «conversiones» de engagement, que empujaban un purchase falso de valor 1
+// a Google Analytics y descalibraron Google Ads): se borran de la base para que el panel no las muestre.
+const OBSOLETOS = ['map-interaction', 'map-wait', 'sell-pop', 'phone-search']
+const borrados = sqlite.prepare(`DELETE FROM flags WHERE clave IN (${OBSOLETOS.map(() => '?').join(',')})`).run(...OBSOLETOS).changes
+if (borrados) console.log(`[OK] flags obsoletos borrados: ${borrados}`)
 
 // ── Cuenta de admin ──────────────────────────────────────────────────────────
 // Solo si no hay ninguna. Nunca pisa una cuenta existente ni su contraseña.

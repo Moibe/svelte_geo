@@ -18,8 +18,6 @@
   // y no sale de ninguna búsqueda del número, y las etiquetas del mapa lo dicen.
   // Las antenas lo son siempre: se reparten al azar alrededor del punto.
   export let simulation = false;
-  export let mapInteractionEnabled = false; // Si true, emite evento al interactuar
-  export let mapWaitEnabled = false;         // Si true, emite evento al pasar X segundos
   export let mapWaitTime = 30;               // Segundos a esperar (desde Firestore)
 
   const dispatch = createEventDispatcher();

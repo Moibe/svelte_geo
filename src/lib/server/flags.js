@@ -38,10 +38,6 @@ export const FLAGS_POR_DEFECTO = {
   waitSafe: 30,
   waitProd: 30,
   mapWaitTime: 30,
-  mapInteractionEnabled: false,
-  mapWaitEnabled: false,
-  sellPopEnabled: false,
-  phoneSearchEnabled: false,
   verbose: true,
 }
 
@@ -61,10 +57,6 @@ const NOMBRES = {
   'wait-safe': 'waitSafe',
   'wait-prod': 'waitProd',
   'map-wait-time': 'mapWaitTime',
-  'map-interaction': 'mapInteractionEnabled',
-  'map-wait': 'mapWaitEnabled',
-  'sell-pop': 'sellPopEnabled',
-  'phone-search': 'phoneSearchEnabled',
   verbose: 'verbose',
 }
 
