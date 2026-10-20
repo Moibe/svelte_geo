@@ -17,7 +17,7 @@
   import { borrarCoordenadasDelPago, guardar, leer, leerCoordenadasDelPago, purgarCoordenadasVencidas, quitar } from '$lib/almacenamiento.js';
   import { consumirRecargaPorConsentimiento, cuandoHayAnalitica, hayRecargaPorConsentimiento } from '$lib/consentimiento-navegador.js';
   import { setLanguageFromCountry, getLanguageFromCountry } from '$lib/i18n.js';
-  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapWaitConfig, onMapWaitChange, getPriceLevelConfig, onPriceLevelChange } from '$lib/flags.js';
+  import { getSafeModeConfig, onSafeModeChange, getStripeModeConfig, onStripeModeChange, getModalWaitConfig, onModalWaitChange, getSellConfig, onSellChange, getVerboseConfig, onVerboseChange, getMapInteractionConfig, onMapInteractionChange, getMapWaitConfig, onMapWaitChange, getSellPopConfig, onSellPopChange, getPhoneSearchConfig, onPhoneSearchChange, getPriceLevelConfig, onPriceLevelChange } from '$lib/flags.js';
   import { verboseStore, log, warn, error } from '$lib/logger.js';
 
   let phoneNumber = '';
@@ -77,8 +77,15 @@
   let waitSafe = data.flags.waitSafe; // Tiempo de espera en Safe Mode (segundos)
   let waitProd = data.flags.waitProd; // Tiempo de espera en modo producción (segundos)
   let sellEnabled = data.flags.sellEnabled; // Estado de venta (true = mostrar modal)
-  let mapWaitTime = 30;              // Segundos en el mapa antes de registrar map_wait
+  let mapInteractionEnabled = false; // Si true, dispara purchase al interactuar con mapa
+  let unsubscribeMapInteraction = null;
+  let mapWaitEnabled = false;        // Si true, dispara purchase al quedarse X segundos en mapa
+  let mapWaitTime = 30;              // Segundos a esperar (desde Firestore)
   let unsubscribeMapWait = null;
+  let sellPopEnabled = false;        // Si true, dispara purchase cuando se abre el modal de ventas
+  let unsubscribeSellPop = null;
+  let phoneSearchEnabled = false;    // Si true, dispara purchase cuando el usuario busca un teléfono
+  let unsubscribePhoneSearch = null;
   let priceLevel = data.flags.priceLevel;   // Nivel de precio (100 = barato, 200 = original)
   let unsubscribePriceLevel = null;  // Función para detener listener de Price Level
 
@@ -213,19 +220,56 @@
       sellEnabled = true; // Default a mostrar modal
     }
 
-
     try {
-      mapWaitTime = (await getMapWaitConfig()).waitTime;
-      log(`⏱️ Map Wait: ${mapWaitTime}s`);
-      unsubscribeMapWait = onMapWaitChange((newValue) => {
-        mapWaitTime = newValue.waitTime;
-        log(`⏱️ Map Wait actualizado: ${newValue.waitTime}s`);
+      mapInteractionEnabled = await getMapInteractionConfig();
+      log('🗺️ Map Interaction purchase:', mapInteractionEnabled ? 'ACTIVADO' : 'DESACTIVADO');
+      unsubscribeMapInteraction = onMapInteractionChange((newValue) => {
+        mapInteractionEnabled = newValue;
+        log('🗺️ Map Interaction purchase actualizado:', newValue ? 'ACTIVADO' : 'DESACTIVADO');
       });
     } catch (err) {
-      error('❌ Error al cargar map-wait-time:', err);
+      error('❌ Error al cargar map-interaction:', err);
+      mapInteractionEnabled = false;
     }
 
+    try {
+      const mapWaitCfg = await getMapWaitConfig();
+      mapWaitEnabled = mapWaitCfg.enabled;
+      mapWaitTime = mapWaitCfg.waitTime;
+      log(`⏱️ Map Wait purchase: ${mapWaitEnabled ? 'ACTIVADO' : 'DESACTIVADO'} (${mapWaitTime}s)`);
+      unsubscribeMapWait = onMapWaitChange((newValue) => {
+        mapWaitEnabled = newValue.enabled;
+        mapWaitTime = newValue.waitTime;
+        log(`⏱️ Map Wait purchase actualizado: ${newValue.enabled ? 'ACTIVADO' : 'DESACTIVADO'} (${newValue.waitTime}s)`);
+      });
+    } catch (err) {
+      error('❌ Error al cargar map-wait:', err);
+      mapWaitEnabled = false;
+    }
 
+    try {
+      sellPopEnabled = await getSellPopConfig();
+      log(`🛒 Sell Pop purchase: ${sellPopEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      unsubscribeSellPop = onSellPopChange((newValue) => {
+        sellPopEnabled = newValue;
+        log(`🛒 Sell Pop purchase actualizado: ${newValue ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      });
+    } catch (err) {
+      error('❌ Error al cargar sell-pop:', err);
+      sellPopEnabled = false;
+    }
+
+    try {
+      phoneSearchEnabled = await getPhoneSearchConfig();
+      log(`📱 Phone Search purchase: ${phoneSearchEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      unsubscribePhoneSearch = onPhoneSearchChange((newValue) => {
+        phoneSearchEnabled = newValue;
+        log(`📱 Phone Search purchase actualizado: ${newValue ? 'ACTIVADO' : 'DESACTIVADO'}`);
+      });
+    } catch (err) {
+      error('❌ Error al cargar phone-search:', err);
+      phoneSearchEnabled = false;
+    }
 
     try {
       priceLevel = await getPriceLevelConfig();
@@ -580,8 +624,17 @@
     if (unsubscribeVerbose) {
       unsubscribeVerbose();
     }
+    if (unsubscribeMapInteraction) {
+      unsubscribeMapInteraction();
+    }
     if (unsubscribeMapWait) {
       unsubscribeMapWait();
+    }
+    if (unsubscribeSellPop) {
+      unsubscribeSellPop();
+    }
+    if (unsubscribePhoneSearch) {
+      unsubscribePhoneSearch();
     }
     if (unsubscribePriceLevel) {
       unsubscribePriceLevel();
@@ -606,6 +659,7 @@
     }));
 
     // logConversion SIEMPRE se ejecuta (MariaDB registra todo)
+    // sellPopEnabled solo controla si se marca como conversión en GA4
     logConversion({
       type: 'sell_pop',
       gaClientId: getGAClientId(),
@@ -620,10 +674,78 @@
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
 
+    if (sellPopEnabled) {
+      const currency = currencyByCountry[userCountryCode] || 'USD';
+      const transactionId = `sell_pop_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'sell_pop',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🛒 Sell Pop purchase enviado a GA4:', purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'sell_pop', item_name: 'Modal de Ventas Abierto', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🛒 Sell Pop purchase enviado vía dataLayer:', purchaseData);
+      }
+    } else {
+      log('🛒 Sell Pop: solo logging a DB (conversión GA4 desactivada)');
+    }
   }
 
   function handlePhoneSearch() {
     // logConversion SIEMPRE se ejecuta (MariaDB registra toda búsqueda)
+    // phoneSearchEnabled solo controla si se marca como conversión en GA4
+    const currency = currencyByCountry[userCountryCode] || 'USD';
+
+    if (phoneSearchEnabled) {
+      const transactionId = `phone_search_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'phone_search',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('📱 Phone Search purchase enviado a GA4:', purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'phone_search', item_name: 'Búsqueda por Teléfono', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('📱 Phone Search purchase enviado vía dataLayer:', purchaseData);
+      }
+    } else {
+      log('📱 Phone Search: solo logging a DB (conversión GA4 desactivada)');
+    }
 
     logConversion({
       type: 'phone_search',
@@ -640,8 +762,38 @@
     });
   }
 
+  // Currencias por código de país (para los purchases de engagement)
+  const currencyByCountry = {
+    '+52': 'MXN', '+1': 'USD', '+55': 'BRL', '+34': 'EUR', '+33': 'EUR',
+    '+49': 'EUR', '+44': 'GBP', '+54': 'ARS', '+56': 'CLP', '+57': 'COP',
+    '+51': 'PEN', '+593': 'USD', '+591': 'BOB', '+595': 'PYG', '+598': 'UYU',
+    '+351': 'EUR', '+43': 'EUR', '+32': 'EUR', '+352': 'EUR', '+353': 'EUR',
+    '+39': 'EUR', '+31': 'EUR', '+30': 'EUR', '+358': 'EUR',
+    '+359': 'EUR', '+355': 'ALL', '+36': 'HUF', '+82': 'KRW',
+    '+234': 'NGN', '+60': 'MYR', '+45': 'DKK', '+852': 'HKD', '+976': 'MNT',
+    '+224': 'GNF', '+264': 'NAD', '+256': 'UGX', '+267': 'BWP', '+374': 'AMD',
+    '+7': 'RUB', '+66': 'THB', '+258': 'MZN', '+65': 'SGD', '+373': 'MDL',
+    '+995': 'GEL', '+1246': 'BBD', '+505': 'NIO', '+501': 'BZD', '+212': 'MAD',
+    '+380': 'UAH', '+244': 'AOA', '+1868': 'TTD', '+679': 'FJD', '+20': 'EGP',
+    '+253': 'DJF', '+95': 'MMK', '+260': 'ZMW', '+47': 'NOK', '+853': 'MOP',
+    '+1876': 'JMD', '+91': 'INR', '+974': 'QAR', '+257': 'BIF', '+266': 'LSL',
+    '+254': 'KES', '+269': 'KMF', '+689': 'XPF', '+86': 'CNY', '+856': 'LAK',
+    '+268': 'SZL', '+504': 'HNL', '+354': 'ISK', '+966': 'SAR', '+972': 'ILS',
+    '+967': 'YER', '+261': 'MGA', '+250': 'RWF', '+48': 'PLN', '+500': 'FKP',
+    '+1767': 'XCD', '+502': 'GTQ', '+46': 'SEK', '+41': 'CHF', '+977': 'NPR',
+    '+231': 'LRD', '+265': 'MWK', '+232': 'SLE', '+297': 'AWG', '+63': 'PHP',
+    '+238': 'CVE', '+592': 'GYD', '+213': 'DZD', '+387': 'BAM', '+420': 'CZK',
+    '+230': 'MUR', '+597': 'SRD', '+252': 'SOS', '+389': 'MKD', '+1242': 'BSD',
+    '+64': 'NZD', '+220': 'GMD', '+84': 'VND', '+678': 'VUV', '+685': 'WST',
+    '+255': 'TZS', '+350': 'GIP', '+375': 'BYN', '+676': 'TOP', '+62': 'IDR',
+    '+61': 'AUD', '+381': 'RSD', '+506': 'CRC', '+1441': 'BMD', '+599': 'ANG',
+    '+290': 'SHP', '+248': 'SCR', '+960': 'MVR', '+94': 'LKR', '+855': 'KHR',
+    '+40': 'RON',
+  };
+
   function handleMapWaited() {
     // logConversion SIEMPRE se ejecuta (MariaDB registra todo)
+    // mapWaitEnabled solo controla si se marca como conversión en GA4
     logConversion({
       type: 'map_wait',
       gaClientId: getGAClientId(),
@@ -656,10 +808,44 @@
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
 
+    if (mapWaitEnabled) {
+      const currency = currencyByCountry[userCountryCode] || 'USD';
+      const transactionId = `map_wait_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'map_wait',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log(`⏱️ Map Wait purchase enviado a GA4 (${mapWaitTime}s):`, purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_wait', item_name: `Permanencia en Mapa ${mapWaitTime}s`, item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log(`⏱️ Map Wait purchase enviado vía dataLayer (${mapWaitTime}s):`, purchaseData);
+      }
+    } else {
+      log('⏱️ Map Wait: solo logging a DB (conversión GA4 desactivada)');
+    }
   }
 
   function handleMapInteracted() {
     // logConversion SIEMPRE se ejecuta (MariaDB registra todo)
+    // mapInteractionEnabled solo controla si se marca como conversión en GA4
     logConversion({
       type: 'map_interaction',
       gaClientId: getGAClientId(),
@@ -674,6 +860,39 @@
       utmSource, utmMedium, utmCampaign, utmTerm, utmContent, gclid, fbclid,
     });
 
+    if (mapInteractionEnabled) {
+      const currency = currencyByCountry[userCountryCode] || 'USD';
+      const transactionId = `map_interaction_${Date.now()}`;
+      const purchaseData = {
+        transaction_id: transactionId,
+        value: 1,
+        currency,
+        price_id: 'map_interaction',
+        country_iso: userCountryISO,
+      };
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', {
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🗺️ Map Interaction purchase enviado a GA4:', purchaseData);
+      } else if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+          event: 'purchase',
+          transaction_id: purchaseData.transaction_id,
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          country_iso: purchaseData.country_iso,
+          items: [{ item_id: 'map_interaction', item_name: 'Interacción con Mapa GPS', item_category: 'Engagement', price: 1, quantity: 1 }]
+        });
+        log('🗺️ Map Interaction purchase enviado vía dataLayer:', purchaseData);
+      }
+    } else {
+      log('🗺️ Map Interaction: solo logging a DB (conversión GA4 desactivada)');
+    }
   }
 
   // Punto de partida del simulador: la ubicación aproximada del visitante por su IP, que SÍ trae
@@ -990,7 +1209,7 @@
     {/if}
     {#if showMap}
       <div class="map-wrapper">
-        <Map lat={mapCoords.lat} lng={mapCoords.lng} simulation={modoTelefono} on:mapInteracted={handleMapInteracted} mapWaitTime={mapWaitTime} on:mapWaited={handleMapWaited} on:mapZoom={handleMapZoom} />
+        <Map lat={mapCoords.lat} lng={mapCoords.lng} simulation={modoTelefono} mapInteractionEnabled={mapInteractionEnabled} on:mapInteracted={handleMapInteracted} mapWaitEnabled={mapWaitEnabled} mapWaitTime={mapWaitTime} on:mapWaited={handleMapWaited} on:mapZoom={handleMapZoom} />
       </div>
     {/if}
   </div>

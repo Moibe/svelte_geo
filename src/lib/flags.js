@@ -163,6 +163,15 @@ export const onSellChange = (cb) => alCambiarFlag('sellEnabled', cb)
 export const getPriceLevelConfig = () => obtenerFlag('priceLevel')
 export const onPriceLevelChange = (cb) => alCambiarFlag('priceLevel', cb)
 
+export const getMapInteractionConfig = () => obtenerFlag('mapInteractionEnabled')
+export const onMapInteractionChange = (cb) => alCambiarFlag('mapInteractionEnabled', cb)
+
+export const getSellPopConfig = () => obtenerFlag('sellPopEnabled')
+export const onSellPopChange = (cb) => alCambiarFlag('sellPopEnabled', cb)
+
+export const getPhoneSearchConfig = () => obtenerFlag('phoneSearchEnabled')
+export const onPhoneSearchChange = (cb) => alCambiarFlag('phoneSearchEnabled', cb)
+
 export const getVerboseConfig = () => obtenerFlag('verbose')
 export const onVerboseChange = (cb) => alCambiarFlag('verbose', cb)
 
@@ -181,13 +190,19 @@ export function onModalWaitChange(callback) {
   }
 }
 
-/** El tiempo de permanencia en el mapa antes de registrar map_wait. */
+/** El flag de permanencia en mapa y su tiempo, juntos (igual que antes). */
 export async function getMapWaitConfig() {
-  return { waitTime: await obtenerFlag('mapWaitTime') }
+  return { enabled: await obtenerFlag('mapWaitEnabled'), waitTime: await obtenerFlag('mapWaitTime') }
 }
 
 export function onMapWaitChange(callback) {
-  return alCambiarFlag('mapWaitTime', () => callback({ waitTime: actuales.mapWaitTime }))
+  const emitir = () => callback({ enabled: actuales.mapWaitEnabled, waitTime: actuales.mapWaitTime })
+  const a = alCambiarFlag('mapWaitEnabled', emitir)
+  const b = alCambiarFlag('mapWaitTime', emitir)
+  return () => {
+    a()
+    b()
+  }
 }
 
 /**

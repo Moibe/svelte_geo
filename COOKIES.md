@@ -105,7 +105,8 @@ Fuera de la región: `default` con todo `granted` y GTM se carga de inmediato, c
 `default`, luego `update` (si ya había elección) y **después** `gtm.js`. Así todos los
 hits de Google salen con el estado definitivo. La función `gtag` del script de arranque
 empuja el objeto `arguments`, no un arreglo: con un arreglo Google ignora el `default` **en
-silencio** (hay una prueba que lo cuida). `gtag` NO es global a propósito.
+silencio** (hay una prueba que lo cuida). `gtag` NO es global a propósito: los cuatro
+`purchase` de «engagement» (`+page.svelte`) cambian de rama si existe `window.gtag`.
 
 **Modo básico, no avanzado**: GTM no se carga hasta que haya algún permiso. El modo
 avanzado (cargarlo con todo denegado) manda a Google la URL, el título y los datos de las
@@ -306,8 +307,8 @@ Tag Assistant (<https://tagassistant.google.com>) con `?cookies=preview`.
 4. **`/privacy` no existe en producción** hasta definir `PRIVACY_CONTACT_EMAIL` (ver `SEO.md`).
    Mientras tanto el aviso no enlaza a ninguna política (sí a «cómo usa Google tus datos»).
 5. **Registros del servidor**: los de pm2 no rotan y los de nginx guardan la IP 14 días.
-6. Los cuatro `purchase` de «engagement» que empujaban un evento falso de valor 1 a Google (`sell_pop`,
-   `phone_search`, `map_wait`, `map_interaction`) se **borraron el 2026-10-19**, junto con sus cuatro
-   interruptores del panel. Esos cuatro eventos siguen registrándose en la base propia (`logConversion`),
-   solo que ya no llegan a Google Analytics ni a Google Ads como compras.
+6. Los cuatro `purchase` de «engagement» (`sell_pop`, `phone_search`, `map_wait`,
+   `map_interaction`) siguen empujando al `dataLayer` cuando su flag está encendido
+   (hoy apagados); si Google se carga después de que la persona acepte, los eventos en
+   cola se reenvían. Están pendientes de borrar (ver `SEO.md`).
 7. **Revisión legal**: nada de esto la sustituye.
