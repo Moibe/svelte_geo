@@ -304,8 +304,8 @@ Tag Assistant (<https://tagassistant.google.com>) con `?cookies=preview`.
    `KeyError` (HTTP 500 y reintentos de Stripe) en `checkout.session.async_payment_succeeded`
    cuando el pago no trae `gaCliente`, y el aviso va a hacer que haya más pagos sin él. No es
    de este repo.
-4. **`/privacy` no existe en producción** hasta definir `PRIVACY_CONTACT_EMAIL` (ver `SEO.md`).
-   Mientras tanto el aviso no enlaza a ninguna política (sí a «cómo usa Google tus datos»).
+4. **`/privacy` está activa desde el 2026-10-20** (`PRIVACY_CONTACT_EMAIL=privacidad@geoservices.space` en el `.env` del
+   droplet). El aviso la enlaza (y el pie, la FAQ y el sitemap). Si algún día se vacía esa variable, la ruta vuelve a dar 404.
 5. **Registros del servidor**: los de pm2 no rotan y los de nginx guardan la IP 14 días.
 6. Los cuatro `purchase` de «engagement» (`sell_pop`, `phone_search`, `map_wait`,
    `map_interaction`) siguen empujando al `dataLayer` cuando su flag está encendido
