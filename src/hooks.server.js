@@ -3,6 +3,7 @@ import { COOKIE_CONSENTIMIENTO, esVistaPrevia, leerDecision, valorDeCookie } fro
 import { COOKIE_IDIOMA, esRTL, resolverIdiomaDeRequest } from '$lib/idiomas.js'
 import { redireccionDeNormalizacion } from '$lib/seo.js'
 import { COOKIE_SESION, borrarCookieDeSesion, ponerCookieDeSesion, validarTokenDeSesion } from '$lib/server/auth.js'
+import { obtenerFlags } from '$lib/server/flags.js'
 import { paisDeIp, precargarGeoip } from '$lib/server/pais.js'
 
 /**
@@ -143,7 +144,15 @@ export async function handle({ event, resolve }) {
   const consentimiento = event.locals.consentimiento
   const regionIp = consentimiento?.regionIp
   // Se arman al reemplazar (solo las páginas HTML llevan los marcadores), no por cada request.
-  const scriptConsentimiento = () => (consentimiento ? scriptDeArranque({ regionIp, gtmId: GTM_ID }) : '')
+  // El nivel de precio vigente (100/200) viaja a la capa de datos de Analytics para poder comparar niveles.
+  const nivelDePrecio = () => {
+    try {
+      return obtenerFlags().priceLevel
+    } catch {
+      return null
+    }
+  }
+  const scriptConsentimiento = () => (consentimiento ? scriptDeArranque({ regionIp, gtmId: GTM_ID, nivelDePrecio: nivelDePrecio() }) : '')
   // El <noscript> de GTM solo para quien SEGURO está fuera de la región regulada: sin
   // JavaScript no hay forma de pedir consentimiento ni de leer la zona horaria.
   // (Ni para quien ya tiene una elección guardada: puede ser un rechazo hecho desde otra IP.)

@@ -65,6 +65,10 @@ const PLANTILLA = `(function (w, d, c) {
   var dl = (w.dataLayer = w.dataLayer || []);
   function gtag() { dl.push(arguments); }
 
+  /* Nivel de precio vigente del SITIO (100 o 200): un dato de la tienda, no de la persona. Va antes de que se
+     cargue Tag Manager para que la etiqueta de Analytics lo mande en TODOS sus eventos (visita, compra…). */
+  if (c.nivelDePrecio) { dl.push({ price_level: c.nivelDePrecio }); }
+
   /* ---- 1. ¿región regulada? ---- */
   function empiezaCon(t, prefijos) {
     for (var i = 0; i < prefijos.length; i++) { if (t.indexOf(prefijos[i]) === 0) return true; }
@@ -282,9 +286,12 @@ const PLANTILLA = `(function (w, d, c) {
  * @param {{ regionIp: 'si'|'no'|'?', gtmId: string }} opciones
  * @returns {string}
  */
-export function scriptDeArranque({ regionIp, gtmId }) {
+export function scriptDeArranque({ regionIp, gtmId, nivelDePrecio }) {
+  const nivel = Number(nivelDePrecio)
+
   const configuracion = {
     regionIp: ['si', 'no'].includes(regionIp) ? regionIp : '?',
+    nivelDePrecio: Number.isFinite(nivel) && nivel > 0 ? nivel : 0,
     gtm: String(gtmId),
     cookie: COOKIE_CONSENTIMIENTO,
     version: VERSION_CONSENTIMIENTO,

@@ -277,6 +277,8 @@
       unsubscribePriceLevel = onPriceLevelChange((newValue) => {
         priceLevel = newValue;
         log(`💲 Price Level actualizado: ${newValue}`);
+        // Los eventos siguientes de esta visita llevan el nivel nuevo
+        if (typeof window !== 'undefined' && window.dataLayer) window.dataLayer.push({ price_level: newValue });
       });
     } catch (err) {
       error('❌ Error al cargar price-level:', err);
@@ -469,6 +471,7 @@
                   transaction_id: data.transaction_id,
                   value: data.value,
                   currency: data.currency,
+                  price_level: data.price_level ?? null,
                   items: [{
                     item_id: data.price_id,
                     item_name: 'Mapa Completo GPS',
@@ -482,7 +485,8 @@
                   event: 'compra_geo',
                   transaction_id: data.transaction_id,
                   value: data.value,
-                  currency: data.currency
+                  currency: data.currency,
+                  price_level: data.price_level ?? null
                 });
                 log('✅ Eventos purchase y compra_geo enviados vía GTM:', data);
               }

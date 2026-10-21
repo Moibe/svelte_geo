@@ -683,3 +683,32 @@ test('retirar un permiso desde otra pestaña recarga hacia urlAlRecargar si la p
   assert.equal(A.consent.sincronizar(), true)
   assert.deepEqual(A.recargas, ['/es?payment=success'])
 })
+
+// ── nivel de precio en la capa de datos ──────────────────────────────────────────────────────────
+
+test('el nivel de precio se publica en la capa de datos ANTES de cargar Google, y solo si es válido', () => {
+  const con = (nivel) => {
+    const html = scriptDeArranque({ regionIp: 'no', gtmId: 'GTM-X', nivelDePrecio: nivel })
+    const contexto = vm.createContext({
+      window: { location: { search: '', hostname: 'x.test', protocol: 'https:' }, dispatchEvent() {}, addEventListener() {}, localStorage: { removeItem() {} }, sessionStorage: { setItem() {} } },
+      document: { cookie: '', createElement: () => ({}), head: { appendChild() {} }, documentElement: { appendChild() {} }, visibilityState: 'visible', addEventListener() {} },
+      CustomEvent: function () {},
+    })
+    vm.runInContext(`Intl = { DateTimeFormat: function () { return { resolvedOptions: function () { return { timeZone: 'America/Mexico_City' } } } } }`, contexto)
+    vm.runInContext(html.replace(/^<script>/, '').replace(/<\/script>$/, ''), contexto)
+
+    return JSON.parse(JSON.stringify((contexto.window.dataLayer || []).map((e) => (Object.prototype.toString.call(e) === '[object Arguments]' ? Array.from(e) : e))))
+  }
+
+  const dl100 = con(100)
+  const posNivel = dl100.findIndex((e) => e && e.price_level === 100)
+  const posGtm = dl100.findIndex((e) => e && e.event === 'gtm.js')
+
+  assert.ok(posNivel >= 0, 'el nivel 100 está en la capa de datos')
+  assert.ok(posGtm < 0 || posNivel < posGtm, 'va antes de gtm.js')
+  assert.equal(con(200).some((e) => e && e.price_level === 200), true)
+
+  for (const malo of [null, undefined, 0, -5, 'abc', NaN]) {
+    assert.equal(con(malo).some((e) => e && 'price_level' in e), false, `no se publica ${String(malo)}`)
+  }
+})

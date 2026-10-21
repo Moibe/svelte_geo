@@ -313,6 +313,7 @@
         value: purchaseValue,
         currency: (stripePrice.currency || getCurrency(countryCode).code).toUpperCase(),
         price_id: productDetails.priceId,
+        price_level: priceLevel, // 100 o 200: con el que se pagó, aunque el interruptor cambie antes de volver de Stripe
         country_code: countryCode,
         country_iso: countryISO, // Usar ISO real de geolocalización
         timestamp: Date.now()
