@@ -5,7 +5,8 @@
 > VND del nivel 100 ÷10, a 150000) y se archivó el viejo; `static/product-details*.json` apunta a los nuevos `price_id`.
 > CLP e ISK estaban bien. Quedan 15 precios corregidos en Stripe que la app no usa (XAF, XOF, JPY nivel 100 y los de
 > nivel 200 de otros países): si se agregan al catálogo, esos países dejan de caer al precio de México. Lo de abajo
-> queda como historia del problema. Pendiente de código: `scripts/fetch-product-details.js` aún divide entre 100 a ciegas.
+> queda como historia del problema. El script `scripts/fetch-product-details.js`, que dividía entre 100 a ciegas, se reescribió
+> el 2026-10-21 (ver «Cómo corregirlo» y «Qué ya se arregló en el código»).
 
 > Detectado el 2026-09-20 mientras se arreglaba el valor de conversión que
 > llegaba `null` a Google Ads. **Esto no se puede arreglar desde el código**:
@@ -17,8 +18,8 @@ Stripe expresa `unit_amount` en la subunidad de la moneda (centavos) para la
 mayoría de monedas, **pero en las llamadas "zero-decimal" el valor ya está en
 unidades enteras**: para JPY, `unit_amount: 1780` son ¥1780, no ¥17.80.
 
-[`scripts/fetch-product-details.js:118`](scripts/fetch-product-details.js#L118)
-hace `unit_amount / 100` a ciegas para toda moneda al calcular el campo
+El script viejo `scripts/fetch-product-details.js` (reescrito el 2026-10-21)
+hacía `unit_amount / 100` a ciegas para toda moneda al calcular el campo
 `formatted`, y los precios del catálogo se cargaron con esa misma lógica. El
 resultado: en esas monedas **Stripe cobra 100× lo que la app muestra**.
 
@@ -34,11 +35,17 @@ La lista de monedas sin subunidad vive en
 
 Los precios de Stripe son **inmutables**: no se editan. Por cada uno hay que
 crear un precio nuevo con el `unit_amount` corregido, archivar el viejo, y
-después regenerar los JSON:
+después poner al día los JSON:
 
 ```bash
-npm run fetch-product-details
+npm run fetch-product-details              # simulacro: muestra qué cambiaría
+npm run fetch-product-details -- --aplicar  # escribe los dos JSON
 ```
+
+El script no regenera el catálogo desde cero (la relación código telefónico →
+moneda no sale de Stripe): refresca cada entrada existente con el precio activo
+de su moneda y nunca agrega ni quita países. Detalles en la cabecera de
+[`scripts/fetch-product-details.js`](scripts/fetch-product-details.js).
 
 ---
 
@@ -116,10 +123,10 @@ decimales antes de decidir.
   serializaba como `null`, y así llegaba a Google Ads).
 - La moneda ahora sale del objeto `price` de Stripe, no del mapa local.
 
-**Pendiente**: `scripts/fetch-product-details.js:118` sigue dividiendo entre
-100 a ciegas, así que el campo `formatted` seguirá mal en estas monedas
-mientras no use `toMajorUnits()`. Se dejó sin tocar para no cambiar los JSON
-en medio de la migración.
+**Resuelto el 2026-10-21**: `scripts/fetch-product-details.js` se reescribió y
+ya respeta las monedas sin subunidad (usa `toMajorUnits()`). Su primera corrida
+corrigió el campo `formatted` de 9 entradas que seguían con la cifra de antes
+(CLP «$50» → «$5000», VND, LBP, AFN, ALL, SOS), sin tocar ningún `price_id`.
 
 ---
 

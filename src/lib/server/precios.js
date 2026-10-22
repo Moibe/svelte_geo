@@ -9,7 +9,7 @@ import catalogo100 from '../../../static/product-details-100.json'
  * abriera el modal. Ahora el servidor manda solo el precio que toca.
  *
  * Los JSON se importan desde static/ en vez de duplicarlos: siguen siendo el
- * mismo unico archivo que regenera `npm run fetch-product-details`, y siguen
+ * mismo unico archivo que pone al dia `npm run fetch-product-details`, y siguen
  * sirviendose en /product-details.json por si algo externo los consume. Vite
  * los inlinea en el bundle del servidor, asi que no hay lectura de disco en
  * tiempo de request.

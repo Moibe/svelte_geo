@@ -5,9 +5,9 @@
  * mayoría de monedas, PERO en las llamadas "zero-decimal" el valor ya está en
  * unidades enteras: para JPY, `unit_amount: 1780` son ¥1780, no ¥17.80.
  *
- * Dividir entre 100 a ciegas —que es lo que hacía Modal.svelte y lo que sigue
- * haciendo scripts/fetch-product-details.js para el campo `formatted`— reporta
- * un valor 100 veces menor en esas monedas.
+ * Dividir entre 100 a ciegas —que es lo que hacía Modal.svelte y lo que hacía
+ * scripts/fetch-product-details.js para el campo `formatted`, hasta que se
+ * reescribió y pasó a usar esto— reporta un valor 100 veces menor en esas monedas.
  *
  * Referencia: https://docs.stripe.com/currencies#zero-decimal
  */
@@ -53,9 +53,10 @@ export function toMajorUnits(unitAmount, currency) {
  * código de la moneda (`$200 MXN`, `€10 EUR`, `¥1,780 JPY`).
  *
  * Sale de `unit_amount` y de la moneda del PRECIO, o sea de lo que de verdad se
- * cobra. El campo `formatted` del catálogo no sirve para esto: lo calcula
- * scripts/fetch-product-details.js dividiendo entre 100 a ciegas, y en las
- * monedas sin subunidad eso muestra un importe 100 veces menor al cobrado.
+ * cobra. El campo `formatted` del catálogo no sirve para esto: es solo un texto
+ * de respaldo que el script de sincronización con Stripe conserva, y antes se
+ * calculaba dividiendo entre 100 a ciegas (en las monedas sin subunidad mostraba
+ * un importe 100 veces menor al cobrado).
  * Tampoco sirve la moneda del país del visitante: cuando el catálogo no tiene
  * precio para su país se cobra el de México, y rotularlo con la moneda del
  * visitante ("$200 BRL") decía una moneda que no era la que se cobraba.

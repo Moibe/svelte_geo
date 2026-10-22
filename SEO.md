@@ -160,7 +160,7 @@ idiomas. Si se cambia un texto, vale la pena repetir ese ciclo.
 - **Nombre del producto en Stripe**: en Checkout y en el recibo aparece «GPS SMS
   Location» / «Acceso a Mapa Completo», que sugiere localización real por SMS y
   contradice el aviso de simulación. Se cambia en el dashboard de Stripe (y se
-  regeneran los JSON de `static/` con `npm run fetch-product-details`).
+  ponen al día los JSON de `static/` con `npm run fetch-product-details -- --aplicar`).
 - **Precios de Stripe cargados 100 veces de más** en monedas sin subunidad
   (`PRECIOS_STRIPE.md`): el modal ya muestra lo que Stripe cobra de verdad, pero
   el precio sigue siendo el equivocado hasta que se corrija en Stripe.
