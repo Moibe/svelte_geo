@@ -10,7 +10,6 @@
     "start": "node build",
     "test": "node --test",
     "prepare": "svelte-kit sync || echo ''",
-    "fetch-prices": "node scripts/fetch-stripe-prices.js",
     "fetch-product-details": "node scripts/fetch-product-details.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=.env scripts/migrate.mjs",
