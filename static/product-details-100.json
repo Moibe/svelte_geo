@@ -1098,7 +1098,7 @@
     "price": {
       "currency": "clp",
       "unit_amount": 5000,
-      "formatted": "$50",
+      "formatted": "$5000",
       "id": "price_1US9lvI0R8Mnc7bT6cytJI6f",
       "nickname": "Chile - Map Location"
     },
@@ -1218,7 +1218,7 @@
     "price": {
       "currency": "vnd",
       "unit_amount": 150000,
-      "formatted": "₫15000",
+      "formatted": "₫150000",
       "id": "price_1US9lbI0R8Mnc7bTffv3ebhz",
       "nickname": "Vietnam - Map Location"
     },
@@ -1520,7 +1520,7 @@
       "unit_amount": 10000,
       "formatted": "$100",
       "id": "price_1US9m2I0R8Mnc7bT6Ebex2jC",
-      "nickname": "México - Map Location Full Real Time"
+      "nickname": null
     },
     "priceId": "price_1US9m2I0R8Mnc7bT6Ebex2jC",
     "product": {
@@ -2133,7 +2133,7 @@
     "price": {
       "currency": "lbp",
       "unit_amount": 51500000,
-      "formatted": "L£51500000",
+      "formatted": "L£515000",
       "id": "price_1US9loI0R8Mnc7bTrVazPUFY",
       "nickname": "Líbano - Map Location"
     },
@@ -2403,7 +2403,7 @@
     "price": {
       "currency": "afn",
       "unit_amount": 36300,
-      "formatted": "؋36300",
+      "formatted": "؋363",
       "id": "price_1US9m1I0R8Mnc7bTpf6yl7VQ",
       "nickname": "Afganistán - Map Location"
     },

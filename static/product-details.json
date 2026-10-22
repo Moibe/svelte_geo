@@ -41,7 +41,7 @@
       "unit_amount": 20000,
       "currency": "mxn",
       "formatted": "$200",
-      "nickname": "Default"
+      "nickname": null
     }
   },
   "+355": {
@@ -55,8 +55,8 @@
       "id": "price_1US9m6I0R8Mnc7bTqb1hol2y",
       "unit_amount": 110000,
       "currency": "all",
-      "formatted": "L11",
-      "nickname": "Albania - GPS SMS Location"
+      "formatted": "L1100",
+      "nickname": null
     }
   },
   "+30": {
@@ -1923,7 +1923,7 @@
     "price": {
       "currency": "sos",
       "unit_amount": 664000,
-      "formatted": "SOS664000",
+      "formatted": "SOS6640",
       "id": "price_1US9mBI0R8Mnc7bTJcezyDa7",
       "nickname": "Somalia - GPS Location"
     },
@@ -2403,7 +2403,7 @@
     "price": {
       "currency": "afn",
       "unit_amount": 75200,
-      "formatted": "؋75200",
+      "formatted": "؋752",
       "id": "price_1US9mWI0R8Mnc7bTw2weiUGS",
       "nickname": "Afganistán - GPS Location"
     },
