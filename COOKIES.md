@@ -184,8 +184,9 @@ como mexicano** (el respaldo era México).
   se registra como «ubicación mostrada»). `ip_detection_iso_code`/`country_code` sí llevan el país.
 - **Costo/alternativa**: obtener coordenadas en el servidor pediría la base *City* de DB-IP
   (~130 MB), que no cabe en el límite de memoria de pm2 del sitio (250 MB con ~125 MB ya en uso).
-- El modo sombra (`GEO_SHADOW`, una línea de log por visita) **terminó**: el módulo
-  `src/lib/server/geoSombra.js` ya no lo importa nadie y se puede borrar.
+- El modo sombra (`GEO_SHADOW`, una línea de log por visita) **terminó** y su módulo
+  (`src/lib/server/geoSombra.js`) se borró el 2026-10-21. Existió para comprobar, sin arriesgar nada,
+  que el país que resolvía el servidor coincidía con la realidad antes de dejarle elegir idioma y precio.
 
 ## Piezas y dónde viven
 
