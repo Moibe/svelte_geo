@@ -185,7 +185,7 @@
           "Stripe: payment processing.",
           "OpenStreetMap: loads the maps and, if you use Search by Browser, receives your exact coordinates to determine the country (Nominatim service).",
           "GeoJS: receives your IP address, from your browser, only when you choose Search by IP (or use the simulator), to calculate an approximate location. Our server, by contrast, does not send it: it estimates your country with the “IP to Country Lite” database from DB-IP (db-ip.com, Creative Commons Attribution 4.0 license), which it queries locally and which does not receive any of your data.",
-          "Hosting providers: DigitalOcean, where the site runs and the activity log is stored; Hugging Face, where the service that creates the payment sessions runs, as well as the one that receives Stripe notifications and sends each purchase to Google Analytics; and Opalstack, where the previous database was hosted, which may keep activity logs from before September 2026.",
+          "Hosting providers: DigitalOcean, where the site runs and the activity log is stored, and Hugging Face, where the service that creates the payment sessions runs, as well as the one that receives Stripe notifications and sends each purchase to Google Analytics.",
           "OpenAI: if whoever administers the site uses its internal analysis assistant, the results of its queries on the activity log, which may include phone numbers and identifiers, are processed by that service."
         ]
       },

@@ -185,7 +185,7 @@
           "Stripe: Verarbeitung der Zahlungen.",
           "OpenStreetMap: Laden der Karten und, wenn Sie die Suche über Browser nutzen, Empfang Ihrer genauen Koordinaten, um das Land zu bestimmen (Nominatim-Dienst).",
           "GeoJS: erhält Ihre IP-Adresse, von Ihrem Browser, nur dann, wenn Sie die Suche über IP wählen (oder den Simulator nutzen), um eine ungefähre Position zu berechnen. Unser Server sendet sie dagegen nicht: Er schätzt Ihr Land mit der Datenbank „IP to Country Lite“ von DB-IP (db-ip.com, Lizenz Creative Commons Namensnennung 4.0), die er lokal abfragt und die keinerlei Daten von Ihnen erhält.",
-          "Hosting-Anbieter: DigitalOcean, wo die Website läuft und das Aktivitätsprotokoll gespeichert wird; Hugging Face, wo der Dienst läuft, der die Zahlungssitzungen erstellt, und wo der Dienst läuft, der die Benachrichtigungen von Stripe empfängt und jeden Kauf an Google Analytics sendet; und Opalstack, wo sich die frühere Datenbank befand, die Aktivitätsprotokolle aus der Zeit vor September 2026 aufbewahren kann.",
+          "Hosting-Anbieter: DigitalOcean, wo die Website läuft und das Aktivitätsprotokoll gespeichert wird, und Hugging Face, wo der Dienst läuft, der die Zahlungssitzungen erstellt, und wo der Dienst läuft, der die Benachrichtigungen von Stripe empfängt und jeden Kauf an Google Analytics sendet.",
           "OpenAI: Wenn die Person, die die Website verwaltet, ihren internen Analyseassistenten verwendet, werden die Ergebnisse ihrer Abfragen zum Aktivitätsprotokoll, die Telefonnummern und Kennungen enthalten können, mit diesem Dienst verarbeitet."
         ]
       },

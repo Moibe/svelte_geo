@@ -185,7 +185,7 @@
           "Stripe : traitement des paiements.",
           "OpenStreetMap : chargement des cartes ; si vous utilisez la recherche par navigateur, il reçoit vos coordonnées exactes pour déterminer le pays (service Nominatim).",
           "GeoJS : reçoit votre adresse IP, depuis votre navigateur, uniquement lorsque vous choisissez la recherche par IP (ou utilisez le simulateur), pour calculer une position approximative. Notre serveur, en revanche, ne la lui envoie pas : il estime votre pays à l’aide de la base de données « IP to Country Lite » de DB-IP (db-ip.com, licence Creative Commons Attribution 4.0), qu’il consulte en local et qui ne reçoit aucune de vos données.",
-          "Prestataires d’hébergement : DigitalOcean, où le site s’exécute et où le journal d’activité est stocké ; Hugging Face, où s’exécutent le service qui crée les sessions de paiement et celui qui reçoit les notifications de Stripe et envoie chaque achat à Google Analytics ; et Opalstack, où se trouvait l’ancienne base de données, qui peut conserver des journaux d’activité antérieurs à septembre 2026.",
+          "Prestataires d’hébergement : DigitalOcean, où le site s’exécute et où le journal d’activité est stocké, et Hugging Face, où s’exécutent le service qui crée les sessions de paiement et celui qui reçoit les notifications de Stripe et envoie chaque achat à Google Analytics.",
           "OpenAI : si la personne qui administre le site utilise son assistant d’analyse interne, les résultats de ses requêtes sur le journal d’activité, qui peuvent inclure des numéros de téléphone et des identifiants, sont traités via ce service."
         ]
       },

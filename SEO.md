@@ -85,9 +85,10 @@ Los textos afirman hechos. Estos son los que más fácil se vuelven falsos:
   exactas si se usa el GPS; Google (GTM, GA4, Ads) recibe el importe y la moneda
   de las compras, desde el navegador y desde el servicio de avisos de Stripe, y en
   el EEE, el Reino Unido y Suiza **solo se carga con el permiso de quien visita**;
-  Hugging Face crea las sesiones de pago y recibe esos avisos; Opalstack guarda
-  la base anterior (hoy inaccesible); OpenAI recibe resultados de consultas del
-  asistente interno de `geospace_nucleo`. El envío paralelo de eventos al Space
+  Hugging Face crea las sesiones de pago y recibe esos avisos; OpenAI recibe
+  resultados de consultas del asistente interno de `geospace_nucleo` (Opalstack
+  ya no interviene: se dio de baja el 2026-10-22, tras migrar su histórico de
+  `map_interactions` a la base del droplet). El envío paralelo de eventos al Space
   legacy está **apagado** (`VITE_LEGACY_TRACK_URL`, ver
   `src/lib/conversionLogger.js`): si se vuelve a encender, la política tiene que
   nombrarlo.
