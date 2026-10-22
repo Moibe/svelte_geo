@@ -36,3 +36,6 @@ build
 local.db
 local.db-shm
 local.db-wal
+
+# Permisos personales de Claude Code
+.claude/settings.local.json
